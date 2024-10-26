@@ -16,12 +16,12 @@ origins = [
 print("hello")
 print("Allowed origins1:", origins)
 
-origins = [
-    "https://frederik-heda-portfolio-af45ad5c4c69.herokuapp.com"
-]
+# origins = [
+#     "https://frederik-heda-portfolio-af45ad5c4c69.herokuapp.com"
+# ]
 
-print("hello")
-print("Allowed origins2:", origins)
+# print("hello")
+# print("Allowed origins2:", origins)
 
 # CORS configuration
 app.add_middleware(
