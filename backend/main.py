@@ -5,7 +5,7 @@ import asyncio
 from message_generator import generate_custom_message
 import os
 from dotenv import load_dotenv
-_ = load_dotenv()
+#_ = load_dotenv()
 
 app = FastAPI()
 
@@ -13,7 +13,7 @@ origins = [
     os.getenv("REACT_APP_FRONTEND_URL")
 ]
 
-print(origins)
+print("Allowed origins:", origins)
 
 # CORS configuration
 app.add_middleware(
