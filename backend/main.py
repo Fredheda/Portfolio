@@ -3,11 +3,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import asyncio
 from message_generator import generate_custom_message
+import os
+from dotenv import load_dotenv
+_ = load_dotenv()
 
 app = FastAPI()
 
 origins = [
-    "https://frederik-heda-portfolio.herokuapp.com",
+    os.getenv("REACT_APP_FRONTEND_URL")
 ]
 
 # CORS configuration
