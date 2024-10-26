@@ -1,0 +1,11 @@
+/* Footer.css */
+
+footer {
+    background-color: #f8f9fa; /* Light background color */
+    color: #333; /* Text color */
+    padding: 10px;
+    text-align: center;
+    width: 100%;
+    margin-top: auto; /* Ensure the footer pushes to the bottom */
+    position: relative; /* Remove absolute positioning */
+  }

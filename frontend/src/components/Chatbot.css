@@ -1,0 +1,195 @@
+/* General Chatbot Container */
+.chatbot-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+/* Toggle Button Styles */
+.chatbot-toggle {
+  background-color: #007bff; /* Primary blue color */
+  color: white;
+  border-radius: 50%;
+  padding: 12px;
+  cursor: pointer;
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.chatbot-toggle:hover {
+  background-color: #0056b3; /* Darker blue for hover effect */
+  transform: scale(1.1); /* Slightly larger on hover */
+}
+
+.chatbot-toggle.hidden {
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(0);
+}
+
+/* Chat Window Styles */
+.chatbot-window {
+  width: 400px; /* Increased from 320px */
+  height: 550px; /* Increased from 450px */
+  background-color: #ffffff;
+  border-radius: 15px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: fixed;
+  bottom: 80px; /* Adjusted to appear just above the toggle button */
+  right: 20px;
+  transform: translateY(150%);
+  transition: transform 0.4s ease, opacity 0.4s ease, width 0.3s, height 0.3s;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.chatbot-window.open {
+  transform: translateY(0);
+  opacity: 1;
+  visibility: visible;
+}
+
+.chatbot-window.closed {
+  transform: translateY(150%);
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* Expanded state for chat window */
+.chatbot-window.expanded {
+  width: 1200px; /* Increase this value as needed */
+  height: 800px; /* Increase this value as needed */
+}
+
+/* Header Styling */
+.chatbot-header {
+  background-color: #007bff;
+  color: white;
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top-left-radius: 15px;
+  border-top-right-radius: 15px;
+}
+
+.chatbot-header h4 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+/* New styling for header buttons (expand, clear, and close) */
+.chatbot-header-buttons {
+  display: flex;
+  gap: 8px; /* Space between the buttons */
+}
+
+.expand-btn, .clear-btn, .close-btn {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.expand-btn:hover {
+  color: #00cc66; /* Greenish color for expand/collapse hover */
+}
+
+.clear-btn:hover {
+  color: #ff4d4d; /* Light red when hovering the clear button */
+}
+
+.close-btn:hover {
+  color: #ccc; /* Light grey when hovering the close button */
+}
+
+/* Chat Body and Messages */
+.chatbot-body {
+  flex: 1;
+  padding: 15px;
+  overflow-y: auto;
+  font-size: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  background-color: #f9f9f9;
+}
+
+.chatbot-message {
+  padding: 10px;
+  margin: 5px 0;
+  border-radius: 10px;
+  max-width: 75%;
+  word-wrap: break-word;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.chatbot-message.user {
+  background-color: #007bff;
+  color: white;
+  align-self: flex-end;
+  text-align: right;
+  border-top-right-radius: 0;
+}
+
+.chatbot-message.bot {
+  background-color: #e0e0e0;
+  color: #333;
+  align-self: flex-start;
+  text-align: left;
+  border-top-left-radius: 0;
+}
+
+/* Footer Input and Send Button */
+.chatbot-footer {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border-top: 1px solid #ddd;
+  background-color: #ffffff;
+}
+
+.chatbot-footer input {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+.chatbot-footer input:focus {
+  border-color: #007bff; /* Change border color on focus */
+}
+
+.chatbot-footer button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  margin-left: 10px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.chatbot-footer button:hover {
+  background-color: #0056b3;
+  transform: translateY(-2px); /* Slight lift on hover */
+}
+
+.chatbot-footer button:active {
+  transform: translateY(0); /* Reset lift on click */
+}
+
+/* Hide scrollbar for a cleaner look */
+.chatbot-body::-webkit-scrollbar {
+  width: 0;
+}
