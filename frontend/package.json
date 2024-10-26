@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "description": "My Portfolio website",
   "main": "index.js",
-"scripts": {
-  "start": "vite preview --port $PORT",
-  "build": "vite build",
-  "postinstall": "npm run build"
-},
+  "scripts": {
+    "start": "vite preview --port $PORT",
+    "build": "vite build",
+    "postinstall": "npm run build"
+  },
   "author": "",
   "license": "ISC",
   "dependencies": {
@@ -18,8 +18,7 @@
     "react-slick": "^0.30.2",
     "react-swipeable": "^7.0.1",
     "serve": "^14.2.4",
-    "slick-carousel": "^1.8.1",
-    "vite": "^5.4.10"
+    "slick-carousel": "^1.8.1"
   },
   "devDependencies": {
     "@babel/core": "^7.26.0",
