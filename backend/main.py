@@ -13,6 +13,8 @@ origins = [
     os.getenv("REACT_APP_FRONTEND_URL")
 ]
 
+print(origins)
+
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
