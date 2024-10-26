@@ -38,8 +38,10 @@ const Chatbot = () => {
   
       try {
         // Determine the backend URL based on the environment
-        const REACT_APP_BACKEND_URL = import.meta.env.VITE_BACKEND_API_URL;
+        const REACT_APP_BACKEND_URL = process.env.VITE_BACKEND_API_URL
+        const REACT_APP_BACKEND_URL2 = process.env.REACT_APP_BACKEND_API_URL  //import.meta.env.VITE_BACKEND_API_URL;
         console.log("REACT_APP_BACKEND_URL: ", REACT_APP_BACKEND_URL)
+        console.log("REACT_APP_BACKEND_URL2: ", REACT_APP_BACKEND_URL2)
   
         // Send the user's message to the backend API
         const response = await fetch(`${REACT_APP_BACKEND_URL}/chatbot`, {
