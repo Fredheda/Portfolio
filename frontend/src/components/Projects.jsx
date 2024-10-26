@@ -2,7 +2,7 @@ import React from 'react';
 import Slider from 'react-slick';
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-import './Projects.css';
+import './projects.css';
 
 // Custom arrow components
 const PrevArrow = ({ className, onClick }) => {
