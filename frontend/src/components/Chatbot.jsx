@@ -21,9 +21,9 @@ const Chatbot = () => {
     setInput(event.target.value);
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (input.trim()) {
-      const sanitizedInput = DOMPurify.sanitize(input); // Sanitize user input
+      const sanitizedInput = DOMPurify.sanitize(input);
       const newMessage = {
         id: messages.length,
         text: sanitizedInput,
@@ -33,14 +33,49 @@ const Chatbot = () => {
       // Add the user's message to the chat
       setMessages([...messages, newMessage]);
   
-      // Directly add "hello world" as the bot's response
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        { id: prevMessages.length, text: "hello world", sender: 'bot' },
-      ]);
-  
       // Clear the input field
       setInput('');
+  
+      try {
+        // Determine the backend URL based on the environment
+        const REACT_APP_BACKEND_URL = import.meta.env.VITE_BACKEND_API_URL;
+        console.log("REACT_APP_BACKEND_URL: ", REACT_APP_BACKEND_URL)
+  
+        // Send the user's message to the backend API
+        const response = await fetch(`${REACT_APP_BACKEND_URL}/chatbot`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ text: sanitizedInput }),
+        });
+
+        console.log("error: ", response)
+  
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+  
+        const data = await response.json();
+  
+        // Add the chatbot's response to the chat
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          { id: prevMessages.length, text: data.response, sender: 'bot' },
+        ]);
+      } catch (error) {
+        console.error('Error communicating with the backend:', error);
+  
+        // Optionally, display an error message in the chat
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          {
+            id: prevMessages.length,
+            text: 'Sorry, something went wrong. Please try again later.',
+            sender: 'bot',
+          },
+        ]);
+      }
     }
   };
 
