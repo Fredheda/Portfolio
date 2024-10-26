@@ -13,7 +13,15 @@ origins = [
     os.getenv("REACT_APP_FRONTEND_URL")
 ]
 
-print("Allowed origins:", origins)
+print("hello")
+print("Allowed origins1:", origins)
+
+origins = [
+    "https://frederik-heda-portfolio-af45ad5c4c69.herokuapp.com"
+]
+
+print("hello")
+print("Allowed origins2:", origins)
 
 # CORS configuration
 app.add_middleware(
@@ -38,8 +46,8 @@ async def get_custom_response(user_input: str) -> str:
 @app.post("/chatbot")
 async def get_response(message: Message):
     # Call the asynchronous custom response function
-    custom_response = await get_custom_response(message.text)
-    return {"response": custom_response}
+    #custom_response = await get_custom_response(message.text)
+    return {"response": "hello!!!"}
 
 if __name__ == "__main__":
     import uvicorn
