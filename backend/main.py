@@ -2,15 +2,15 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import asyncio
-from message_generator import generate_custom_message
 import os
-from dotenv import load_dotenv
+from LLM.openai_client import OpenAIClient
+from response_generator import ResponseGenerator
+from LLM.prompts.prompt_manager import PromptManager
+
 
 app = FastAPI()
 
-origins = [
-    os.getenv("REACT_APP_FRONTEND_URL")
-]
+origins = [os.getenv("REACT_APP_FRONTEND_URL")]
 
 # CORS configuration
 app.add_middleware(
@@ -25,18 +25,24 @@ app.add_middleware(
 class Message(BaseModel):
     text: str
 
+# Initialize the OpenAI client and message generator
+openai_client = OpenAIClient()
+prompt_manager = PromptManager()
+response_generator = ResponseGenerator(openai_client, prompt_manager)
+
+
 # Run the custom message generator function asynchronously
-async def get_custom_response(user_input: str) -> str:
+async def get_LLM_response(user_input: str) -> str:
     # Using asyncio to run the blocking function in a separate thread
     loop = asyncio.get_event_loop()
-    response = await loop.run_in_executor(None, generate_custom_message, user_input)
+    response = await loop.run_in_executor(None, response_generator.generate_response, user_input)
     return response
 
 @app.post("/chatbot")
 async def get_response(message: Message):
     # Call the asynchronous custom response function
-    custom_response = await get_custom_response(message.text)
-    return {"response": custom_response}
+    response = await get_LLM_response(message.text)
+    return {"response": response}
 
 if __name__ == "__main__":
     import uvicorn

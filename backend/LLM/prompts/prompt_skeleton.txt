@@ -1,0 +1,7 @@
+$system_message
+
+$content_safety_prompt
+
+$instructions
+
+$context
