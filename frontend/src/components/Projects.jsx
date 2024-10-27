@@ -89,7 +89,7 @@ const Projects = () => {
   };
 
   return (
-    <section className="projects-section">
+    <section id="projects" className="projects-section">
       <h2 className="projects-title">My Projects</h2>
       <Slider {...settings}>
         {projects.map((project, index) => (
