@@ -5,7 +5,6 @@ import asyncio
 from message_generator import generate_custom_message
 import os
 from dotenv import load_dotenv
-#_ = load_dotenv()
 
 app = FastAPI()
 
