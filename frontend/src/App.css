@@ -1,3 +1,4 @@
+/* Global Styles */
 html, body {
   height: 100%;
   margin: 0;
@@ -10,38 +11,74 @@ html, body {
   min-height: 100vh;
 }
 
-header {
+/* Unified Header and Footer Styles */
+header, footer {
   background-color: #333;
   color: white;
-  padding: 1em 0;
   text-align: center;
+  padding: 1.5em 0; /* Increased padding for header and footer */
 }
 
-nav a {
+/* Header Styles */
+header h1 {
+  font-size: 2.5em; /* Larger font size for heading */
+  margin: 0;
+  margin-bottom: 0.5em; /* Add margin below the heading for spacing */
+}
+
+header nav a {
   color: white;
   margin: 0 1em;
+  text-decoration: none; /* No underline by default */
+}
+
+header nav a:hover {
+  text-decoration: underline; /* Underline on hover */
+}
+
+/* Footer Styles */
+footer p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+footer a {
+  color: #007bff;
   text-decoration: none;
 }
 
+footer a:hover {
+  text-decoration: underline;
+}
+
+/* Main Content Area */
 main {
-  flex: 1; /* This makes the main content area expand to take available space */
+  flex: 1; /* Expands to take available space */
   padding: 2em;
 }
 
+/* Section Styling */
 section {
   margin-bottom: 2em;
 }
 
+/* Project Section Styling */
 .project {
   border: 1px solid #ccc;
   padding: 1em;
   margin-bottom: 1em;
 }
 
-footer {
-  background-color: #333;
+header nav button {
+  background: none;
+  border: none;
   color: white;
-  text-align: center;
-  padding: 1em 0;
-  margin-top: auto; /* Ensure the footer pushes to the bottom */
+  margin: 0 1em;
+  text-decoration: none;
+  cursor: pointer;
+  font-size: 1em;
+}
+
+header nav button:hover {
+  text-decoration: underline;
 }
