@@ -5,3 +5,4 @@ node_modules
 __pycache__
 dist
 testing.py
+security_prompts
