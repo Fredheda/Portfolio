@@ -9,14 +9,13 @@ const About = () => {
       <div className="about-content">
         <div className="about-text">
           <p>
-            Hello! I'm a passionate software developer with a love for creating interactive and dynamic web applications. 
-            My journey started a few years ago when I began exploring front-end technologies like HTML, CSS, and JavaScript. 
-            Since then, I've expanded my skill set to include frameworks such as React and backend development with Python.
+            Frederik is a senior data scientist at BP, where he spearheads digital innovation across the trading and shipping organisation. He is an AI enthusiast with a strong background in machine learning, statistics, and software engineering.
           </p>
           <p>
-            I enjoy problem-solving and continuously learning new tools and technologies. My goal is to build modern, 
-            user-friendly web applications that make life easier for people. When I'm not coding, I love reading tech blogs, 
-            experimenting with new software, and exploring the world of AI.
+            Frederik's role is to drive innovation through advanced data science and analytics solutions, leading the development and adoption of generative AI across the trading and shipping organisation. He is a leading member of BP's data & analytics and GenAI communities of practice, actively demystifying data science and AI across the business.
+          </p>
+          <p>
+            Frederik holds master's degrees in Mechanical & Electrical Engineering from Robert Gordon University, and Applied Data Science from the University of Buckingham, and has led projects across various domains including demand forecasting, causal inference, and generative AI. Frederik is a strong advocate for democratising artificial intelligence and believes it can help us be more efficient, productive, and safe.
           </p>
         </div>
         <div className="about-image">
@@ -27,26 +26,14 @@ const About = () => {
       <div className="about-details">
         <h3>My Skills</h3>
         <ul className="about-skills">
-          <li>JavaScript, React, HTML, CSS</li>
-          <li>Python, Django, FastAPI</li>
-          <li>APIs, RESTful Services</li>
-          <li>Git, Version Control</li>
-        </ul>
-      </div>
-      
-      <div className="about-details">
-        <h3>Hobbies</h3>
-        <p>
-          Besides coding, I have a few hobbies that keep me inspired and motivated:
-        </p>
-        <ul className="about-hobbies">
-          <li>📸 Photography - Capturing moments and telling stories through images</li>
-          <li>🌍 Travel - Exploring new places and cultures</li>
-          <li>📚 Reading - From tech blogs to fantasy novels</li>
+          <li>Machine Learning, Statistics, Software Engineering</li>
+          <li>Generative AI, Large Language Models, RAG Solutions</li>
+          <li>Python, Docker, DevOps, Kubernetes, AWS, Azure</li>
+          <li>Data Science, Time-Series Forecasting, Causal Inference</li>
         </ul>
       </div>
     </section>
   );
-};
+}
 
 export default About;
