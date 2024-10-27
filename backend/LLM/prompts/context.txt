@@ -1,3 +1,66 @@
 Frederik is a senior data scientist at bp, where he spearheads digital innovation across the trading and shipping organisation. He is an ai enthusiast with a strong background in machine learning, statistics, and software engineering.
 Frederik's role is to drive innovation through advanced data science and analytics solutions, leading the development and adoption of generative ai across the trading and shipping organisation. He is a leading member of bp's data & analytics and genai communities of practice, actively demystifying data science and AI across the business.
 Frederik holds masters degrees in mechanical & electrical engineering from Robert Gordon University, and applied data science from the University of Buckingham, and has led projects across various domains including demand forecasting, causal inference and generative AI. Frederik is a strong advocate for democratising artificial intelligence and believes it can help us be more efficient, productive, and safe.
+
+----------------------- Frederik's CV -----------------------
+
+EXPERIENCE
+
+Current Role (09/2021 - Present)
+Senior Data Scientist, BP 
+(Previosly: Data Scientist, Digital Graduate in the software engineering and data analytics departments)
+
+Summary:
+Spearheading implementation and adoption of generative AI solutions at BP Trading & Shipping; Lead for data & analytics and GenAI communities of practice; Prev: Lead for data science workstream (demand forecasting midstream North America).
+
+Roles & Responsibilities:
+•	Developed internal Pip packages for automated evaluation of GenAI/LLM applications
+•	Implementing generative AI solutions using large language models (LLM), using Azure OpenAI.
+•	Leading the development & implementation of Retrieval Augmented Generation (RAG) solutions for various use-cases involving structured, unstructured, and semi-structured data.
+•	Developed and deployed an in-house developed RAG-based chatbot.
+•	Spearheaded the implementation of internal GenAI evaluation metrics.
+•	Created ML and similarity models for identifying ideal EV site locations.
+•	Led the data science workstream in demand management including development and deployment of ML and analytics solutions.
+•	Led the foundational data & analytics community of practice & GenAI community of practice with 750+ members.
+•	Spearheaded the development of predictive maintenance solutions using causal inference and anomaly detection.
+•	Testing, validation, performance management, and visualization of key metrics for existing ML models with Power BI.
+•	Coordination of the rollout of a mobile-first application to 1000+ retail stations in Germany.
+•	Development of features for a global retail web application, focused on back-end development.
+•	Mentoring/Managing of graduates and interns.
+
+Technical Skills (gained and demonstrated through experience working on, and leading projects at BP):
+Python, Time-Series Forecasting, Docker, DevOps, Kubernetes, AWS, Azure, Open AI, APIs, LoRA, PEFT
+
+INTERNSHIPS:
+
+UNICCOMP GMBH
+(2 Internships, June 2020 - August 2020 & May 2021 - July 2021)
+
+•	Led the implementation of an industrial Bin-Picking system for a manufacturing application.
+•	Implemented an industrial computer vision system for process automation.
+
+Additionally:
+-   Wrote Master's Thesis in Mechanical and Electrical Engineering. The MEng project was to implement a bin-picking mini project using an Arduino robot and the Tensorflow object detection API.
+
+VOLKSWAGEN AG (May 2019 - August 2019)
+•	Supported the technical program management of the VW ID.3.
+•	Conceptualized and executed field-tests for battery range testing.
+
+AUDI AG (June 2018 - August 2018)
+•	Supported the technical program management of the Audi e-Tron homologation pre-testing.
+
+Technical Skills (gained and demonstrated through interships): Computer vision, CUDA, Faster-RCNN, TensorFlow, CAD, Python, C++, VBA, Microcontrollers, Robotics.
+
+EDUCATION AND LICENSES:
+
+MSc Applied Data Science, University of Buckingham (2024)
+•	Distinction; Degree apprenticeship via bp.
+
+MEng Mechanical & Electrical Engineering, Robert Gordon University (2021)
+•	Distinction; Award for best dissertation of the cohort.
+
+AWS Cloud Practitioner Certification (2022)
+
+Technical Skills (gained and demonstrated through formal education): Python, Statistics, Data Mining, Visualisation, Probability Theory Engineering, Object Detection, Image Processing, MATLAB & Simulink, OpenCV, C++, VBA, Office
+
+----------------------- Frederik's CV END -----------------------
