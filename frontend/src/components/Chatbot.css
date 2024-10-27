@@ -8,7 +8,7 @@
 
 /* Toggle Button Styles */
 .chatbot-toggle {
-  background-color: #007bff; /* Primary blue color */
+  background-color: #007bff;
   color: white;
   border-radius: 50%;
   padding: 12px;
@@ -21,8 +21,8 @@
 }
 
 .chatbot-toggle:hover {
-  background-color: #0056b3; /* Darker blue for hover effect */
-  transform: scale(1.1); /* Slightly larger on hover */
+  background-color: #0056b3;
+  transform: scale(1.1);
 }
 
 .chatbot-toggle.hidden {
@@ -33,8 +33,8 @@
 
 /* Chat Window Styles */
 .chatbot-window {
-  width: 400px; /* Increased from 320px */
-  height: 550px; /* Increased from 450px */
+  width: 400px;
+  height: 550px;
   background-color: #ffffff;
   border-radius: 15px;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
@@ -42,7 +42,7 @@
   flex-direction: column;
   overflow: hidden;
   position: fixed;
-  bottom: 80px; /* Adjusted to appear just above the toggle button */
+  bottom: 80px;
   right: 20px;
   transform: translateY(150%);
   transition: transform 0.4s ease, opacity 0.4s ease, width 0.3s, height 0.3s;
@@ -62,33 +62,67 @@
   visibility: hidden;
 }
 
-/* Expanded state for chat window */
-.chatbot-window.expanded {
-  width: 1200px; /* Increase this value as needed */
-  height: 800px; /* Increase this value as needed */
+/* Expanded state for chat window on larger screens */
+@media (min-width: 768px) {
+  .chatbot-window.expanded {
+    width: 1200px;
+    height: 800px;
+  }
 }
 
 /* Header Styling */
 .chatbot-header {
   background-color: #007bff;
   color: white;
-  padding: 12px;
+  padding: 16px 20px;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
+  position: relative;
   border-top-left-radius: 15px;
   border-top-right-radius: 15px;
 }
 
+/* Default Header Text Alignment */
 .chatbot-header h4 {
   margin: 0;
-  font-size: 1rem;
+  font-size: 1.2rem;
+  position: absolute;
+  left: 15%;
+  transform: translateX(-50%);
 }
 
-/* New styling for header buttons (expand, clear, and close) */
+.chatbot-header p {
+  margin: 0;
+  font-size: 1rem;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Expanded Header Text Alignment on Larger Screens */
+@media (min-width: 1200px) {
+  .chatbot-window.expanded .chatbot-header h4 {
+    position: relative;
+    left: auto;
+    transform: none;
+    margin-right: auto;
+  }
+
+  .chatbot-window.expanded .chatbot-header p {
+    position: absolute;
+    left: 0;
+    padding-left: 150px;
+    margin-left: 100px;
+  }
+}
+
+/* Header Buttons */
 .chatbot-header-buttons {
   display: flex;
-  gap: 8px; /* Space between the buttons */
+  gap: 8px;
+  position: absolute;
+  right: 12px;
 }
 
 .expand-btn, .clear-btn, .close-btn {
@@ -100,15 +134,15 @@
 }
 
 .expand-btn:hover {
-  color: #00cc66; /* Greenish color for expand/collapse hover */
+  color: #00cc66;
 }
 
 .clear-btn:hover {
-  color: #ff4d4d; /* Light red when hovering the clear button */
+  color: #ff4d4d;
 }
 
 .close-btn:hover {
-  color: #ccc; /* Light grey when hovering the close button */
+  color: #ccc;
 }
 
 /* Chat Body and Messages */
@@ -166,7 +200,7 @@
 }
 
 .chatbot-footer input:focus {
-  border-color: #007bff; /* Change border color on focus */
+  border-color: #007bff;
 }
 
 .chatbot-footer button {
@@ -182,14 +216,69 @@
 
 .chatbot-footer button:hover {
   background-color: #0056b3;
-  transform: translateY(-2px); /* Slight lift on hover */
+  transform: translateY(-2px);
 }
 
 .chatbot-footer button:active {
-  transform: translateY(0); /* Reset lift on click */
+  transform: translateY(0);
 }
 
 /* Hide scrollbar for a cleaner look */
 .chatbot-body::-webkit-scrollbar {
   width: 0;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .chatbot-container {
+    bottom: 15px;
+    right: 15px;
+  }
+
+  .chatbot-toggle {
+    padding: 10px;
+  }
+
+  .chatbot-window {
+    width: 90vw;
+    height: 70vh;
+    bottom: 70px;
+    right: 5vw;
+    border-radius: 10px;
+  }
+
+  .expand-btn {
+    display: none;
+  }
+
+  .chatbot-header {
+    padding: 16px;
+  }
+
+  .chatbot-header h4 {
+    font-size: 0.9rem;
+    left: 15%;
+  }
+
+  .chatbot-header p {
+    font-size: 0.9rem;
+    left: 50%;
+  }
+
+  .chatbot-body {
+    font-size: 0.8rem;
+    padding: 10px;
+  }
+
+  .chatbot-footer {
+    padding: 8px;
+  }
+
+  .chatbot-footer input {
+    padding: 6px;
+  }
+
+  .chatbot-footer button {
+    padding: 6px 12px;
+  }
 }

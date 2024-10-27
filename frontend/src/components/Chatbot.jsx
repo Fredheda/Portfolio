@@ -95,7 +95,7 @@ const Chatbot = () => {
       {/* Chat Window */}
       <div className={`chatbot-window ${isOpen ? 'open' : 'closed'} ${isExpanded ? 'expanded' : ''}`}>
         <div className="chatbot-header">
-          <h4>Chat with Us!</h4>
+          <h4>Fredbot</h4> <p>(Powered by OpenAI)</p>
           <div className="chatbot-header-buttons">
             <button className="expand-btn" onClick={toggleExpand}>
               {isExpanded ? <FaCompress /> : <FaExpand />}
