@@ -34,7 +34,6 @@ function MainContent() {
     <>
       <About />
       <Projects />
-      <LinkedInPostsCarousel /> {/* Add LinkedInPosts component */}
       <Chatbot />
     </>
   );
