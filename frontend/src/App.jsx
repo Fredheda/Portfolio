@@ -8,6 +8,8 @@ import Contact from './components/Contact';
 import Footer from './components/Footer';
 import Chatbot from './components/Chatbot';
 import PrivacyPolicy from './components/PrivacyPolicy'; // Import PrivacyPolicy component
+import LinkedInPostsCarousel from './components/LinkedInPosts'; // Import LinkedInPosts component
+
 
 function App() {
   return (
@@ -32,7 +34,7 @@ function MainContent() {
     <>
       <About />
       <Projects />
-      <Contact />
+      <LinkedInPostsCarousel /> {/* Add LinkedInPosts component */}
       <Chatbot />
     </>
   );

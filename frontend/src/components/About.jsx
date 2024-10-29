@@ -1,10 +1,18 @@
 import React from 'react';
+import SkillSet from './SkillSet';
 import './About.css';
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
 const About = () => {
   return (
     <section className="about-section" id="about">
       <h2 className="about-title">About Me</h2>
+      <div className="contact-info">
+        <p><i className="fas fa-envelope"></i> <a href="mailto:frederik.heda@gmx.net">frederik.heda@gmx.net</a></p>
+        <p><i className="fas fa-phone"></i> <a href="tel:+447948905688">+44 7948 905688</a></p>
+        <p><i className="fab fa-linkedin"></i> <a href="https://www.linkedin.com/in/frederik-heda/" target="_blank" rel="noopener noreferrer">linkedin.com/in/frederik-heda</a></p>
+        <p><i className="fab fa-github"></i> <a href="https://github.com/Fredheda?tab=repositories" target="_blank" rel="noopener noreferrer">https://github.com/Fredheda</a></p>
+      </div>
       
       <div className="about-content">
         <div className="about-text">
@@ -24,13 +32,47 @@ const About = () => {
       </div>
       
       <div className="about-details">
-        <h3>My Skills</h3>
-        <ul className="about-skills">
-          <li>Machine Learning, Statistics, Software Engineering</li>
-          <li>Generative AI, Large Language Models, RAG Solutions</li>
-          <li>Python, Docker, DevOps, Kubernetes, AWS, Azure</li>
-          <li>Data Science, Time-Series Forecasting, Causal Inference</li>
-        </ul>
+        <h3>Demonstrated Skills</h3>
+        <SkillSet 
+          title="Machine Learning, Statistics & Software Engineering" 
+          details={[
+            "Experience with Python",
+            "Time-Series Forecasting",
+            "Docker",
+            "DevOps",
+            "Kubernetes",
+            "AWS",
+            "Azure",
+            "Open AI",
+            "APIs",
+            "LoRA",
+            "PEFT"
+          ]}
+        />
+        <SkillSet 
+          title="Generative AI, Large Language Models & RAG Solutions" 
+          details={[
+            "Developed internal Pip packages for automated evaluation of GenAI/LLM applications",
+            "Implemented generative AI solutions using large language models (LLM) with Azure OpenAI",
+            "Led the development & implementation of Retrieval Augmented Generation (RAG) solutions"
+          ]}
+        />
+        <SkillSet 
+          title="Data Science, Time-Series Forecasting & Causal Inference" 
+          details={[
+            "Led the data science workstream in demand management",
+            "Developed and deployed ML and analytics solutions",
+            "Spearheaded the development of predictive maintenance solutions using causal inference and anomaly detection"
+          ]}
+        />
+        <SkillSet 
+          title="Computer Vision, Robotics & Microcontrollers" 
+          details={[
+            "Implemented industrial Bin-Picking systems",
+            "Developed computer vision systems for process automation",
+            "Worked on robotics projects using TensorFlow and Arduino"
+          ]}
+        />
       </div>
     </section>
   );

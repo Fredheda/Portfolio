@@ -1,0 +1,32 @@
+/* src/components/Contact.css */
+.contact-section {
+    background-color: #f9f9f9;
+    padding: 10px 20px;
+    border-top: 1px solid #ddd;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .contact-info {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .contact-info p {
+    margin: 0;
+    font-size: 1rem;
+    color: #555;
+  }
+  
+  .contact-info a {
+    color: #0073e6;
+    text-decoration: none;
+  }
+  
+  .contact-info a:hover {
+    text-decoration: underline;
+  }
