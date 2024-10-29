@@ -6,11 +6,10 @@ import os
 from LLM.openai_client import OpenAIClient
 from response_generator import ResponseGenerator
 from LLM.prompts.prompt_manager import PromptManager
-# from services.openai_content_safety_service import ContentSafetyService
+from services.openai_content_safety_service import ContentSafetyService
 
 
 app = FastAPI()
-
 origins = [os.getenv("REACT_APP_FRONTEND_URL")]
 
 # CORS configuration
@@ -28,7 +27,7 @@ class Message(BaseModel):
 # Initialize the OpenAI client and message generator
 openai_client = OpenAIClient()
 prompt_manager = PromptManager()
-# content_safety = ContentSafetyService()
+content_safety = ContentSafetyService()
 response_generator = ResponseGenerator(openai_client, prompt_manager)
 
 
@@ -36,9 +35,9 @@ response_generator = ResponseGenerator(openai_client, prompt_manager)
 async def get_LLM_response(user_input: str) -> str:
     loop = asyncio.get_event_loop()
     # Check if the input is safe
-    # flagged = await loop.run_in_executor(None, content_safety.classify_text, user_input)
-    # if flagged:
-    #     return "Sorry, I cannot respond to that message."
+    flagged = await loop.run_in_executor(None, content_safety.classify_text, user_input)
+    if flagged:
+        return "Sorry, I cannot respond to that message."
     # Using asyncio to run the blocking function in a separate thread
     response = await loop.run_in_executor(None, response_generator.generate_response, user_input)
     return response
