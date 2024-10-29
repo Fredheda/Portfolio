@@ -4,3 +4,5 @@ node_modules
 *.pyc
 __pycache__
 dist
+testing.py
+security_prompts
