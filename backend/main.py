@@ -1,5 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 from pydantic import BaseModel
 import asyncio
 import os
@@ -10,6 +13,9 @@ from services.openai_content_safety_service import ContentSafetyService
 
 
 app = FastAPI()
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 origins = [os.getenv("REACT_APP_FRONTEND_URL")]
 
 # CORS configuration
@@ -43,7 +49,8 @@ async def get_LLM_response(user_input: str) -> str:
     return response
 
 @app.post("/chatbot")
-async def get_response(message: Message):
+@limiter.limit("2/minute") 
+async def get_response(message: Message, request: Request):
     # Call the asynchronous custom response function
     response = await get_LLM_response(message.text)
     return {"response": response}
