@@ -1,25 +1,29 @@
 /* General Styling for Projects Section */
 .projects-section {
     background-color: #f5f5f5;
-    padding: 60px 40px; 
+    padding: 20px 40px; 
     border-radius: 15px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     max-width: 1400px; 
-    margin: 40px auto;
+    margin: 10px auto;
     text-align: center;
     overflow: hidden;
+    font-family: 'Montserrat', sans-serif; 
   }
   
   .projects-title {
-    font-size: 2.5rem;
+    font-size: 2rem;
     color: #333;
-    margin-bottom: 40px;
+    margin-bottom: 20px;
+    margin-top: 5px;
     font-weight: 600;
+    font-family: 'Montserrat', sans-serif; 
   }
   
   /* Carousel Wrapper Adjustments */
   .slick-slider {
     padding: 0 40px; 
+    font-family: 'Montserrat', sans-serif; 
   }
   
   /* Project Card Styling */
@@ -34,6 +38,7 @@
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     cursor: pointer;
     margin: 0 auto;
+    font-family: 'Montserrat', sans-serif; 
   }
   
   .project-card:hover {
@@ -51,16 +56,19 @@
   .project-details {
     padding: 15px;
     text-align: left;
+    font-family: 'Montserrat', sans-serif; 
   }
   
   .project-details h3 {
     font-size: 1.2rem;
     color: #007bff;
     margin-bottom: 10px;
+    font-family: 'Montserrat', sans-serif; 
   }
   
   .project-details p {
     font-size: 0.9rem;
+    font-family: 'Montserrat', sans-serif; 
     color: #555;
     line-height: 1.4;
     margin-bottom: 15px;
@@ -71,6 +79,7 @@
     display: inline-block;
     color: #007bff;
     font-weight: 600;
+    font-family: 'Montserrat', sans-serif; 
     text-decoration: none;
     border: 2px solid #007bff;
     padding: 8px 16px;
@@ -89,6 +98,7 @@
     color: white !important;
     border: none;
     font-size: 2rem;
+    font-family: 'Montserrat', sans-serif; 
     width: 50px;
     height: 50px;
     border-radius: 50%;
@@ -127,6 +137,7 @@
   /* Custom Arrow Styling */
   .custom-arrow {
     font-size: 24px;
+    font-family: 'Montserrat', sans-serif; 
     color: #FFFFFF;
     text-align: center;
   }
@@ -134,6 +145,7 @@
   /* Dots Styling */
   .slick-dots li button:before {
     font-size: 12px;
+    font-family: 'Montserrat', sans-serif; 
     color: #007bff;
   }
   

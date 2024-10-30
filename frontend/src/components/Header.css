@@ -1,0 +1,37 @@
+.header {
+    display: flex;
+    justify-content: center; 
+    align-items: center; 
+    padding: 10px 20px; 
+    background-color: #333;
+    color: #fff;
+    position: relative; 
+  }
+  
+  .header-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.5rem; 
+    font-weight: 600;
+    margin: 0; 
+  }
+  
+  .header-nav {
+    display: flex;
+    gap: 20px;
+    position: absolute; 
+    right: 20px; 
+  }
+  
+  .nav-button {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.5rem; 
+    font-weight: 600;
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+  }
+  
+  .nav-button:hover {
+    text-decoration: underline;
+  }

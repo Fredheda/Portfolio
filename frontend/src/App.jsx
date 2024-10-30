@@ -4,12 +4,9 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Header from './components/Headers';
 import About from './components/About';
 import Projects from './components/Projects';
-import Contact from './components/Contact';
 import Footer from './components/Footer';
 import Chatbot from './components/Chatbot';
-import PrivacyPolicy from './components/PrivacyPolicy'; // Import PrivacyPolicy component
-import LinkedInPostsCarousel from './components/LinkedInPosts'; // Import LinkedInPosts component
-
+import PrivacyPolicy from './components/PrivacyPolicy';
 
 function App() {
   return (
@@ -34,7 +31,6 @@ function MainContent() {
     <>
       <About />
       <Projects />
-      <LinkedInPostsCarousel /> {/* Add LinkedInPosts component */}
       <Chatbot />
     </>
   );
