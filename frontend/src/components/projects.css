@@ -125,8 +125,6 @@
   /* Hover Effect for Buttons */
   .slick-prev:hover, .slick-next:hover {
     background: #222 !important; 
-    transform: scale(1.15); 
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
   }
   
   /* Hide Default "Next" and "Previous" Text and Arrows */
