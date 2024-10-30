@@ -39,8 +39,7 @@ const Chatbot = () => {
       try {
         // Determine the backend URL based on the environment
         const REACT_APP_BACKEND_URL = import.meta.env.VITE_BACKEND_API_URL;
-        console.log("REACT_APP_BACKEND_URL: ", REACT_APP_BACKEND_URL)
-  
+      
         // Send the user's message to the backend API
         const response = await fetch(`${REACT_APP_BACKEND_URL}/chatbot`, {
           method: 'POST',
@@ -49,15 +48,11 @@ const Chatbot = () => {
           },
           body: JSON.stringify({ text: sanitizedInput }),
         });
-
-        console.log("error: ", response)
-  
         if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
+          throw new Error(response.status === 429 ? 'Rate limit exceeded' : `HTTP error! Status: ${response.status}`);
         }
-  
         const data = await response.json();
-  
+      
         // Add the chatbot's response to the chat
         setMessages((prevMessages) => [
           ...prevMessages,
@@ -65,13 +60,15 @@ const Chatbot = () => {
         ]);
       } catch (error) {
         console.error('Error communicating with the backend:', error);
-  
+      
+        const errorMessage = error.message === 'Rate limit exceeded' ? 'Sorry, you are rate limited. Please try again later.' : 'Sorry, something went wrong. Please try again later.';
+      
         // Optionally, display an error message in the chat
         setMessages((prevMessages) => [
           ...prevMessages,
           {
             id: prevMessages.length,
-            text: 'Sorry, something went wrong. Please try again later.',
+            text: errorMessage,
             sender: 'bot',
           },
         ]);

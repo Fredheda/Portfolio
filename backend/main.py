@@ -49,7 +49,7 @@ async def get_LLM_response(user_input: str) -> str:
     return response
 
 @app.post("/chatbot")
-@limiter.limit("2/minute") 
+@limiter.limit("5/minute") 
 async def get_response(message: Message, request: Request):
     # Call the asynchronous custom response function
     response = await get_LLM_response(message.text)

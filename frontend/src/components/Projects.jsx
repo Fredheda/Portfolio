@@ -27,37 +27,25 @@ const Projects = () => {
       image: "/images/arduino-robot.jpg",
       title: "Arduino Bin-Picking Robot",
       description: "Developed a sophisticated robotic arm using Arduino, capable of identifying and picking objects from a bin.",
-      link: "#"
+      link: "https://github.com/Fredheda/Arduino-Bin-Picking"
     },
     {
       image: "/images/project2.jpg",
-      title: "Autonomous Car Simulation",
-      description: "Designed a simulation of an autonomous vehicle using Python, capable of navigating complex paths and obstacles.",
-      link: "#"
+      title: "Uber Rides in New York City",
+      description: "An analysis of Uber rides in NYC, exploring the impact of weather and time on ride demand.",
+      link: "https://github.com/Fredheda/NYC-Uber-Rides"
     },
     {
       image: "/images/project3.jpg",
-      title: "Smart Home Automation",
-      description: "Built a smart home system that automates lighting, temperature, and security using IoT devices.",
-      link: "#"
+      title: "Chatbot Research Assistant",
+      description: "Built a chatbot that helps researchers find papers and articles on their topic of interest.",
+      link: "https://github.com/Fredheda/Fredbot"
     },
     {
       image: "/images/project4.jpg",
-      title: "Machine Learning Stock Predictor",
-      description: "Created a machine learning model that analyzes historical stock data to predict future trends.",
-      link: "#"
-    },
-    {
-      image: "/images/project5.jpg",
-      title: "Drone Delivery System",
-      description: "Developed a drone-based system for autonomous package delivery using GPS and image recognition.",
-      link: "#"
-    },
-    {
-      image: "/images/project6.jpg",
-      title: "Real-Time Traffic Monitoring",
-      description: "Implemented a traffic monitoring system using cameras and machine learning to detect and analyze road conditions.",
-      link: "#"
+      title: "TFL Status Checker",
+      description: "A web app that checks the status of London's public transportation (TFL) and sends notifications.",
+      link: "https://github.com/Fredheda/TFL_Status"
     }
   ];
 
@@ -94,11 +82,10 @@ const Projects = () => {
       <Slider {...settings}>
         {projects.map((project, index) => (
           <div className="project-card" key={index}>
-            <img src={project.image} alt={project.title} className="project-image" />
             <div className="project-details">
               <h3>{project.title}</h3>
               <p>{project.description}</p>
-              <a href={project.link} className="project-link">Learn More</a>
+              <a href={project.link} className="project-link" target="_blank" rel="noopener noreferrer"> Learn More</a>
             </div>
           </div>
         ))}

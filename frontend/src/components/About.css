@@ -1,20 +1,21 @@
 .about-section {
   background-color: #f5f5f5;
-  padding: 10px 20px; /* Reduced top padding */
+  padding: 10px 20px; 
   border-radius: 15px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  max-width: 1200px; /* Increase the max-width to make the section wider */
+  max-width: 1200px; 
   margin: 20px auto;
   text-align: center;
+  font-family: 'Montserrat', sans-serif; 
 }
 
 .contact-info {
   display: flex;
-  gap: 10px; /* Reduced gap */
+  gap: 10px; 
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-  margin-bottom: 10px; /* Reduced margin-bottom */
+  margin-bottom: 10px; 
 }
 
 .contact-info p {
@@ -33,23 +34,24 @@
 }
 
 .contact-info i {
-  margin-right: 5px; /* Add some space between the icon and the text */
+  margin-right: 5px; 
 }
 
 .about-title {
-  font-size: 2rem; /* Reduced font size */
+  font-size: 2rem; 
   color: #333;
-  margin-bottom: 20px; /* Reduced margin-bottom */
+  margin-bottom: 20px; 
   font-weight: 600;
+  font-family: 'Montserrat', sans-serif; 
 }
 
 .about-content {
   display: flex;
-  flex-wrap: wrap; /* Allow the content to wrap */
-  gap: 20px; /* Reduced gap */
+  flex-wrap: wrap; 
+  gap: 20px; 
   align-items: center;
   justify-content: center;
-  margin-bottom: 30px; /* Reduced margin-bottom */
+  margin-bottom: 30px; 
 }
 
 .about-text {
@@ -62,10 +64,10 @@
 }
 
 .about-image {
-  flex: 0 0 auto; /* Prevent the image from growing */
-  width: 25%; /* Use a percentage width for dynamic resizing */
-  min-width: 200px; /* Set a minimum width */
-  max-width: 300px; /* Set a maximum width */
+  flex: 0 0 auto; 
+  width: 25%; 
+  min-width: 200px; 
+  max-width: 300px; 
 }
 
 .about-image img {
@@ -75,5 +77,5 @@
 
 .about-details {
   text-align: left;
-  margin-top: 10px; /* Reduced margin-top */
+  margin-top: 10px; 
 }
