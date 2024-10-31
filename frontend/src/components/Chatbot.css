@@ -296,4 +296,40 @@
     transform: none; /* Remove vertical centering transform */
     -webkit-transform: none; /* Safari Specific Enhancement */
   }
+
+  .chatbot-window.fullscreen {
+    width: 100vw;
+    height: 100vh;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    top: 0;
+    position: fixed;
+    margin: 0;
+    border-radius: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .chatbot-window.fullscreen .chatbot-body {
+    flex: 1;
+    height: calc(100vh - 120px); /* Adjust based on your header/footer heights */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling for iOS */
+  }
+
+  .chatbot-window.fullscreen .chatbot-header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .chatbot-window.fullscreen .chatbot-footer {
+    position: sticky;
+    bottom: 0;
+    width: 100%;
+    box-sizing: border-box;
+  }
 }
