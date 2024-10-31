@@ -155,3 +155,24 @@
   .slick-list {
     margin: 0 -20px; 
   }
+
+/* Ensure the header takes full width */
+.chatbot-header {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Fix for Safari's viewport height issue */
+@supports (-webkit-touch-callout: none) {
+  .chatbot-header {
+      height: 100vh; /* or the specific height you need */
+  }
+}
+
+/* General mobile adjustments */
+@media only screen and (max-width: 600px) {
+  .chatbot-header {
+      padding: 10px;
+      font-size: 1.2rem; /* Adjust font size for better readability */
+  }
+}
