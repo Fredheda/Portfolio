@@ -42,7 +42,7 @@
   bottom: 80px;
   right: 20px;
   transform: translateY(150%);
-  transition: transform 0.4s ease, opacity 0.4s ease, width 0.3s, height 0.3s;
+  transition: transform 0.2s ease, opacity 0.2s ease, width 0.2s, height 0.2s;
   opacity: 0;
   visibility: hidden;
 }
@@ -59,11 +59,12 @@
   visibility: hidden;
 }
 
-@media (min-width: 768px) {
-  .chatbot-window.expanded {
-    width: 1200px;
-    height: 800px;
-  }
+.chatbot-window.fullscreen {
+  width: 100vw;
+  height: 100vh;
+  bottom: 0;
+  right: 0;
+  border-radius: 0;
 }
 
 .chatbot-header {
@@ -94,22 +95,6 @@
   transform: translateX(-50%);
 }
 
-@media (min-width: 1200px) {
-  .chatbot-window.expanded .chatbot-header h4 {
-    position: relative;
-    left: auto;
-    transform: none;
-    margin-right: auto;
-  }
-
-  .chatbot-window.expanded .chatbot-header p {
-    position: absolute;
-    left: 0;
-    padding-left: 150px;
-    margin-left: 100px;
-  }
-}
-
 .chatbot-header-buttons {
   display: flex;
   gap: 8px;
@@ -117,7 +102,9 @@
   right: 12px;
 }
 
-.expand-btn, .clear-btn, .close-btn {
+.expand-btn,
+.clear-btn,
+.close-btn {
   background: none;
   border: none;
   color: white;
@@ -239,40 +226,44 @@
     display: none;
   }
 
+  .chatbot-header,
+  .chatbot-header h4,
+  .chatbot-header p,
+  .chatbot-body,
+  .chatbot-footer,
+  .chatbot-footer input,
+  .chatbot-footer button {
+    font-family: 'Montserrat', sans-serif;
+  }
+
   .chatbot-header {
     padding: 16px;
-    font-family: 'Montserrat', sans-serif; /* Apply Montserrat font */
   }
-  
+
   .chatbot-header h4 {
     font-size: 0.9rem;
     left: 15%;
-    font-family: 'Montserrat', sans-serif; /* Apply Montserrat font */
   }
-  
+
   .chatbot-header p {
     font-size: 0.9rem;
     left: 50%;
-    font-family: 'Montserrat', sans-serif; /* Apply Montserrat font */
   }
-  
+
   .chatbot-body {
     font-size: 0.8rem;
     padding: 10px;
-    font-family: 'Montserrat', sans-serif; /* Apply Montserrat font */
   }
-  
+
   .chatbot-footer {
     padding: 8px;
-    font-family: 'Montserrat', sans-serif; /* Apply Montserrat font */
   }
-  
+
   .chatbot-footer input {
     padding: 6px;
-    font-family: 'Montserrat', sans-serif; /* Apply Montserrat font */
   }
-  
+
   .chatbot-footer button {
     padding: 6px 12px;
-    font-family: 'Montserrat', sans-serif; /* Apply Montserrat font */
   }
+}

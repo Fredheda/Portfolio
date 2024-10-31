@@ -5,16 +5,15 @@ import './Chatbot.css';
 
 const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false); // New state to track expanded size
+  const [isFullscreen, setIsFullscreen] = useState(false); // New state to track fullscreen mode
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
 
   const toggleChatbot = () => {
     setIsOpen(!isOpen);
-  };
-
-  const toggleExpand = () => {
-    setIsExpanded(!isExpanded); // Toggle the expanded state
+    if (window.innerWidth <= 768) {
+      setIsFullscreen(!isOpen);
+    }
   };
 
   const handleInputChange = (event) => {
@@ -90,12 +89,12 @@ const Chatbot = () => {
   return (
     <div className="chatbot-container">
       {/* Chat Window */}
-      <div className={`chatbot-window ${isOpen ? 'open' : 'closed'} ${isExpanded ? 'expanded' : ''}`}>
+      <div className={`chatbot-window ${isOpen ? 'open' : 'closed'} ${isFullscreen ? 'fullscreen' : ''}`}>
         <div className="chatbot-header">
           <h4>Fredbot</h4> <p>(Powered by OpenAI)</p>
           <div className="chatbot-header-buttons">
-            <button className="expand-btn" onClick={toggleExpand}>
-              {isExpanded ? <FaCompress /> : <FaExpand />}
+            <button className="expand-btn" onClick={() => setIsFullscreen(!isFullscreen)}>
+              {isFullscreen ? <FaCompress /> : <FaExpand />}
             </button>
             <button className="clear-btn" onClick={clearChat}>
               <FaTrash />
