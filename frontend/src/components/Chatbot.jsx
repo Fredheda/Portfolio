@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import { FaComments, FaTimes, FaTrash, FaExpand, FaCompress } from 'react-icons/fa'; // Import icons for expand and compress
+import React, { useState, useEffect } from 'react';
+import { FaComments, FaTimes, FaTrash, FaExpand, FaCompress } from 'react-icons/fa';
 import DOMPurify from 'dompurify';
 import './Chatbot.css';
 
 const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false); // New state to track fullscreen mode
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
 
@@ -85,6 +85,20 @@ const Chatbot = () => {
   const clearChat = () => {
     setMessages([]);
   };
+
+  // Prevent body scrolling when chatbot is fullscreen
+  useEffect(() => {
+    if (isFullscreen) {
+      document.body.style.overflow = 'hidden'; // Disable body scroll
+    } else {
+      document.body.style.overflow = ''; // Restore body scroll
+    }
+
+    // Clean up on unmount
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isFullscreen]);
 
   return (
     <div className="chatbot-container">
