@@ -72,6 +72,7 @@
   transition: transform 0.3s ease, opacity 0.3s ease, width 0.3s, height 0.3s;
 }
 
+/* Header Styling */
 .chatbot-header {
   background-color: #007bff;
   color: white;
@@ -95,13 +96,16 @@
   font-size: 1rem;
 }
 
+/* Header Buttons */
 .chatbot-header-buttons {
   display: flex;
   gap: 8px;
   position: absolute;
   top: 50%;
   right: 12px;
-  transform: translateY(-50%); /* Vertically center the buttons */
+  transform: translateY(-50%);
+  /* Safari Specific Enhancements */
+  -webkit-transform: translateY(-50%);
 }
 
 .expand-btn,
@@ -112,6 +116,8 @@
   color: white;
   cursor: pointer;
   transition: color 0.3s ease;
+  /* Safari Specific Enhancements */
+  -webkit-transition: color 0.3s ease;
 }
 
 .expand-btn:hover {
@@ -126,6 +132,7 @@
   color: #ccc;
 }
 
+/* Chat Body */
 .chatbot-body {
   flex: 1;
   padding: 15px;
@@ -161,6 +168,7 @@
   border-top-left-radius: 0;
 }
 
+/* Chat Footer */
 .chatbot-footer {
   display: flex;
   align-items: center;
@@ -176,6 +184,8 @@
   border-radius: 20px;
   outline: none;
   transition: border-color 0.3s ease;
+  /* Safari Specific Enhancements */
+  -webkit-transition: border-color 0.3s ease;
 }
 
 .chatbot-footer input:focus {
@@ -191,6 +201,8 @@
   border-radius: 20px;
   cursor: pointer;
   transition: background-color 0.3s ease, transform 0.2s ease;
+  /* Safari Specific Enhancements */
+  -webkit-transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .chatbot-footer button:hover {
@@ -202,10 +214,12 @@
   transform: translateY(0);
 }
 
+/* Hide Scrollbar */
 .chatbot-body::-webkit-scrollbar {
   width: 0;
 }
 
+/* Responsive Styles */
 @media (max-width: 768px) {
   .chatbot-container {
     bottom: 15px;
@@ -275,10 +289,11 @@
     flex-shrink: 0; /* Prevent shrinking */
   }
 
-  /* Ensure header buttons are visible and properly positioned */
+  /* Adjust Header Buttons for Mobile */
   .chatbot-header-buttons {
-    top: 10px; /* Adjust as needed */
-    right: 10px; /* Adjust as needed */
+    top: 10px;    /* Adjust top position */
+    right: 10px;  /* Adjust right position */
     transform: none; /* Remove vertical centering transform */
+    -webkit-transform: none; /* Safari Specific Enhancement */
   }
 }
