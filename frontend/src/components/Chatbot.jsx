@@ -99,17 +99,16 @@ const Chatbot = () => {
 
   // Prevent body scrolling when chatbot is fullscreen
   useEffect(() => {
-    if (isFullscreen) {
-      document.body.style.overflow = 'hidden'; // Disable body scroll
+    if (isOpen && isFullscreen && window.innerWidth <= 768) {
+      document.body.style.overflow = 'hidden';
     } else {
-      document.body.style.overflow = ''; // Restore body scroll
+      document.body.style.overflow = 'auto';
     }
-
-    // Clean up on unmount
+  
     return () => {
-      document.body.style.overflow = '';
+      document.body.style.overflow = 'auto';
     };
-  }, [isFullscreen]);
+  }, [isOpen, isFullscreen]);
 
   return (
     <div className="chatbot-container">

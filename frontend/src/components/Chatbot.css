@@ -320,10 +320,14 @@
     overflow: hidden !important;
   }
 
-  @supports (-webkit-touch-callout: none) {
-    .chatbot-window.fullscreen {
-      height: -webkit-fill-available !important;
-    }
+  .chatbot-window.closed {
+    overflow: initial !important;
+  }
+
+  .chatbot-window.closed + body {
+    overflow: auto !important;
+    position: static !important;
+    height: auto !important;
   }
 
   .chatbot-window.fullscreen .chatbot-header {
@@ -344,10 +348,13 @@
     min-height: 60px;
   }
 
-  /* Additional Safari-specific fix */
   @supports (-webkit-touch-callout: none) {
     .chatbot-window.fullscreen {
-      height: -webkit-fill-available;
+      height: -webkit-fill-available !important;
+    }
+
+    .chatbot-window.closed {
+      height: auto !important;
     }
   }
 }
