@@ -61,15 +61,32 @@
 }
 
 .chatbot-window.fullscreen {
-  width: 100vw;
-  height: 100vh;
-  bottom: 0;
-  right: 0;
-  border-radius: 0;
-  overflow: hidden;
-  transform: translateY(0); /* Ensure transform is reset */
-  transform-origin: bottom right; /* Ensure transform origin remains bottom right */
-  transition: transform 0.3s ease, opacity 0.3s ease, width 0.3s, height 0.3s;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-height: -webkit-fill-available !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  transform: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  z-index: 9999 !important;
+}
+
+.chatbot-window.fullscreen .chatbot-body {
+  flex: 1 1 auto !important;
+  height: 0 !important; /* This forces the body to take remaining space */
+  min-height: 0 !important;
+  overflow-y: auto !important;
+}
+
+.chatbot-window.fullscreen .chatbot-header,
+.chatbot-window.fullscreen .chatbot-footer {
+  flex: 0 0 auto !important;
 }
 
 /* Header Styling */

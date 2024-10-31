@@ -12,9 +12,20 @@ const Chatbot = () => {
   const toggleChatbot = () => {
     setIsOpen(!isOpen);
     if (window.innerWidth <= 768) {
-      setIsFullscreen(!isOpen);
+      setIsFullscreen(true);
     }
   };
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth <= 768 && isOpen) {
+        setIsFullscreen(true);
+      }
+    };
+
+  window.addEventListener('resize', handleResize);
+  return () => window.removeEventListener('resize', handleResize);
+}, [isOpen]);
 
   const handleInputChange = (event) => {
     setInput(event.target.value);
