@@ -242,6 +242,7 @@
     padding: 16px;
     flex-direction: column; /* Stack title and subtitle vertically */
     align-items: center;    /* Center items horizontally */
+    justify-content: center; /* Ensure vertical centering */
   }
 
   .chatbot-header h4 {
@@ -272,5 +273,12 @@
   .chatbot-header,
   .chatbot-footer {
     flex-shrink: 0; /* Prevent shrinking */
+  }
+
+  /* Ensure header buttons are visible and properly positioned */
+  .chatbot-header-buttons {
+    top: 10px; /* Adjust as needed */
+    right: 10px; /* Adjust as needed */
+    transform: none; /* Remove vertical centering transform */
   }
 }
