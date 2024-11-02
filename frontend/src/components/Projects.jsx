@@ -2,47 +2,42 @@ import React from 'react';
 import Slider from 'react-slick';
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-import './projects.css';
 
 // Custom arrow components
-const PrevArrow = ({ className, onClick }) => {
-    return (
-        <div className={className} onClick={onClick}>
-            <span className="custom-arrow">←</span>
-        </div>
-    );
+const PrevArrow = ({ onClick }) => {
+  return (
+    <div className="custom-arrow custom-prev" onClick={onClick}>
+      <span className="text-xl text-white">←</span>
+    </div>
+  );
 };
 
-const NextArrow = ({ className, onClick }) => {
-    return (
-        <div className={className} onClick={onClick}>
-            <span className="custom-arrow">→</span>
-        </div>
-    );
+const NextArrow = ({ onClick }) => {
+  return (
+    <div className="custom-arrow custom-next" onClick={onClick}>
+      <span className="text-xl text-white">→</span>
+    </div>
+  );
 };
 
 const Projects = () => {
   const projects = [
     {
-      image: "/images/arduino-robot.jpg",
       title: "Arduino Bin-Picking Robot",
       description: "Developed a sophisticated robotic arm using Arduino, capable of identifying and picking objects from a bin.",
       link: "https://github.com/Fredheda/Arduino-Bin-Picking"
     },
     {
-      image: "/images/project2.jpg",
       title: "Uber Rides in New York City",
       description: "An analysis of Uber rides in NYC, exploring the impact of weather and time on ride demand.",
       link: "https://github.com/Fredheda/NYC-Uber-Rides"
     },
     {
-      image: "/images/project3.jpg",
       title: "Chatbot Research Assistant",
       description: "Built a chatbot that helps researchers find papers and articles on their topic of interest.",
       link: "https://github.com/Fredheda/Fredbot"
     },
     {
-      image: "/images/project4.jpg",
       title: "TFL Status Checker",
       description: "A web app that checks the status of London's public transportation (TFL) and sends notifications.",
       link: "https://github.com/Fredheda/TFL_Status"
@@ -77,15 +72,15 @@ const Projects = () => {
   };
 
   return (
-    <section id="projects" className="projects-section">
-      <h2 className="projects-title">My Projects</h2>
+    <section id="projects" className="bg-gray-100 p-16 rounded-[15px] shadow-lg max-w-[1600px] mx-auto my-2.5 text-center overflow-hidden font-montserrat">
+      <h2 className="text-2xl text-gray-800 mb-5 mt-1 font-semibold">My Projects</h2>
       <Slider {...settings}>
         {projects.map((project, index) => (
-          <div className="project-card" key={index}>
-            <div className="project-details">
-              <h3>{project.title}</h3>
-              <p>{project.description}</p>
-              <a href={project.link} className="project-link" target="_blank" rel="noopener noreferrer"> Learn More</a>
+          <div className="bg-white rounded-[15px] shadow-lg overflow-hidden p-5 h-[400px] w-[300px] transition-transform duration-300 ease-in-out cursor-pointer mx-auto hover:transform hover:-translate-y-1 hover:shadow-2xl" key={index}>
+            <div className="p-3 text-left">
+              <h3 className="text-lg text-blue-600 mb-2 font-semibold">{project.title}</h3>
+              <p className="text-sm text-gray-600 leading-6 mb-3">{project.description}</p>
+              <a href={project.link} className="inline-block text-blue-600 font-semibold no-underline border-2 border-blue-600 py-2 px-4 rounded-full transition-colors duration-300 ease-in-out hover:bg-blue-600 hover:text-white" target="_blank" rel="noopener noreferrer">Learn More</a>
             </div>
           </div>
         ))}

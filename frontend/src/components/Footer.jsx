@@ -1,13 +1,14 @@
 import React from 'react';
-import { Link } from 'react-router-dom'; // Import Link for routing
-import './footer.css'; // Import the CSS
+import { Link } from 'react-router-dom';
 
 function Footer() {
   return (
-    <footer>
-      <p>
+    <footer className="bg-gray-800 py-5 px-5 text-center">
+      <p className="inline-block m-0 text-sm text-white">
         &copy; {new Date().getFullYear()} Frederik Heda |{' '}
-        <Link to="/privacy-policy">Privacy Policy</Link>
+        <Link to="/privacy-policy" className="text-white no-underline hover:underline">
+          Privacy Policy
+        </Link>
       </p>
     </footer>
   );

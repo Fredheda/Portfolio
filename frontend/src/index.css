@@ -1,13 +1,41 @@
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.custom-arrow {
+  background-color: #333 !important;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+.custom-prev {
+  left: -50px; /* Adjust as needed */
+}
+
+.custom-next {
+  right: -50px; /* Adjust as needed */
+}
+
+.custom-arrow:hover {
+  background-color: #222 !important;
+}
+
+.custom-arrow span {
+  font-size: 20px;
+  color: #FFFFFF;
+}
+
+/* Hide default slick arrows */
+.slick-prev:before, .slick-next:before {
+  content: none !important;
 }

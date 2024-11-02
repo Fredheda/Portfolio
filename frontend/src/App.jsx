@@ -1,5 +1,4 @@
 import React from 'react';
-import './App.css';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Header from './components/Headers';
 import About from './components/About';
@@ -11,28 +10,31 @@ import PrivacyPolicy from './components/PrivacyPolicy';
 function App() {
   return (
     <Router>
-      <div id="root">
-        <Header />
-        <main>
+      <div className="flex flex-col min-h-screen bg-white">
+        <Header /> {/* Update Header component with: className="bg-gray-800 text-white text-center py-6" */}
+        <main className="flex-1 p-8">
           <Routes>
             <Route path="/" element={<MainContent />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           </Routes>
         </main>
-        <Footer />
+        <Footer /> {/* Update Footer component with: className="bg-gray-800 text-white text-center py-6" */}
+        <Chatbot />
       </div>
     </Router>
   );
 }
 
-// Separate component for main content to use in routing
 function MainContent() {
   return (
-    <>
-      <About />
-      <Projects />
-      <Chatbot />
-    </>
+    <div className="space-y-8">
+      <section className="mb-8">
+        <About />
+      </section>
+      <section className="mb-8">
+        <Projects />
+      </section>
+    </div>
   );
 }
 
