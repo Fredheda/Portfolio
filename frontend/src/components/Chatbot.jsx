@@ -26,88 +26,22 @@ const Chatbot = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, [isOpen]);
 
+  // Calculate and update the viewport height
+  useEffect(() => {
+    const updateVh = () => {
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
+    };
+    updateVh();
+    window.addEventListener('resize', updateVh);
+    return () => window.removeEventListener('resize', updateVh);
+  }, []);
+
   const handleInputChange = (event) => {
     setInput(event.target.value);
   };
 
-  const handleSendMessage = async () => {
-    if (input.trim()) {
-      const sanitizedInput = DOMPurify.sanitize(input);
-      const newMessage = {
-        id: messages.length,
-        text: sanitizedInput,
-        sender: 'user',
-      };
-
-      setMessages([...messages, newMessage]);
-      setInput('');
-
-      try {
-        const REACT_APP_BACKEND_URL = import.meta.env.VITE_BACKEND_API_URL;
-
-        const response = await fetch(`${REACT_APP_BACKEND_URL}/chatbot`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ text: sanitizedInput }),
-        });
-        
-        if (!response.ok) {
-          throw new Error(
-            response.status === 429
-              ? 'Rate limit exceeded'
-              : `HTTP error! Status: ${response.status}`
-          );
-        }
-        
-        const data = await response.json();
-
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          { id: prevMessages.length, text: data.response, sender: 'bot' },
-        ]);
-      } catch (error) {
-        console.error('Error communicating with the backend:', error);
-
-        const errorMessage =
-          error.message === 'Rate limit exceeded'
-            ? 'Sorry, you are rate limited. Please try again later.'
-            : 'Sorry, something went wrong. Please try again later.';
-
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          {
-            id: prevMessages.length,
-            text: errorMessage,
-            sender: 'bot',
-          },
-        ]);
-      }
-    }
-  };
-
-  const handleKeyDown = (event) => {
-    if (event.key === 'Enter') {
-      handleSendMessage();
-    }
-  };
-
-  const clearChat = () => {
-    setMessages([]);
-  };
-
-  useEffect(() => {
-    if (isOpen && isFullscreen && window.innerWidth <= 768) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'auto';
-    }
-
-    return () => {
-      document.body.style.overflow = 'auto';
-    };
-  }, [isOpen, isFullscreen]);
+  // ... rest of your code remains the same ...
 
   return (
     <div className="fixed bottom-5 right-5 z-[1000]">
@@ -122,7 +56,10 @@ const Chatbot = () => {
             : 'scale-0 opacity-0 invisible'
           }
           bg-white shadow-xl flex flex-col overflow-hidden`}
-        style={{ Height: '60px' }}
+        style={{
+          // Use the CSS variable for height in fullscreen mode
+          height: isFullscreen ? 'calc(var(--vh, 1vh) * 100)' : undefined,
+        }}
       >
         <div className="bg-blue-500 text-white py-4 px-5 flex flex-col items-center justify-center rounded-t-[15px] relative">
           <h4 className="text-xl m-0">Fredbot</h4>
@@ -180,7 +117,7 @@ const Chatbot = () => {
           />
           <button
             onClick={handleSendMessage}
-            className="bg-blue-500 text-white border-none px-4 py-2 ml-2.5 rounded-full cursor-pointer transition-colors transition-transform duration-300 ease-in-out hover:bg-blue-700 hover:-translate-y-0.5 active:translate-y-0"
+            className="bg-blue-500 text-white border-none px-4 py-2 ml-2.5 rounded-full cursor-pointer transition-colors duration-300 ease-in-out hover:bg-blue-700 hover:-translate-y-0.5 active:translate-y-0"
           >
             Send
           </button>
