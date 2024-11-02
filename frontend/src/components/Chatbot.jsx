@@ -122,6 +122,7 @@ const Chatbot = () => {
             : 'scale-0 opacity-0 invisible'
           }
           bg-white shadow-xl flex flex-col overflow-hidden`}
+        style={{ minHeight: '60px' }}
       >
         <div className="bg-blue-500 text-white py-4 px-5 flex flex-col items-center justify-center rounded-t-[15px] relative">
           <h4 className="text-xl m-0">Fredbot</h4>
@@ -159,9 +160,10 @@ const Chatbot = () => {
                   : 'bg-gray-300 text-gray-800 self-start text-left rounded-tl-none'
               }`}
             >
-              <p className="m-0"
-              dangerouslySetInnerHTML={{
-                __html: DOMPurify.sanitize(message.text),
+              <p
+                className="m-0"
+                dangerouslySetInnerHTML={{
+                  __html: DOMPurify.sanitize(message.text),
                 }}
               ></p>
             </div>
