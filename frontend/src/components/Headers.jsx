@@ -42,7 +42,6 @@ function Header() {
           className="font-montserrat text-xl font-semibold bg-transparent border-none text-white cursor-pointer hover:underline lg:text-lg"
           onClick={() => handleNavClick('contact')}
         >
-          Contact
         </button>
       </nav>
     </header>
