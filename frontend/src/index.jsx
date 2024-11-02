@@ -1,9 +1,9 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
-import './index.css';
+import { createRoot } from 'react-dom/client';
 import App from './App';
+import './index.css';
 
-// Dynamically set the CSP with environment variables
+// CSP Meta Tag with Tailwind-compatible settings
 const cspMetaTag = document.createElement('meta');
 cspMetaTag.setAttribute('http-equiv', 'Content-Security-Policy');
 cspMetaTag.setAttribute(
@@ -14,7 +14,7 @@ cspMetaTag.setAttribute(
     script-src 'self'; 
     style-src 'self' 'unsafe-inline'; 
     connect-src 'self' ${import.meta.env.VITE_BACKEND_API_URL}; 
-    font-src 'self'; 
+    font-src 'self' https://fonts.gstatic.com;
     object-src 'none'; 
     base-uri 'self'; 
     form-action 'self';
@@ -22,4 +22,9 @@ cspMetaTag.setAttribute(
 );
 document.head.appendChild(cspMetaTag);
 
-ReactDOM.render(<App />, document.getElementById('root'));
+const root = createRoot(document.getElementById('root'));
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
