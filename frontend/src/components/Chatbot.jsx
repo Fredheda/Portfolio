@@ -41,7 +41,84 @@ const Chatbot = () => {
     setInput(event.target.value);
   };
 
-  // ... rest of your code remains the same ...
+  const handleSendMessage = async () => {
+    if (input.trim()) {
+      const sanitizedInput = DOMPurify.sanitize(input);
+      const newMessage = {
+        id: messages.length,
+        text: sanitizedInput,
+        sender: 'user',
+      };
+
+      setMessages([...messages, newMessage]);
+      setInput('');
+
+      try {
+        const REACT_APP_BACKEND_URL = import.meta.env.VITE_BACKEND_API_URL;
+
+        const response = await fetch(`${REACT_APP_BACKEND_URL}/chatbot`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ text: sanitizedInput }),
+        });
+        
+        if (!response.ok) {
+          throw new Error(
+            response.status === 429
+              ? 'Rate limit exceeded'
+              : `HTTP error! Status: ${response.status}`
+          );
+        }
+        
+        const data = await response.json();
+
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          { id: prevMessages.length, text: data.response, sender: 'bot' },
+        ]);
+      } catch (error) {
+        console.error('Error communicating with the backend:', error);
+
+        const errorMessage =
+          error.message === 'Rate limit exceeded'
+            ? 'Sorry, you are rate limited. Please try again later.'
+            : 'Sorry, something went wrong. Please try again later.';
+
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          {
+            id: prevMessages.length,
+            text: errorMessage,
+            sender: 'bot',
+          },
+        ]);
+      }
+    }
+  };
+
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter') {
+      handleSendMessage();
+    }
+  };
+
+  const clearChat = () => {
+    setMessages([]);
+  };
+
+  useEffect(() => {
+    if (isOpen && isFullscreen && window.innerWidth <= 768) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [isOpen, isFullscreen]);
 
   return (
     <div className="fixed bottom-5 right-5 z-[1000]">
@@ -61,6 +138,7 @@ const Chatbot = () => {
           height: isFullscreen ? 'calc(var(--vh, 1vh) * 100)' : undefined,
         }}
       >
+        {/* Header */}
         <div className="bg-blue-500 text-white py-4 px-5 flex flex-col items-center justify-center rounded-t-[15px] relative">
           <h4 className="text-xl m-0">Fredbot</h4>
           <p className="text-base m-0">(Powered by OpenAI)</p>
@@ -87,7 +165,9 @@ const Chatbot = () => {
             </button>
           </div>
         </div>
-        <div className="flex-1 p-4 overflow-y-auto text-sm flex flex-col bg-gray-100">
+        {/* Message Container */}
+ <div className="flex-1 p-4 overflow-y-auto text-sm flex flex-col bg-gray-100">
+          {/* Messages */}
           {messages.map((message) => (
             <div
               key={message.id}
@@ -106,6 +186,7 @@ const Chatbot = () => {
             </div>
           ))}
         </div>
+        {/* Input */}
         <div className="flex items-center p-2.5 border-t border-gray-300 bg-white">
           <input
             type="text"
@@ -116,7 +197,7 @@ const Chatbot = () => {
             className="flex-1 p-2 border border-gray-300 rounded-full outline-none transition-colors duration-300 ease-in-out focus:border-blue-500"
           />
           <button
-            onClick={handleSendMessage}
+onClick={handleSendMessage}
             className="bg-blue-500 text-white border-none px-4 py-2 ml-2.5 rounded-full cursor-pointer transition-colors duration-300 ease-in-out hover:bg-blue-700 hover:-translate-y-0.5 active:translate-y-0"
           >
             Send
@@ -124,6 +205,7 @@ const Chatbot = () => {
         </div>
       </div>
 
+      {/* Chatbot Toggle Button */}
       <div
         className={`bg-blue-500 text-white rounded-full p-3 cursor-pointer shadow-lg 
           flex items-center justify-center transition-all duration-300 ease-in-out 
