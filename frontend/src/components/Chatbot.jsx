@@ -122,7 +122,7 @@ const Chatbot = () => {
             : 'scale-0 opacity-0 invisible'
           }
           bg-white shadow-xl flex flex-col overflow-hidden`}
-        style={{ minHeight: '60px' }}
+        style={{ Height: '60px' }}
       >
         <div className="bg-blue-500 text-white py-4 px-5 flex flex-col items-center justify-center rounded-t-[15px] relative">
           <h4 className="text-xl m-0">Fredbot</h4>
