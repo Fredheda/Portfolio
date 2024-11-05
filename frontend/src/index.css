@@ -39,3 +39,35 @@
 .slick-prev:before, .slick-next:before {
   content: none !important;
 }
+
+.privacy-policy-container {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
+
+.privacy-policy-content {
+  max-width: 800px;
+  text-align: left;
+}
+
+.privacy-policy-content h1,
+.privacy-policy-content h2,
+.privacy-policy-content h3,
+.privacy-policy-content h4 {
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+.privacy-policy-content p,
+.privacy-policy-content ul {
+  margin-bottom: 20px;
+}
+
+.privacy-policy-content ul {
+  padding-left: 20px;
+}
+
+.privacy-policy-content li {
+  margin-bottom: 10px;
+}
