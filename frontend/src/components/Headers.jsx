@@ -19,31 +19,12 @@ function Header() {
   };
 
   return (
-    <header className="flex flex-col lg:flex-row justify-center items-center p-2.5 bg-gray-800 text-white relative">
+    <header className="flex flex-col lg:flex-row justify-left items-center p-2.5 bg-purple-950 text-white relative">
       <h1 className="font-montserrat text-xl font-semibold m-0 mb-2.5 lg:mb-0 lg:mr-5">
         <RouterLink to="/" className="text-white no-underline">
           Frederik Heda
         </RouterLink>
       </h1>
-      <nav className="flex flex-col lg:flex-row gap-2.5 lg:gap-5">
-        <button 
-          className="font-montserrat text-xl font-semibold bg-transparent border-none text-white cursor-pointer hover:underline lg:text-lg"
-          onClick={() => handleNavClick('about')}
-        >
-          About
-        </button>
-        <button 
-          className="font-montserrat text-xl font-semibold bg-transparent border-none text-white cursor-pointer hover:underline lg:text-lg"
-          onClick={() => handleNavClick('projects')}
-        >
-          Projects
-        </button>
-        <button 
-          className="font-montserrat text-xl font-semibold bg-transparent border-none text-white cursor-pointer hover:underline lg:text-lg"
-          onClick={() => handleNavClick('contact')}
-        >
-        </button>
-      </nav>
     </header>
   );
 }
