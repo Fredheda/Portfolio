@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const SkillSet = ({ title, details }) => {
+const ExpandableBox = ({ title, details }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
@@ -27,4 +27,4 @@ const SkillSet = ({ title, details }) => {
   );
 };
 
-export default SkillSet;
+export default ExpandableBox;

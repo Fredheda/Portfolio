@@ -1,32 +1,37 @@
 import React from 'react';
-import { Link as ScrollLink, animateScroll } from 'react-scroll';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
 
-function Header() {
-  const navigate = useNavigate();
-
-  const handleNavClick = (sectionId) => {
-    if (window.location.pathname !== '/') {
-      navigate('/'); 
-    }
-    
-    setTimeout(() => {
-      animateScroll.scrollTo(document.getElementById(sectionId).offsetTop - 70, {
-        duration: 100,
-        smooth: true,
-      });
-    }, 20); 
-  };
-
+const Header = () => {
   return (
-    <header className="flex flex-col lg:flex-row justify-left items-center p-2.5 bg-purple-950 text-white relative">
-      <h1 className="font-montserrat text-xl font-semibold m-0 mb-2.5 lg:mb-0 lg:mr-5">
+    <header className="flex flex-row justify-between items-center p-2.5 bg-purple-950 text-white relative">
+      <h1 className="font-bebas-neue text-xl italic m-0">
         <RouterLink to="/" className="text-white no-underline">
-          Frederik Heda
+          Home
         </RouterLink>
       </h1>
+      <div className="flex items-center gap-4 mr-4">
+        <a href="mailto:frederik.heda@gmx.net" className="text-white no-underline hover:underline text-2xl">
+          <i className="fas fa-envelope"></i>
+        </a>
+        <a
+          href="https://www.linkedin.com/in/frederik-heda/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-white no-underline hover:underline text-2xl"
+        >
+          <i className="fab fa-linkedin"></i>
+        </a>
+        <a
+          href="https://github.com/Fredheda?tab=repositories"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-white no-underline hover:underline text-2xl"
+        >
+          <i className="fab fa-github"></i>
+        </a>
+      </div>
     </header>
   );
-}
+};
 
 export default Header;
