@@ -1,27 +1,29 @@
 import React, { useState } from 'react';
 
-const ExpandableBox = ({ title, details }) => {
+const ExpandableBox = ({ title, details, children }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
+  const toggleExpand = () => {
+    setIsExpanded(!isExpanded);
+  };
+
   return (
-    <div
-      className={`mb-3 cursor-pointer p-1 border border-gray-800 rounded-lg transition-all duration-300 ease-in-out shadow-sm bg-purple-950 text-white ${
-        isExpanded ? 'bg-purple-950 shadow-lg' : ''
-      }`}
-      onClick={() => setIsExpanded(!isExpanded)}
-    >
-      <div className="flex justify-between items-center p-1">
-        <h4 className="text-lg font-medium mb-1 mt-1 flex-grow text-white">{title}</h4>
-        <span className={`text-xl transition-transform duration-300 ease-in-out ${isExpanded ? 'rotate-180' : ''}`}>
-          {isExpanded ? '▲' : '▼'}
-        </span>
-      </div>
+    <div className="bg-white p-4 rounded-lg shadow-lg mb-4">
+      <h3 className="text-xl font-semibold cursor-pointer" onClick={toggleExpand}>
+        {title} {isExpanded ? '▲' : '▼'}
+      </h3>
       {isExpanded && (
-        <ul className="text-base text-white leading-6 pl-4 transition-all duration-300 ease-in-out list-disc ml-5 mt-1 mb-1">
-          {details.map((detail, index) => (
-            <li key={index}>{detail}</li>
-          ))}
-        </ul>
+        <div className="mt-2">
+          {details ? (
+            <ul className="list-disc list-inside">
+              {details.map((detail, index) => (
+                <li key={index}>{detail}</li>
+              ))}
+            </ul>
+          ) : (
+            children
+          )}
+        </div>
       )}
     </div>
   );

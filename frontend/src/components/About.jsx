@@ -1,5 +1,5 @@
 import React from 'react';
-import ExpandableBox from './expandableBox';
+import ExpandableBox from './ExpandableBox';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
 const About = () => {
@@ -35,49 +35,50 @@ const About = () => {
         id="skills"
         className="bg-purple-100 py-2.5 px-5 rounded-[15px] shadow-lg w-full max-w-[1200px] mx-auto my-5 text-center font-montserrat"
       >
-        <div className="text-left mt-2.5">
-          <h3 className="text-2xl mb-4">Demonstrated Skills</h3>
-          <ExpandableBox
-            title="Machine Learning, Statistics & Software Engineering"
-            details={[
-              'Experience with Python',
-              'Time-Series Forecasting',
-              'Docker',
-              'DevOps',
-              'Kubernetes',
-              'AWS',
-              'Azure',
-              'OpenAI',
-              'APIs',
-              'LoRA',
-              'PEFT',
-            ]}
-          />
-          <ExpandableBox
-            title="Generative AI, Large Language Models & RAG Solutions"
-            details={[
-              'Developed internal Pip packages for automated evaluation of GenAI/LLM applications',
-              'Implemented generative AI solutions using large language models (LLM) with Azure OpenAI',
-              'Led the development & implementation of Retrieval Augmented Generation (RAG) solutions',
-            ]}
-          />
-          <ExpandableBox
-            title="Data Science, Time-Series Forecasting & Causal Inference"
-            details={[
-              'Led the data science workstream in demand management',
-              'Developed and deployed ML and analytics solutions',
-              'Spearheaded the development of predictive maintenance solutions using causal inference and anomaly detection',
-            ]}
-          />
-          <ExpandableBox
-            title="Computer Vision, Robotics & Microcontrollers"
-            details={[
-              'Implemented industrial bin-picking systems',
-              'Developed computer vision systems for process automation',
-              'Worked on robotics projects using TensorFlow and Arduino',
-            ]}
-          />
-        </div>
+        <ExpandableBox title="Demonstrated Skills">
+          <div className="text-left mt-2.5">
+            <ExpandableBox
+              title="Machine Learning, Statistics & Software Engineering"
+              details={[
+                'Experience with Python',
+                'Time-Series Forecasting',
+                'Docker',
+                'DevOps',
+                'Kubernetes',
+                'AWS',
+                'Azure',
+                'OpenAI',
+                'APIs',
+                'LoRA',
+                'PEFT',
+              ]}
+            />
+            <ExpandableBox
+              title="Generative AI, Large Language Models & RAG Solutions"
+              details={[
+                'Developed internal Pip packages for automated evaluation of GenAI/LLM applications',
+                'Implemented generative AI solutions using large language models (LLM) with Azure OpenAI',
+                'Led the development & implementation of Retrieval Augmented Generation (RAG) solutions',
+              ]}
+            />
+            <ExpandableBox
+              title="Data Science, Time-Series Forecasting & Causal Inference"
+              details={[
+                'Led the data science workstream in demand management',
+                'Developed and deployed ML and analytics solutions',
+                'Spearheaded the development of predictive maintenance solutions using causal inference and anomaly detection',
+              ]}
+            />
+            <ExpandableBox
+              title="Computer Vision, Robotics & Microcontrollers"
+              details={[
+                'Implemented industrial bin-picking systems',
+                'Developed computer vision systems for process automation',
+                'Worked on robotics projects using TensorFlow and Arduino',
+              ]}
+            />
+          </div>
+        </ExpandableBox>
       </section>
     </>
   );
