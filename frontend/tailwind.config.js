@@ -7,6 +7,8 @@ module.exports = {
     extend: {
       fontFamily: {
         'bebas-neue': ['"Bebas Neue"', 'sans-serif'],
+        'Pacifico': ['"Pacifico"', 'sans-serif'],
+        'permanent-marker': ['"Permanent Marker"', 'cursive'],
       },
     },
   },

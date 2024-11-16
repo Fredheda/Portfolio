@@ -4,7 +4,7 @@ import { Link as RouterLink } from 'react-router-dom';
 const Header = () => {
   return (
     <header className="flex flex-row justify-between items-center p-2.5 bg-purple-950 text-white relative">
-      <h1 className="font-bebas-neue text-xl italic m-0">
+      <h1 className="font-permanent-marker text-xl pl-3">
         <RouterLink to="/" className="text-white no-underline">
           Home
         </RouterLink>

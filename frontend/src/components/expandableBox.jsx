@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const ExpandableBox = ({ title, details, children }) => {
+const ExpandableBox = ({ title, details, children, className }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const toggleExpand = () => {
@@ -9,7 +9,10 @@ const ExpandableBox = ({ title, details, children }) => {
 
   return (
     <div className="p-1 rounded-lg">
-      <h3 className="text-xl font-semibold cursor-pointer" onClick={toggleExpand}>
+      <h3
+        className={`font-semibold cursor-pointer ${className}`}
+        onClick={toggleExpand}
+      >
         {title} {isExpanded ? '▲' : '▼'}
       </h3>
       {isExpanded && (

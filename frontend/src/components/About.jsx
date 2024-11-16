@@ -9,7 +9,7 @@ const About = () => {
         id="about"
         className="bg-gray-100 py-4 px-5 rounded-[15px] w-full max-w-[1200px] mx-auto my-4 text-center font-montserrat"
       >
-        <h2 className="font-bebas-neue text-2xl text-left text-black mb-5 font-semibold">About Me</h2>
+        <h2 className="font-permanent-marker text-2xl text-left text-black mb-5 font-semibold">About Me</h2>
 
         <div className="flex flex-col lg:flex-row items-center lg:items-start justify-center gap-5 mb-5">
           <div className="flex-grow min-w-[280px] text-base text-black leading-[1.8] text-left">
@@ -35,7 +35,7 @@ const About = () => {
         id="skills"
         className="bg-gray-100 py-1 px-2.5 rounded-[15px] shadow-lg w-full max-w-[1200px] mx-auto my-1 text-center font-montserrat flex flex-col"
       >
-        <ExpandableBox title="Demonstrated Skills">
+        <ExpandableBox title="Demonstrated Skills" className="font-permanent-marker text-2xl text-left text-black font-semibold">
           <div className="text-left mt-2.5">
             <ExpandableBox
               title="Machine Learning, Statistics & Software Engineering"

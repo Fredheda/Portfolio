@@ -72,11 +72,11 @@ const Projects = () => {
   };
 
   return (
-    <section id="projects" className="bg-gray-100 px-16 pt-2.5 pb-8 rounded-[15px] max-w-[1200px] mx-auto my-1 text-center overflow-hidden font-montserrat">
-      <h2 className="text-2xl text-black mb-5 mt-1 font-semibold">My Projects</h2>
+    <section id="projects" className="bg-gray-100 px-16 pt-2.5 pb-2.5 rounded-[15px] max-w-[1200px] mx-auto my-1 text-center overflow-hidden font-montserrat">
+      <h2 className="font-permanent-marker text-2xl text-left text-black mb-2.5 font-semibold -ml-11">My Projects</h2>
       <Slider {...settings}>
         {projects.map((project, index) => (
-          <div className="bg-white rounded-[15px] shadow-lg overflow-hidden p-5 h-[400px] w-[300px] transition-transform duration-300 ease-in-out cursor-pointer mx-auto hover:transform hover:-translate-y-1 hover:shadow-2xl" key={index}>
+          <div className="bg-white rounded-[15px] shadow-lg overflow-hidden p-2.5 h-[400px] w-[300px] transition-transform duration-300 ease-in-out cursor-pointer mx-auto hover:transform hover:-translate-y-1 hover:shadow-2xl" key={index}>
             <div className="p-3 text-left">
               <h3 className="text-lg text-black mb-2 font-semibold">{project.title}</h3>
               <p className="text-sm text-black-950 leading-6 mb-3">{project.description}</p>
