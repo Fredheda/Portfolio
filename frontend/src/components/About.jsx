@@ -1,5 +1,5 @@
 import React from 'react';
-import ExpandableBox from './ExpandableBox';
+import ExpandableBox from './expandableBox';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
 const About = () => {
@@ -7,13 +7,13 @@ const About = () => {
     <>
       <section
         id="about"
-        className="bg-purple-100 py-2.5 px-5 rounded-[15px] shadow-lg w-full max-w-[1200px] mx-auto my-5 text-center font-montserrat"
+        className="bg-gray-100 py-4 px-5 rounded-[15px] w-full max-w-[1200px] mx-auto my-4 text-center font-montserrat"
       >
-        <h2 className="font-bebas-neue text-2xl text-left text-gray-800 mb-5 font-semibold">About Me</h2>
+        <h2 className="font-bebas-neue text-2xl text-left text-black mb-5 font-semibold">About Me</h2>
 
-        <div className="flex flex-col lg:flex-row items-center lg:items-start justify-center gap-5 mb-7.5">
-          <div className="flex-grow min-w-[280px] text-base text-gray-600 leading-[1.8] p-2.5 text-left">
-            <div className="bg-purple-200 p-4 rounded-lg mb-4 shadow-lg">
+        <div className="flex flex-col lg:flex-row items-center lg:items-start justify-center gap-5 mb-5">
+          <div className="flex-grow min-w-[280px] text-base text-black leading-[1.8] text-left">
+            <div className="rounded-lg mb-4">
               <p>
                 <strong>Frederik</strong> is a senior data scientist at <strong>BP</strong>, where he spearheads digital innovation across the trading and shipping organisation. He is an <em>AI enthusiast</em> with a strong background in <strong>machine learning</strong>, <strong>statistics</strong>, and <strong>software engineering</strong>.
                 <br /><br />
@@ -33,7 +33,7 @@ const About = () => {
 
       <section
         id="skills"
-        className="bg-purple-100 py-2.5 px-5 rounded-[15px] shadow-lg w-full max-w-[1200px] mx-auto my-5 text-center font-montserrat"
+        className="bg-gray-100 py-1 px-2.5 rounded-[15px] shadow-lg w-full max-w-[1200px] mx-auto my-1 text-center font-montserrat flex flex-col"
       >
         <ExpandableBox title="Demonstrated Skills">
           <div className="text-left mt-2.5">

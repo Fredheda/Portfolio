@@ -2,72 +2,58 @@
 @tailwind components;
 @tailwind utilities;
 
-.custom-arrow {
-  background-color: #333 !important;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 1;
+@layer components {
+  .custom-arrow {
+    @apply bg-purple-950 rounded-full w-10 h-10 flex items-center justify-center cursor-pointer 
+    absolute top-1/2 -translate-y-1/2 z-10 transition-all duration-300 ease-in-out;
+  }
+
+  .custom-prev {
+    @apply -left-[50px];
+  }
+
+  .custom-next {
+    @apply -right-[50px];
+  }
+
+  .custom-arrow:hover {
+    @apply bg-gray-800;
+  }
+
+  .custom-arrow span {
+    @apply text-xl text-white;
+  }
+
+  .privacy-policy-container {
+    @apply flex justify-center p-5;
+  }
+
+  .privacy-policy-content {
+    @apply max-w-[800px] text-left;
+  }
+
+  .privacy-policy-content h1,
+  .privacy-policy-content h2,
+  .privacy-policy-content h3,
+  .privacy-policy-content h4 {
+    @apply mt-5 mb-2.5;
+  }
+
+  .privacy-policy-content p,
+  .privacy-policy-content ul {
+    @apply mb-5;
+  }
+
+  .privacy-policy-content ul {
+    @apply pl-5;
+  }
+
+  .privacy-policy-content li {
+    @apply mb-2.5;
+  }
 }
 
-.custom-prev {
-  left: -50px; /* Adjust as needed */
-}
-
-.custom-next {
-  right: -50px; /* Adjust as needed */
-}
-
-.custom-arrow:hover {
-  background-color: #222 !important;
-}
-
-.custom-arrow span {
-  font-size: 20px;
-  color: #FFFFFF;
-}
-
-/* Hide default slick arrows */
+/* Keep this if needed for slick slider override */
 .slick-prev:before, .slick-next:before {
   content: none !important;
-}
-
-.privacy-policy-container {
-  display: flex;
-  justify-content: center;
-  padding: 20px;
-}
-
-.privacy-policy-content {
-  max-width: 800px;
-  text-align: left;
-}
-
-.privacy-policy-content h1,
-.privacy-policy-content h2,
-.privacy-policy-content h3,
-.privacy-policy-content h4 {
-  margin-top: 20px;
-  margin-bottom: 10px;
-}
-
-.privacy-policy-content p,
-.privacy-policy-content ul {
-  margin-bottom: 20px;
-}
-
-.privacy-policy-content ul {
-  padding-left: 20px;
-}
-
-.privacy-policy-content li {
-  margin-bottom: 10px;
 }
