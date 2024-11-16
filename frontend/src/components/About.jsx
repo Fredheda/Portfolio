@@ -35,10 +35,11 @@ const About = () => {
         id="skills"
         className="bg-gray-100 py-1 px-2.5 rounded-[15px] shadow-lg w-full max-w-[1200px] mx-auto my-1 text-center font-montserrat flex flex-col"
       >
-        <ExpandableBox title="Demonstrated Skills" className="font-permanent-marker text-2xl text-left text-black font-semibold">
+          <ExpandableBox title="Demonstrated Skills" className="font-permanent-marker text-2xl text-left text-black font-semibold" defaultExpanded={true}>
           <div className="text-left mt-2.5">
             <ExpandableBox
               title="Machine Learning, Statistics & Software Engineering"
+              className="text-xl text-left text-black font-semibold"
               details={[
                 'Experience with Python',
                 'Time-Series Forecasting',
@@ -55,6 +56,7 @@ const About = () => {
             />
             <ExpandableBox
               title="Generative AI, Large Language Models & RAG Solutions"
+              className="text-xl text-left text-black font-semibold"
               details={[
                 'Developed internal Pip packages for automated evaluation of GenAI/LLM applications',
                 'Implemented generative AI solutions using large language models (LLM) with Azure OpenAI',
@@ -63,6 +65,7 @@ const About = () => {
             />
             <ExpandableBox
               title="Data Science, Time-Series Forecasting & Causal Inference"
+              className="text-xl text-left text-black font-semibold"
               details={[
                 'Led the data science workstream in demand management',
                 'Developed and deployed ML and analytics solutions',
@@ -71,6 +74,7 @@ const About = () => {
             />
             <ExpandableBox
               title="Computer Vision, Robotics & Microcontrollers"
+              className="text-xl text-left text-black font-semibold"
               details={[
                 'Implemented industrial bin-picking systems',
                 'Developed computer vision systems for process automation',

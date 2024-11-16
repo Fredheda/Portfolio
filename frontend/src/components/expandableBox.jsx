@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
-const ExpandableBox = ({ title, details, children, className }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+const ExpandableBox = ({ title, details, children, className, defaultExpanded = false }) => {
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
   const toggleExpand = () => {
     setIsExpanded(!isExpanded);
