@@ -7,7 +7,7 @@ const About = () => {
     <>
       <section
         id="about"
-        className="bg-gray-100 py-4 px-5 rounded-[15px] w-full max-w-[1200px] mx-auto my-4 text-center font-montserrat"
+        className="bg-gray-100 py-4 px-5 rounded-[15px] w-full max-w-[1200px] mx-auto mb-2.5 text-center font-montserrat"
       >
         <h2 className="font-permanent-marker text-2xl text-left text-black mb-5 font-semibold">About Me</h2>
 
@@ -32,10 +32,33 @@ const About = () => {
       </section>
 
       <section
-        id="skills"
-        className="bg-gray-100 py-1 px-2.5 rounded-[15px] shadow-lg w-full max-w-[1200px] mx-auto my-1 text-center font-montserrat flex flex-col"
+        id="website-info"
+        className="bg-gray-100 py-4 px-2.5 rounded-[15px] shadow-lg w-full max-w-[1200px] mx-auto my-2.5 text-center font-montserrat flex flex-col"
       >
-          <ExpandableBox title="Demonstrated Skills" className="font-permanent-marker text-2xl text-left text-black font-semibold" defaultExpanded={true}>
+        <ExpandableBox 
+          title="About This Website" 
+          className="font-permanent-marker text-2xl text-left text-black font-semibold"
+          defaultExpanded={true}
+        >
+          <div className="flex-grow min-w-[280px] text-base text-black leading-[1.8] text-left">
+            <div className="rounded-lg mb-4">
+              <p>
+                [Placeholder: Brief introduction about the website's purpose]
+                <br /><br />
+                [Placeholder: Technical stack and implementation details]
+                <br /><br />
+                [Placeholder: Features and functionality overview]
+              </p>
+            </div>
+          </div>
+        </ExpandableBox>
+      </section>
+
+      <section
+        id="skills"
+        className="bg-gray-100 py-4 px-2.5 rounded-[15px] shadow-lg w-full max-w-[1200px] mx-auto mt-2.5 text-center font-montserrat flex flex-col"
+      >
+          <ExpandableBox title="Demonstrated Skills" className="font-permanent-marker text-2xl text-left text-black font-semibold">
           <div className="text-left mt-2.5">
             <ExpandableBox
               title="Machine Learning, Statistics & Software Engineering"

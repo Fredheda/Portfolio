@@ -72,11 +72,10 @@ const Projects = () => {
   };
 
   return (
-    <section className="bg-gray-100 px-12 pt-2.5 pb-1 rounded-[15px] max-w-[1200px] mx-auto my-1 text-center overflow-hidden font-montserrat">
+    <section className="bg-gray-100 px-12 py-2 rounded-[15px] max-w-[1200px] mx-auto my-1 text-center overflow-hidden font-montserrat flex flex-col justify-center">
       <ExpandableBox 
         title="My Projects" 
         className="font-permanent-marker text-2xl text-left text-black font-semibold -ml-10"
-        defaultExpanded={true}
       >
         <div className="mt-2.5 pb-6">
           <Slider {...settings}>

@@ -27,11 +27,11 @@ function App() {
 
 function MainContent() {
   return (
-    <div className="space-y-4">
-      <section className="mb-1">
+    <div>
+      <section>
         <About />
       </section>
-      <section className="mb-1">
+      <section className="mb-2 py-2">
         <Projects />
       </section>
     </div>
