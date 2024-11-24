@@ -27,7 +27,7 @@ const About = () => {
               <br /><br />
               <strong>Passions 🏓</strong><br/>
               I'm a strong advocate for <em>democratising artificial intelligence</em> 🤝 and believe it can help us work smarter, not harder. I'm always excited to collaborate on innovative projects that push the boundaries of what's possible with AI.
-              <br/> In my free time, I enjoy playing <strong>table tennis</strong> 🏓, <strong>travelling</strong> 🌍, and <strong>learning new things</strong> 📚. I've also recently <em>"rediscovered"</em> e-books and am trying to listen to 1-2, mostly non-fiction, books every month.
+              <br/> In my free time, I enjoy playing <strong>table tennis</strong> 🏓, <strong>travelling</strong> 🌍, and <strong>learning new things</strong> 📚. I've also recently <em>"rediscovered"</em> audio-books and am trying to listen to 1-2, mostly non-fiction, books every month.
               </p>
             </div>
           </div>
@@ -72,50 +72,49 @@ const About = () => {
       >
           <ExpandableBox title="Demonstrated Skills" className="font-permanent-marker text-2xl text-left text-black font-semibold">
           <div className="text-left mt-2.5">
-            <ExpandableBox
-              title="Machine Learning, Statistics & Software Engineering"
-              className="text-xl text-left text-black font-semibold"
-              details={[
-                'Experience with Python',
-                'Time-Series Forecasting',
-                'Docker',
-                'DevOps',
-                'Kubernetes',
-                'AWS',
-                'Azure',
-                'OpenAI',
-                'APIs',
-                'LoRA',
-                'PEFT',
-              ]}
-            />
-            <ExpandableBox
-              title="Generative AI, Large Language Models & RAG Solutions"
-              className="text-xl text-left text-black font-semibold"
-              details={[
-                'Developed internal Pip packages for automated evaluation of GenAI/LLM applications',
-                'Implemented generative AI solutions using large language models (LLM) with Azure OpenAI',
-                'Led the development & implementation of Retrieval Augmented Generation (RAG) solutions',
-              ]}
-            />
-            <ExpandableBox
-              title="Data Science, Time-Series Forecasting & Causal Inference"
-              className="text-xl text-left text-black font-semibold"
-              details={[
-                'Led the data science workstream in demand management',
-                'Developed and deployed ML and analytics solutions',
-                'Spearheaded the development of predictive maintenance solutions using causal inference and anomaly detection',
-              ]}
-            />
-            <ExpandableBox
-              title="Computer Vision, Robotics & Microcontrollers"
-              className="text-xl text-left text-black font-semibold"
-              details={[
-                'Implemented industrial bin-picking systems',
-                'Developed computer vision systems for process automation',
-                'Worked on robotics projects using TensorFlow and Arduino',
-              ]}
-            />
+          <ExpandableBox
+            title="Machine Learning Engineering"
+            className="text-xl text-left text-black font-semibold"
+            details={[
+              '🔬 ML Development: TensorFlow, PyTorch, Scikit-learn | Deployed enterprise-grade ML models, e.g. demand forecasting, anomaly detection & clustering.',
+              '📊 Data Engineering: Built scalable data pipelines, e.g. for document processing and OCR',
+              '🔄 MLOps: Implemented CI/CD pipelines with Azure DevOps, AWS Codecommit & Sagemaker Pipelines for automated model training and deployment',
+              '📈 Time Series & Statistics: Developed forecasting models using ARIMA, Prophet, and custom deep learning architectures'
+            ]}
+          />
+
+          <ExpandableBox
+            title="Generative AI"
+            className="text-xl text-left text-black font-semibold"
+            details={[
+              '🤖 LLM Development: Azure OpenAI, LangChain, HuggingFace | Built enterprise-grade GenAI applications that deliver multi-million dollar value',
+              '🔍 RAG Systems: Developed production RAG solutions using custom retrieval systems',
+              '📚 Model Fine-tuning: Implemented LoRA and PEFT techniques for domain-specific LLM adaptation',
+              '🛠️ GenAI Tools: Created evaluation frameworks and productioned them as a reusable (internal) PIP library'
+            ]}
+          />
+
+          <ExpandableBox
+            title="Software Engineering"
+            className="text-xl text-left text-black font-semibold"
+            details={[
+              '☁️ Cloud Architecture: Designed and implemented solutions using AWS and Azure cloud services',
+              '🏗️ Infrastructure: Experienced in Docker, Kubernetes, and cloud-native application development',
+              '💻 Programming: Python, SQL, Matlab, JavaScript, React | Built full-stack applications and REST APIs',
+              '🔐 Best Practices: Test-driven development, code review, documentation, and agile methodologies'
+            ]}
+          />
+
+          <ExpandableBox
+            title="Leadership"
+            className="text-xl text-left text-black font-semibold"
+            details={[
+              '👥 Team Leadership: Led cross-discipline teams of data scientists, engineers and developers in delivering data & analytics solutions',
+              '🎯 Project Management: Managed end-to-end ML projects from conception to production deployment',
+              '🤝 Stakeholder Management: Collaborated with senior business leaders to align technical solutions with business objectives',
+              '📚 Knowledge Sharing: Created and led internal communities of practice with more than 750 members'
+            ]}
+          />
           </div>
         </ExpandableBox>
       </section>
