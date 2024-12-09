@@ -6,7 +6,11 @@ const Header = () => {
     <header className="flex flex-row justify-between items-center p-2.5 bg-purple-950 text-white relative">
       <h1 className="font-permanent-marker text-xl pl-3">
         <RouterLink to="/" className="text-white no-underline">
-          Home
+          <img 
+            src="/images/logo.png" 
+            alt="Frederik Heda Logo" 
+            className="h-10 w-auto"
+          />
         </RouterLink>
       </h1>
       <div className="flex items-center gap-4 mr-4">
