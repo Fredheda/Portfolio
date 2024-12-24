@@ -7,9 +7,14 @@ from pydantic import BaseModel
 import asyncio
 import os
 from LLM.openai_client import OpenAIClient
+from LLM.rag_client import ragClient
+from LLM.utils import llm_utils
+from LLM.tools.tool_orchestrator import ToolOrchestrator
 from response_generator import ResponseGenerator
 from LLM.prompts.prompt_manager import PromptManager
 from services.openai_content_safety_service import ContentSafetyService
+from azure.search.documents import SearchClient
+from azure.core.credentials import AzureKeyCredential
 
 
 app = FastAPI()
@@ -31,10 +36,23 @@ class Message(BaseModel):
     text: str
 
 # Initialize the OpenAI client and message generator
-openai_client = OpenAIClient()
 prompt_manager = PromptManager()
 content_safety = ContentSafetyService()
-response_generator = ResponseGenerator(openai_client, prompt_manager)
+tool_orchestrator = ToolOrchestrator()
+tools = tool_orchestrator.get_tools(["LLM/tools/retrieve_information"])
+openai_client = OpenAIClient(tools)
+search_client = SearchClient(
+            endpoint=os.getenv("azure_search_endpoint"),
+            index_name=os.getenv("azure_index_name"),
+            credential=AzureKeyCredential(os.getenv("azure_search_api_key"))
+            )
+
+llm_utils = llm_utils(openai_client, search_client, prompt_manager)
+rag_client = ragClient(openai_client, llm_utils, tools)
+
+
+
+response_generator = ResponseGenerator(rag_client, openai_client, prompt_manager)
 
 
 # Run the custom message generator function asynchronously
@@ -45,7 +63,7 @@ async def get_LLM_response(user_input: str) -> str:
     if flagged:
         return "Sorry, I cannot respond to that message."
     # Using asyncio to run the blocking function in a separate thread
-    response = await loop.run_in_executor(None, response_generator.generate_response, user_input)
+    response = await loop.run_in_executor(None, response_generator.generate_rag_response, user_input)
     return response
 
 @app.post("/chatbot")

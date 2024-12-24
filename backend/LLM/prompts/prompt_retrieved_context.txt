@@ -1,0 +1,11 @@
+
+--------------------------- Document {num} ---------------------------
+
+Document Name: {document_name}
+Document Description: (currently not available)
+
+Document Content:
+
+{content}
+
+------------------------------------------------------------------------

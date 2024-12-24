@@ -6,3 +6,4 @@ __pycache__
 dist
 testing.py
 security_prompts
+*data*
