@@ -30,7 +30,8 @@ class ragClient():
             arguments = json.loads(tool_calls[0].function.arguments)
             if tool_function_name == 'retrieve_information':
                 tool_call_results = self.llm_utils.retrieve_information(search_query=arguments['search_query'])
-                messages.append({"role": "assistant", "content": "The retrieve information tool was called with the following arguments: search_query='quaternions'."})
+                self.database_client.log_chatbot_interaction(arguments['search_query'], "tool_search_query", 0)
+                messages.append({"role": "assistant", "content": f"The retrieve information tool was called with the following arguments: search_query={arguments['search_query']}."})
                 messages.append({"role": "assistant", "content": tool_call_results})
                 response = self.chatclient.generate_chat_response(messages)
         
