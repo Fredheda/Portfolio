@@ -50,7 +50,7 @@ search_client = SearchClient(
             )
 
 llm_utils = llm_utils(openai_client, search_client, prompt_manager)
-rag_client = ragClient(openai_client, llm_utils, database_client, tools)
+rag_client = ragClient(openai_client, llm_utils, database_client, prompt_manager)
 
 
 

@@ -5,5 +5,7 @@
     "prompt_skeleton": "LLM/prompts/prompt_skeleton.txt",
     "few_shot_examples": "LLM/prompts/few_shot_examples.txt",
     "prompt_retrieved_context": "LLM/prompts/prompt_retrieved_context.txt",
-    "content_safety_prompt": "LLM/prompts/security_prompts/content_safety_prompt.txt"
+    "content_safety_prompt": "LLM/prompts/security_prompts/content_safety_prompt.txt",
+    "tool_base_prompt": "LLM/prompts/tool_base_prompt.txt"
+
 }

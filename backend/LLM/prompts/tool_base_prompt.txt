@@ -1,0 +1,5 @@
+The {tool_name} tool was called with the following arguments: {argument}
+
+The output from the tool call is given below:
+
+{tool_call_content}
