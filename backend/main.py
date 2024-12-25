@@ -7,6 +7,7 @@ from pydantic import BaseModel
 import asyncio
 import os
 from LLM.openai_client import OpenAIClient
+from services.database_client import database_client
 from LLM.rag_client import ragClient
 from LLM.utils import llm_utils
 from LLM.tools.tool_orchestrator import ToolOrchestrator
@@ -37,6 +38,7 @@ class Message(BaseModel):
 
 # Initialize the OpenAI client and message generator
 prompt_manager = PromptManager()
+database_client = database_client()
 content_safety = ContentSafetyService()
 tool_orchestrator = ToolOrchestrator()
 tools = tool_orchestrator.get_tools(["LLM/tools/retrieve_information"])
@@ -48,11 +50,11 @@ search_client = SearchClient(
             )
 
 llm_utils = llm_utils(openai_client, search_client, prompt_manager)
-rag_client = ragClient(openai_client, llm_utils, tools)
+rag_client = ragClient(openai_client, llm_utils, database_client, tools)
 
 
 
-response_generator = ResponseGenerator(rag_client, openai_client, prompt_manager)
+response_generator = ResponseGenerator(rag_client, openai_client, database_client, prompt_manager)
 
 
 # Run the custom message generator function asynchronously

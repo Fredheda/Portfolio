@@ -1,13 +1,15 @@
 from dotenv import load_dotenv
 from LLM.LLMClient import LLMClient
 from LLM.utils import llm_utils
+from services.database_client import database_client
 import json
 _ = load_dotenv()
 
 class ragClient():
-    def __init__(self, chatclient: LLMClient, llm_utils: llm_utils,  tools):
+    def __init__(self, chatclient: LLMClient, llm_utils: llm_utils, database_client: database_client,  tools):
         self.chatclient = chatclient
         self.llm_utils = llm_utils
+        self.database_client = database_client
         self.tools = tools
         
     def generate_rag_response(self, messages: list) -> str:
