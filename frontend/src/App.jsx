@@ -10,7 +10,7 @@ import PrivacyPolicy from './components/PrivacyPolicy';
 function App() {
   return (
     <Router>
-      <div className="flex flex-col min-h-screen bg-purple-950">
+      <div className="flex flex-col min-h-screen bg-stone-950">
         <Header /> {/* Update Header component with: className="bg-gray-800 text-white text-center py-6" */}
         <main className="flex-1 p-8">
           <Routes>
