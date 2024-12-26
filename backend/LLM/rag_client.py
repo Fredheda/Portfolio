@@ -1,14 +1,17 @@
 from dotenv import load_dotenv
 from LLM.LLMClient import LLMClient
 from LLM.utils import llm_utils
+from services.database_client import database_client
+from LLM.prompts.prompt_manager import PromptManager
 import json
 _ = load_dotenv()
 
 class ragClient():
-    def __init__(self, chatclient: LLMClient, llm_utils: llm_utils,  tools):
+    def __init__(self, chatclient: LLMClient, llm_utils: llm_utils, database_client: database_client,  prompt_manager):
         self.chatclient = chatclient
         self.llm_utils = llm_utils
-        self.tools = tools
+        self.database_client = database_client
+        self.prompt_manager = prompt_manager
         
     def generate_rag_response(self, messages: list) -> str:
         """
@@ -28,8 +31,8 @@ class ragClient():
             arguments = json.loads(tool_calls[0].function.arguments)
             if tool_function_name == 'retrieve_information':
                 tool_call_results = self.llm_utils.retrieve_information(search_query=arguments['search_query'])
-                messages.append({"role": "assistant", "content": "The retrieve information tool was called with the following arguments: search_query='quaternions'."})
-                messages.append({"role": "assistant", "content": tool_call_results})
+                self.database_client.log_chatbot_interaction(arguments['search_query'], "tool_search_query", 0)
+                messages = self.prompt_manager.update_messages_with_toolcalls(messages, tool_function_name, arguments['search_query'], tool_call_results)
                 response = self.chatclient.generate_chat_response(messages)
         
         return response.content
