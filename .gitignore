@@ -5,4 +5,5 @@ node_modules
 __pycache__
 dist
 testing.py
-*data/*
+*data/*cw*
+venv/*
