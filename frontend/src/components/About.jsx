@@ -2,9 +2,61 @@ import React from 'react';
 import ExpandableBox from './expandableBox';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
+const QuickFact = ({ icon, text }) => (
+  <div className="bg-stone-800 p-4 rounded-lg hover:bg-stone-700 transition-all duration-300 cursor-default">
+    <i className={`${icon} text-2xl text-white mb-2`}></i>
+    <p className="text-white text-sm">{text}</p>
+  </div>
+);
+
 const About = () => {
   return (
     <>
+      <section className="bg-stone-900 py-12 px-8 rounded-[15px] w-full max-w-[1200px] mx-auto mb-4 font-montserrat">
+        <div className="flex flex-col lg:flex-row items-center gap-8">
+          <div className="flex-1">
+            <h1 className="text-5xl font-bold text-white mb-4 animate-fade-in">Hi! I'm Fred</h1>
+            <p className="text-white text-xl mb-8">
+              Senior Machine Learning Engineer: passionate about AI, building innovative solutions, and sharing knowledge.
+            </p>
+            
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+              <QuickFact icon="fas fa-robot" text="AI/ML Expert" />
+              <QuickFact icon="fas fa-code" text="Software Engineer" />
+              <QuickFact icon="fas fa-brain" text="Innovation Leader" />
+              <QuickFact icon="fas fa-graduation-cap" text="2x MSc Degrees" />
+              <QuickFact icon="fas fa-table-tennis" text="Table Tennis Player" />
+              <QuickFact icon="fas fa-book" text="Lifelong Learner" />
+            </div>
+
+            <div className="flex gap-4">
+              <a 
+                href="https://www.linkedin.com/in/frederik-heda/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full transition-all duration-300 cursor-pointer"
+              >
+                <i className="fab fa-linkedin mr-2"></i>Connect
+              </a>
+              <button className="bg-stone-700 hover:bg-stone-600 text-white px-6 py-2 rounded-full transition-all duration-300">
+                <i className="fas fa-robot mr-2"></i>Chat with Fredbot
+              </button>
+            </div>
+          </div>
+          
+          <div className="lg:w-1/3 min-w-[280px]">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-b from-blue-600/20 to-transparent rounded-[15px]"></div>
+              <img 
+                src="/images/FH.png" 
+                alt="A picture of me" 
+                className="w-full rounded-[15px] shadow-xl transform hover:scale-[1.02] transition-all duration-300"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section
         id="about"
         className="bg-stone-900 py-4 px-5 rounded-[15px] w-full max-w-[1200px] mx-auto mb-2.5 text-center font-montserrat"
