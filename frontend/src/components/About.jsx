@@ -38,9 +38,14 @@ const About = () => {
               >
                 <i className="fab fa-linkedin mr-2"></i>Connect
               </a>
-              <button className="bg-stone-700 hover:bg-stone-600 text-white px-6 py-2 rounded-full transition-all duration-300">
-                <i className="fas fa-robot mr-2"></i>Chat with Fredbot
-              </button>
+              <a 
+                href="https://github.com/fredheda" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="bg-stone-700 hover:bg-stone-600 text-white px-6 py-2 rounded-full transition-all duration-300 cursor-pointer"
+              >
+                <i className="fab fa-github mr-2"></i>GitHub
+              </a>
             </div>
           </div>
           
