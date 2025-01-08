@@ -72,28 +72,28 @@ const Projects = () => {
   };
 
   return (
-    <section className="bg-gray-100 px-12 py-2 rounded-[15px] max-w-[1200px] mx-auto my-1 text-center overflow-hidden font-montserrat flex flex-col justify-center">
+    <section className="bg-stone-900 px-12 py-2 rounded-[15px] max-w-[1200px] mx-auto my-1 text-center overflow-hidden font-montserrat flex flex-col justify-center">
       <ExpandableBox 
         title="My Projects" 
-        className="font-permanent-marker text-2xl text-left text-black font-semibold -ml-10"
+        className="font-permanent-marker text-2xl text-left text-white font-semibold -ml-10"
       >
         <div className="mt-2.5 pb-6">
           <Slider {...settings}>
             {projects.map((project, index) => (
               <div 
-                className="bg-white rounded-[15px] shadow-lg overflow-hidden p-2.5 h-[400px] w-[300px] transition-transform duration-300 ease-in-out cursor-pointer mx-auto hover:transform hover:-translate-y-1 hover:shadow-2xl" 
+                className="bg-stone-800 text-white rounded-[15px] shadow-lg overflow-hidden p-2.5 h-[400px] w-[300px] transition-transform duration-300 ease-in-out cursor-pointer mx-auto hover:transform hover:-translate-y-1 hover:shadow-2xl border border-white" 
                 key={index}
               >
                 <div className="p-3 text-left">
-                  <h3 className="text-lg text-black mb-2 font-semibold">
+                  <h3 className="text-lg text-white mb-2 font-semibold">
                     {project.title}
                   </h3>
-                  <p className="text-sm text-black-950 leading-6 mb-3">
+                  <p className="text-sm text-white leading-6 mb-3">
                     {project.description}
                   </p>
                   <a 
                     href={project.link}
-                    className="inline-block text-black-950 font-semibold no-underline border-2 border-black py-2 px-4 rounded-full transition-colors duration-300 ease-in-out hover:bg-purple-950 hover:text-white"
+                    className="inline-block text-white font-semibold no-underline border-2 border-white py-2 px-4 rounded-full transition-colors duration-300 ease-in-out hover:bg-cyan-950 hover:text-white text-white border border-white"
                     target="_blank"
                     rel="noopener noreferrer"
                   >

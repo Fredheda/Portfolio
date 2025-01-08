@@ -139,13 +139,13 @@ const Chatbot = () => {
         }}
       >
         {/* Header */}
-        <div className="bg-green-800 text-white py-4 px-5 flex flex-col items-center justify-center rounded-t-[15px] relative">
+        <div className="bg-stone-800 text-white py-4 px-5 flex flex-col items-center justify-center rounded-t-[15px] relative">
           <h4 className="text-xl m-0">FredBot</h4>
           <p className="text-base m-0">(Powered by OpenAI)</p>
           <div className="flex space-x-2 absolute top-1/2 right-3 transform -translate-y-1/2">
             {window.innerWidth > 768 && (
               <button
-                className="bg-none border-none text-white cursor-pointer transition-colors duration-300 ease-in-out hover:text-green-800"
+                className="bg-none border-none text-white cursor-pointer transition-colors duration-300 ease-in-out hover:text-stone-700"
                 onClick={() => setIsFullscreen(!isFullscreen)}
               >
                 {isFullscreen ? <FaCompress /> : <FaExpand />}
@@ -198,7 +198,7 @@ const Chatbot = () => {
           />
           <button
 onClick={handleSendMessage}
-            className="bg-green-800 text-white border-none px-4 py-2 ml-2.5 rounded-full cursor-pointer transition-colors duration-300 ease-in-out hover:bg-blue-700 hover:-translate-y-0.5 active:translate-y-0"
+            className="bg-stone-800 text-white border-none px-4 py-2 ml-2.5 rounded-full cursor-pointer transition-colors duration-300 ease-in-out hover:bg-stone-600 hover:-translate-y-0.5 active:translate-y-0"
           >
             Send
           </button>
@@ -207,9 +207,9 @@ onClick={handleSendMessage}
 
       {/* Chatbot Toggle Button */}
       <div
-        className={`bg-green-800 text-white rounded-full p-3 cursor-pointer shadow-lg 
+        className={`bg-stone-700 text-white rounded-full p-3 cursor-pointer shadow-lg 
           flex items-center justify-center transition-all duration-300 ease-in-out 
-          hover:bg-green-900 ${isOpen ? 'opacity-0 invisible' : 'opacity-100 visible'}`}
+          hover:bg-stone-700 ${isOpen ? 'opacity-0 invisible' : 'opacity-100 visible'}`}
         onClick={toggleChatbot}
       >
         <FaComments size={24} />

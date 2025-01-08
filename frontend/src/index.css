@@ -4,7 +4,7 @@
 
 @layer components {
   .custom-arrow {
-    @apply bg-purple-950 rounded-full w-10 h-10 flex items-center justify-center cursor-pointer 
+    @apply bg-stone-950 rounded-full w-10 h-10 flex items-center justify-center cursor-pointer 
     absolute top-1/2 -translate-y-1/2 z-10 transition-all duration-300 ease-in-out;
   }
 
@@ -56,4 +56,13 @@
 /* Keep this if needed for slick slider override */
 .slick-prev:before, .slick-next:before {
   content: none !important;
+}
+
+/* Custom styles for Slick carousel dots */
+.slick-dots li button:before {
+  color: white !important; 
+}
+
+.slick-dots li.slick-active button:before {
+  color: white !important; 
 }

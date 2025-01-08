@@ -3,7 +3,7 @@ import { Link as RouterLink } from 'react-router-dom';
 
 const Header = () => {
   return (
-    <header className="flex flex-row justify-between items-center p-2.5 bg-purple-950 text-white relative">
+    <header className="flex flex-row justify-between items-center p-2.5 bg-stone-950 text-white relative">
       <h1 className="font-permanent-marker text-xl pl-3">
         <RouterLink to="/" className="text-white no-underline">
           <img 
