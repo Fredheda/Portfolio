@@ -2,37 +2,151 @@ import React from 'react';
 import ExpandableBox from './expandableBox';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
+const QuickFact = ({ icon, text }) => (
+  <div className="bg-stone-800 p-4 rounded-lg hover:bg-stone-700 transition-all duration-300 cursor-default">
+    <i className={`${icon} text-2xl text-white mb-2`}></i>
+    <p className="text-white text-sm">{text}</p>
+  </div>
+);
+
 const About = () => {
   return (
     <>
-      <section
-        id="about"
-        className="bg-stone-900 py-4 px-5 rounded-[15px] w-full max-w-[1200px] mx-auto mb-2.5 text-center font-montserrat"
-      >
-        <h2 className="font-permanent-marker text-2xl text-left text-white mb-5 font-semibold">About Me</h2>
+      <section className="bg-stone-900 py-12 px-8 rounded-[15px] w-full max-w-[1200px] mx-auto mb-4 font-montserrat">
+        <div className="flex flex-col lg:flex-row items-center gap-8">
+          <div className="flex-1">
+            <h1 className="text-5xl font-bold text-white mb-4 animate-fade-in">Hi! I'm Fred</h1>
+            <p className="text-white text-xl mb-8">
+              Senior Machine Learning Engineer:<br/> passionate about AI, building innovative solutions, and sharing knowledge.
+            </p>
+            
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+              <QuickFact icon="fas fa-robot" text="AI/ML Expert" />
+              <QuickFact icon="fas fa-code" text="Software Engineer" />
+              <QuickFact icon="fas fa-brain" text="Innovation Leader" />
+              <QuickFact icon="fas fa-graduation-cap" text="2x Masters Degrees" />
+              <QuickFact icon="fas fa-table-tennis" text="Table Tennis Player" />
+              <QuickFact icon="fas fa-book" text="Lifelong Learner" />
+            </div>
 
-        <div className="flex flex-col lg:flex-row items-center lg:items-start justify-center gap-5 mb-5">
-          <div className="flex-grow min-w-[280px] text-base text-white leading-[1.8] text-left">
-            <div className="rounded-lg mb-4">
-              <p>
-              I'm a <strong>senior machine learning engineer</strong> at <strong>BP</strong> 🚀, where I lead digital innovation across the trading and shipping organisation. I'm passionate about <em>AI</em> with a strong background in <strong>machine learning</strong>, <strong>statistics</strong>, and <strong>software engineering</strong>.
-              <br /><br />
-              <strong>My Role 🧑🏻‍💻</strong><br/>
-              My role focuses on driving innovation through advanced data science and analytics solutions, particularly leading the development and adoption of <strong>generative AI</strong> across the organisation. I'm an active leader in BP's <strong>data & analytics</strong> and <strong>GenAI communities of practice</strong>, working to make data science and AI more accessible across the business.<br/>
-              over the last two years, I have been leading the development and implementation of <strong>Retrieval Augmented Generation (RAG)</strong> solutions, which have been deployed across the organisation to improve efficiency and drive innovation.
-              Throughout my career, I've led projects across various domains including <strong>demand forecasting</strong>, <strong>causal inference</strong>, and <strong>generative AI</strong>.
-              <br /><br />
-              <strong>Academics 🎓</strong><br/>
-              I hold master's degrees in <strong>Mechanical & Electrical Engineering</strong> from <strong>Robert Gordon University</strong>, and <strong>Applied Data Science</strong> from the <strong>University of Buckingham</strong>. While doing my first Masters at RGU, I was also president of the University table tennis club and student representative for my cohort.
-              <br /><br />
-              <strong>Passions 🏓</strong><br/>
-              I'm a strong advocate for <em>democratising artificial intelligence</em> 🤝 and believe it can help us work smarter, not harder. I'm always excited to collaborate on innovative projects that push the boundaries of what's possible with AI.
-              <br/> In my free time, I enjoy playing <strong>table tennis</strong> 🏓, <strong>travelling</strong> 🌍, and <strong>learning new things</strong> 📚. I've also recently <em>"rediscovered"</em> audio-books and am trying to listen to 1-2, mostly non-fiction, books every month.
-              </p>
+            <div className="flex gap-4">
+              <a 
+                href="https://www.linkedin.com/in/frederik-heda/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full transition-all duration-300 cursor-pointer"
+              >
+                <i className="fab fa-linkedin mr-2"></i>Connect
+              </a>
+              <a 
+                href="https://github.com/fredheda" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="bg-stone-700 hover:bg-stone-600 text-white px-6 py-2 rounded-full transition-all duration-300 cursor-pointer"
+              >
+                <i className="fab fa-github mr-2"></i>GitHub
+              </a>
             </div>
           </div>
-          <div className="flex-shrink-0 w-full lg:w-1/4 min-w-[200px] max-w-[300px] lg:self-center rounded-[10px] border border-stone-800 overflow-hidden">
-            <img src="/images/FH.png" alt="A picture of me" className="w-full rounded-[10px]" />
+          
+          <div className="lg:w-1/3 min-w-[280px]">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-b from-blue-600/20 to-transparent rounded-[15px]"></div>
+              <img 
+                src="/images/FH.png" 
+                alt="A picture of me" 
+                className="w-full rounded-[15px] shadow-xl transform hover:scale-[1.02] transition-all duration-300"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section
+        id="about"
+        className="bg-stone-900 py-8 px-6 rounded-[15px] w-full max-w-[1200px] mx-auto mb-2.5 font-montserrat"
+      >
+        <h2 className="font-permanent-marker text-3xl text-left text-white mb-8 font-semibold flex items-center">
+          <i className="fas fa-user-astronaut mr-4 text-blue-500"></i>Beyond the Basics
+        </h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Current Focus */}
+          <div className="bg-stone-800/50 p-6 rounded-xl hover:bg-stone-800/70 transition-all duration-300">
+            <h3 className="text-xl text-white mb-4 flex items-center">
+              <i className="fas fa-rocket text-blue-500 mr-3"></i>
+              Current Adventures
+            </h3>
+            <p className="text-gray-300 leading-relaxed">
+              Leading BP's GenAI revolution through innovative RAG solutions and LLM applications. 
+              Democratizing AI by building tools that make complex tech accessible to everyone.
+              <span className="block mt-2 text-blue-400">
+                <i className="fas fa-chart-line mr-2"></i>Impact: Multi-million dollar value delivered
+              </span>
+            </p>
+          </div>
+
+          {/* Tech Philosophy */}
+          <div className="bg-stone-800/50 p-6 rounded-xl hover:bg-stone-800/70 transition-all duration-300">
+            <h3 className="text-xl text-white mb-4 flex items-center">
+              <i className="fas fa-lightbulb text-yellow-500 mr-3"></i>
+              Tech Philosophy
+            </h3>
+            <p className="text-gray-300 leading-relaxed">
+              Believe in building AI that augments human capabilities rather than replacing them.
+              Focused on creating practical solutions that bridge the gap between cutting-edge tech and real-world applications.
+              <span className="block mt-2 text-yellow-400">
+                <i className="fas fa-users mr-2"></i>Led two communities of practice with 750+ members
+              </span>
+            </p>
+          </div>
+
+          {/* Beyond Work */}
+          <div className="bg-stone-800/50 p-6 rounded-xl hover:bg-stone-800/70 transition-all duration-300">
+            <h3 className="text-xl text-white mb-4 flex items-center">
+              <i className="fas fa-compass text-green-500 mr-3"></i>
+              Beyond Work
+            </h3>
+            <div className="text-gray-300 leading-relaxed">
+              <div className="flex items-center mb-2">
+                <i className="fas fa-table-tennis text-green-400 mr-2"></i>
+                Former University Table Tennis Club President
+              </div>
+              <div className="flex items-center mb-2">
+                <i className="fas fa-globe text-green-400 mr-2"></i>
+                Adventure Seeker & World Explorer
+              </div>
+              <div className="flex items-center">
+                <i className="fas fa-headphones text-green-400 mr-2"></i>
+                Audiobook Enthusiast (2 books/month)
+              </div>
+            </div>
+          </div>
+
+          {/* Fun Facts */}
+          <div className="bg-stone-800/50 p-6 rounded-xl hover:bg-stone-800/70 transition-all duration-300">
+            <h3 className="text-xl text-white mb-4 flex items-center">
+              <i className="fas fa-star text-purple-500 mr-3"></i>
+              Quick Bytes
+            </h3>
+            <div className="grid grid-cols-2 gap-4 text-gray-300">
+              <div className="flex items-center">
+                <i className="fas fa-coffee text-purple-400 mr-2"></i>
+                Coffee: ☕☕☕/day
+              </div>
+              <div className="flex items-center">
+                <i className="fas fa-globe-europe text-purple-400 mr-2"></i>
+                Languages: 🇬🇧 🇩🇪 🇵🇱
+              </div>
+              <div className="flex items-center">
+                <i className="fas fa-graduation-cap text-purple-400 mr-2"></i>
+                Degrees: 2
+              </div>
+              <div className="flex items-center">
+                <i className="fas fa-robot text-purple-400 mr-2"></i>
+                Robots: 3
+              </div>
+            </div>
           </div>
         </div>
       </section>
