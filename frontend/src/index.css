@@ -66,3 +66,15 @@
 .slick-dots li.slick-active button:before {
   color: white !important; 
 }
+
+.slick-list {
+  margin: 0 -8px;
+}
+
+.slick-slide > div {
+  margin: 0 8px;
+}
+
+.slick-dots {
+  bottom: -40px;
+}

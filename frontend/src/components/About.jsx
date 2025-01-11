@@ -78,7 +78,7 @@ const About = () => {
               Current Adventures
             </h3>
             <p className="text-gray-300 leading-relaxed">
-              Leading BP's GenAI revolution through innovative RAG solutions and LLM applications. 
+              Spearheading BP's GenAI revolution through innovative RAG solutions and LLM applications. 
               Democratizing AI by building tools that make complex tech accessible to everyone.
               <span className="block mt-2 text-blue-400">
                 <i className="fas fa-chart-line mr-2"></i>Impact: Multi-million dollar value delivered
@@ -153,84 +153,228 @@ const About = () => {
 
       <section
         id="website-info"
-        className="bg-stone-900 py-4 px-2.5 rounded-[15px] shadow-lg w-full max-w-[1200px] mx-auto my-2.5 text-center font-montserrat flex flex-col"
+        className="bg-gradient-to-br from-stone-900 to-stone-800 py-8 px-6 rounded-[15px] w-full max-w-[1200px] mx-auto mb-2.5 font-montserrat"
       >
-        <ExpandableBox 
-          title="About This Website" 
-          className="font-permanent-marker text-2xl text-left text-white font-semibold"
-          defaultExpanded={true}
-        >
-          <div className="flex-grow min-w-[280px] text-base text-white leading-[1.8] text-left">
-            <div className="rounded-lg mb-4">
-              <p>
-                This Portfolio website was built to introduce myself and showcase my work. It was built using <strong>React</strong> and <strong>Tailwind CSS</strong>, and is hosted on <strong>Heroku</strong>.
-                <br/>
-                In the following sections, you can find more information about my <strong>skills</strong>, <strong>projects</strong>, and <strong>interests</strong>.
-                <br /><br />
-                Say Hi to <strong>Fredbot 🤖</strong>! <br/>
-                Fredbot is a simple, chatbot that can answer questions about me and my work. <br /> Please be kind and patient when using Fredbot - it is still learning! 
-                <br /><br />
-                <strong>Draft mode</strong><br />
-                This website is currently in draft mode and is being updated regularly. I am using this website to learn more about web development and to showcase my work.
-                Many parts of this site are still under construction, not optimised, or may contain placeholder content.
-                <br /> Please check back soon for more updates!
+        <h2 className="font-permanent-marker text-3xl text-left text-white mb-8 font-semibold flex items-center">
+          <i className="fas fa-code-branch mr-4 text-blue-500"></i>The Tech Behind This Site
+        </h2>
+
+        <div className="flex flex-col md:flex-row gap-6">
+          {/* Left Column - Tech Details */}
+          <div className="md:w-1/2 space-y-4">
+            <div className="bg-stone-800/30 backdrop-blur-sm p-5 rounded-xl border border-stone-700/50 hover:border-blue-500/50 transition-all duration-300">
+              <h3 className="text-xl text-white mb-3 flex items-center">
+                <i className="fas fa-layer-group text-blue-500 mr-3"></i>
+                Built With
+              </h3>
+              <div className="grid grid-cols-2 gap-3 text-gray-300">
+                <div className="flex items-center space-x-2 bg-stone-800/50 p-2 rounded-lg">
+                  <i className="fab fa-react text-blue-400"></i>
+                  <span>React</span>
+                </div>
+                <div className="flex items-center space-x-2 bg-stone-800/50 p-2 rounded-lg">
+                  <i className="fab fa-css3 text-blue-400"></i>
+                  <span>Tailwind</span>
+                </div>
+                <div className="flex items-center space-x-2 bg-stone-800/50 p-2 rounded-lg">
+                  <i className="fas fa-server text-blue-400"></i>
+                  <span>Python</span>
+                </div>
+                <div className="flex items-center space-x-2 bg-stone-800/50 p-2 rounded-lg">
+                  <i className="fas fa-cloud text-blue-400"></i>
+                  <span>Heroku</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-stone-800/30 backdrop-blur-sm p-5 rounded-xl border border-stone-700/50 hover:border-yellow-500/50 transition-all duration-300">
+              <h3 className="text-xl text-white mb-3 flex items-center">
+                <i className="fas fa-robot text-yellow-500 mr-3"></i>
+                AI Integration
+              </h3>
+              <p className="text-gray-300 leading-relaxed">
+                Powered by OpenAI's GPT-4o-mini, Fredbot helps visitors learn more about my work and experience.
+                <span className="block mt-2 p-2 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+                  <i className="fas fa-info-circle text-yellow-500 mr-2"></i>
+                  Currently in beta testing
+                </span>
               </p>
             </div>
           </div>
-        </ExpandableBox>
+
+          {/* Right Column - Status & Info */}
+          <div className="md:w-1/2 space-y-4">
+            <div className="bg-stone-800/30 backdrop-blur-sm p-5 rounded-xl border border-stone-700/50 hover:border-green-500/50 transition-all duration-300">
+              <h3 className="text-xl text-white mb-3 flex items-center">
+                <i className="fas fa-code-commit text-green-500 mr-3"></i>
+                Latest Updates
+              </h3>
+              <div className="space-y-2 text-gray-300">
+                <div className="flex items-center justify-between bg-stone-800/50 p-2 rounded-lg">
+                  <span>Last Commit</span>
+                  <span className="text-green-400">Q1/2025</span>
+                </div>
+                <div className="flex items-center justify-between bg-stone-800/50 p-2 rounded-lg">
+                  <span>Status</span>
+                  <span className="text-green-400">Active Development</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-stone-800/30 backdrop-blur-sm p-5 rounded-xl border border-stone-700/50 hover:border-purple-500/50 transition-all duration-300">
+              <h3 className="text-xl text-white mb-3 flex items-center">
+                <i className="fas fa-wand-magic-sparkles text-purple-500 mr-3"></i>
+                Site Features
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="group bg-gradient-to-br from-stone-800/50 to-purple-900/30 p-4 rounded-xl hover:scale-105 transition-all duration-300">
+                  <i className="fas fa-palette text-purple-400 text-2xl mb-2"></i>
+                  <h4 className="text-white text-sm font-semibold">Dark Theme</h4>
+                  <p className="text-gray-400 text-xs">Optimized for readability</p>
+                </div>
+                <div className="group bg-gradient-to-br from-stone-800/50 to-blue-900/30 p-4 rounded-xl hover:scale-105 transition-all duration-300">
+                  <i className="fas fa-mobile-screen text-blue-400 text-2xl mb-2"></i>
+                  <h4 className="text-white text-sm font-semibold">Responsive</h4>
+                  <p className="text-gray-400 text-xs">Mobile-first design</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
       <section
         id="skills"
-        className="bg-stone-900 py-4 px-2.5 rounded-[15px] shadow-lg w-full max-w-[1200px] mx-auto mt-2.5 text-center font-montserrat flex flex-col"
+        className="bg-gradient-to-br from-stone-900 via-stone-800 to-stone-900 py-8 px-6 rounded-[15px] w-full max-w-[1200px] mx-auto mb-2.5 font-montserrat relative overflow-hidden"
       >
-          <ExpandableBox title="Demonstrated Skills" className="font-permanent-marker text-2xl text-left text-white font-semibold">
-          <div className="text-left text-white mt-2.5">
-          <ExpandableBox
-            title="Machine Learning Engineering"
-            className="text-xl text-left text-white font-semibold"
-            details={[
-              '🔬 ML Development: TensorFlow, PyTorch, Scikit-learn | Deployed enterprise-grade ML models, e.g. demand forecasting, anomaly detection & clustering.',
-              '📊 Data Engineering: Built scalable data pipelines, e.g. for document processing and OCR',
-              '🔄 MLOps: Implemented CI/CD pipelines with Azure DevOps, AWS Codecommit & Sagemaker Pipelines for automated model training and deployment',
-              '📈 Time Series & Statistics: Developed forecasting models using ARIMA, Prophet, and custom deep learning architectures'
-            ]}
-          />
+        <div className="relative">
+          <h2 className="font-permanent-marker text-3xl text-left text-white mb-8 font-semibold flex items-center">
+            <i className="fas fa-microchip mr-4 text-blue-500"></i>
+            Skills & Expertise
+          </h2>
 
-          <ExpandableBox
-            title="Generative AI"
-            className="text-xl text-left text-white font-semibold"
-            details={[
-              '🤖 LLM Development: Azure OpenAI, LangChain, HuggingFace | Built enterprise-grade GenAI applications that deliver multi-million dollar value',
-              '🔍 RAG Systems: Developed production RAG solutions using custom retrieval systems',
-              '📚 Model Fine-tuning: Implemented LoRA and PEFT techniques for domain-specific LLM adaptation',
-              '🛠️ GenAI Tools: Created evaluation frameworks and productioned them as a reusable (internal) PIP library'
-            ]}
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* AI & ML */}
+            <div className="group bg-gradient-to-br from-blue-500/5 via-stone-800/95 to-stone-900 p-6 rounded-xl border border-blue-500/20 hover:border-blue-500/50 transition-all duration-500 hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(59,130,246,0.15)]">
+              <h3 className="text-xl text-white mb-4 flex items-center">
+                <i className="fas fa-brain text-blue-500 mr-3 group-hover:scale-110 transition-transform duration-300"></i>
+                AI & Machine Learning
+              </h3>
+              <div className="space-y-4">
+                <div className="bg-stone-800/50 p-4 rounded-lg transform transition-transform hover:translate-x-1 hover:bg-stone-800/70">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-blue-400 font-semibold">LLM Development</p>
+                  </div>
+                  <p className="text-gray-300 text-sm">Azure OpenAI, LangChain, HuggingFace</p>
+                </div>
+                
+                <div className="bg-stone-800/50 p-4 rounded-lg transform transition-transform hover:translate-x-1 hover:bg-stone-800/70">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-blue-400 font-semibold">ML Frameworks</p>
+                  </div>
+                  <p className="text-gray-300 text-sm">TensorFlow, PyTorch, Scikit-learn</p>
+                </div>
+                
+                <div className="bg-stone-800/50 p-4 rounded-lg transform transition-transform hover:translate-x-1 hover:bg-stone-800/70">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-blue-400 font-semibold">MLOps</p>
+                  </div>
+                  <p className="text-gray-300 text-sm">Azure ML, AWS SageMaker, MLflow</p>
+                </div>
+              </div>
+            </div>
 
-          <ExpandableBox
-            title="Software Engineering"
-            className="text-xl text-left text-white font-semibold"
-            details={[
-              '☁️ Cloud Architecture: Designed and implemented solutions using AWS and Azure cloud services',
-              '🏗️ Infrastructure: Experienced in Docker, Kubernetes, and cloud-native application development',
-              '💻 Programming: Python, SQL, Matlab, JavaScript, React | Built full-stack applications and REST APIs',
-              '🔐 Best Practices: Test-driven development, code review, documentation, and agile methodologies'
-            ]}
-          />
+            {/* Software Engineering */}
+            <div className="group bg-gradient-to-br from-yellow-500/5 via-stone-800/95 to-stone-900 p-6 rounded-xl border border-yellow-500/20 hover:border-yellow-500/50 transition-all duration-500 hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(234,179,8,0.15)]">
+              <h3 className="text-xl text-white mb-4 flex items-center">
+                <i className="fas fa-code text-yellow-500 mr-3 group-hover:scale-110 transition-transform duration-300"></i>
+                Software Engineering
+              </h3>
+              <div className="space-y-4">
+                <div className="bg-stone-800/50 p-4 rounded-lg transform transition-transform hover:translate-x-1 hover:bg-stone-800/70">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-yellow-400 font-semibold">Languages</p>
+                  </div>
+                  <p className="text-gray-300 text-sm">Python, JavaScript, SQL, MATLAB</p>
+                </div>
+                
+                <div className="bg-stone-800/50 p-4 rounded-lg transform transition-transform hover:translate-x-1 hover:bg-stone-800/70">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-yellow-400 font-semibold">Web Development</p>
+                  </div>
+                  <p className="text-gray-300 text-sm">React, CSS, FastAPI</p>
+                </div>
+                
+                <div className="bg-stone-800/50 p-4 rounded-lg transform transition-transform hover:translate-x-1 hover:bg-stone-800/70">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-yellow-400 font-semibold">Cloud & DevOps</p>
+                  </div>
+                  <p className="text-gray-300 text-sm">AWS, Azure, Docker, Kubernetes</p>
+                </div>
+              </div>
+            </div>
 
-          <ExpandableBox
-            title="Leadership"
-            className="text-xl text-left text-white font-semibold"
-            details={[
-              '👥 Team Leadership: Led cross-discipline teams of data scientists, engineers and developers in delivering data & analytics solutions',
-              '🎯 Project Management: Managed end-to-end ML projects from conception to production deployment',
-              '🤝 Stakeholder Management: Collaborated with senior business leaders to align technical solutions with business objectives',
-              '📚 Knowledge Sharing: Created and led internal communities of practice with more than 750 members'
-            ]}
-          />
+            {/* Leadership */}
+            <div className="group bg-gradient-to-br from-green-500/5 via-stone-800/95 to-stone-900 p-6 rounded-xl border border-green-500/20 hover:border-green-500/50 transition-all duration-500 hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(34,197,94,0.15)]">
+              <h3 className="text-xl text-white mb-4 flex items-center">
+                <i className="fas fa-users text-green-500 mr-3 group-hover:scale-110 transition-transform duration-300"></i>
+                Leadership
+              </h3>
+              <div className="space-y-4">
+                <div className="bg-stone-800/50 p-4 rounded-lg transform transition-transform hover:translate-x-1 hover:bg-stone-800/70">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-green-400 font-semibold">Team Management</p>
+                  </div>
+                  <p className="text-gray-300 text-sm">Led cross-functional teams of 6+ members</p>
+                </div>
+                
+                <div className="bg-stone-800/50 p-4 rounded-lg transform transition-transform hover:translate-x-1 hover:bg-stone-800/70">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-green-400 font-semibold">Community Building</p>
+                  </div>
+                  <p className="text-gray-300 text-sm">Led 750+ member communities</p>
+                </div>
+                
+                <div className="bg-stone-800/50 p-4 rounded-lg transform transition-transform hover:translate-x-1 hover:bg-stone-800/70">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-green-400 font-semibold">Project Management</p>
+                  </div>
+                  <p className="text-gray-300 text-sm">Delivered multi-million dollar projects</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Domain Expertise */}
+            <div className="group bg-gradient-to-br from-purple-500/5 via-stone-800/95 to-stone-900 p-6 rounded-xl border border-purple-500/20 hover:border-purple-500/50 transition-all duration-500 hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(168,85,247,0.15)]">
+              <h3 className="text-xl text-white mb-4 flex items-center">
+                <i className="fas fa-layer-group text-purple-500 mr-3 group-hover:scale-110 transition-transform duration-300"></i>
+                Domain Expertise
+              </h3>
+              <div className="space-y-4">
+                <div className="bg-stone-800/50 p-4 rounded-lg transform transition-transform hover:translate-x-1 hover:bg-stone-800/70">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-purple-400 font-semibold">Data Engineering</p>
+                  </div>
+                  <p className="text-gray-300 text-sm">ETL, Data Pipelines, Big Data</p>
+                </div>
+                
+                <div className="bg-stone-800/50 p-4 rounded-lg transform transition-transform hover:translate-x-1 hover:bg-stone-800/70">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-purple-400 font-semibold">Computer Vision</p>
+                  </div>
+                  <p className="text-gray-300 text-sm">OCR, Image Processing, Object Detection</p>
+                </div>
+                
+                <div className="bg-stone-800/50 p-4 rounded-lg transform transition-transform hover:translate-x-1 hover:bg-stone-800/70">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-purple-400 font-semibold">Time Series</p>
+                  </div>
+                  <p className="text-gray-300 text-sm">Forecasting, Anomaly Detection</p>
+                </div>
+              </div>
+            </div>
           </div>
-        </ExpandableBox>
+        </div>
       </section>
     </>
   );
