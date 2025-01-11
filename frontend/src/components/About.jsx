@@ -78,7 +78,7 @@ const About = () => {
               Current Adventures
             </h3>
             <p className="text-gray-300 leading-relaxed">
-              Leading BP's GenAI revolution through innovative RAG solutions and LLM applications. 
+              Spearheading BP's GenAI revolution through innovative RAG solutions and LLM applications. 
               Democratizing AI by building tools that make complex tech accessible to everyone.
               <span className="block mt-2 text-blue-400">
                 <i className="fas fa-chart-line mr-2"></i>Impact: Multi-million dollar value delivered
@@ -178,7 +178,7 @@ const About = () => {
                 </div>
                 <div className="flex items-center space-x-2 bg-stone-800/50 p-2 rounded-lg">
                   <i className="fas fa-server text-blue-400"></i>
-                  <span>Node.js</span>
+                  <span>Python</span>
                 </div>
                 <div className="flex items-center space-x-2 bg-stone-800/50 p-2 rounded-lg">
                   <i className="fas fa-cloud text-blue-400"></i>
@@ -193,7 +193,7 @@ const About = () => {
                 AI Integration
               </h3>
               <p className="text-gray-300 leading-relaxed">
-                Powered by OpenAI's GPT-4, Fredbot helps visitors learn more about my work and experience.
+                Powered by OpenAI's GPT-4o-mini, Fredbot helps visitors learn more about my work and experience.
                 <span className="block mt-2 p-2 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
                   <i className="fas fa-info-circle text-yellow-500 mr-2"></i>
                   Currently in beta testing
@@ -212,7 +212,7 @@ const About = () => {
               <div className="space-y-2 text-gray-300">
                 <div className="flex items-center justify-between bg-stone-800/50 p-2 rounded-lg">
                   <span>Last Commit</span>
-                  <span className="text-green-400">February 2024</span>
+                  <span className="text-green-400">Q1/2025</span>
                 </div>
                 <div className="flex items-center justify-between bg-stone-800/50 p-2 rounded-lg">
                   <span>Status</span>
@@ -302,7 +302,7 @@ const About = () => {
                   <div className="flex justify-between items-center mb-2">
                     <p className="text-yellow-400 font-semibold">Web Development</p>
                   </div>
-                  <p className="text-gray-300 text-sm">React, Node.js, FastAPI, Django</p>
+                  <p className="text-gray-300 text-sm">React, Node.js, FastAPI</p>
                 </div>
                 
                 <div className="bg-stone-800/50 p-4 rounded-lg transform transition-transform hover:translate-x-1 hover:bg-stone-800/70">
@@ -325,14 +325,14 @@ const About = () => {
                   <div className="flex justify-between items-center mb-2">
                     <p className="text-green-400 font-semibold">Team Management</p>
                   </div>
-                  <p className="text-gray-300 text-sm">Led cross-functional teams of 10+ members</p>
+                  <p className="text-gray-300 text-sm">Led cross-functional teams of 6+ members</p>
                 </div>
                 
                 <div className="bg-stone-800/50 p-4 rounded-lg transform transition-transform hover:translate-x-1 hover:bg-stone-800/70">
                   <div className="flex justify-between items-center mb-2">
                     <p className="text-green-400 font-semibold">Community Building</p>
                   </div>
-                  <p className="text-gray-300 text-sm">Created & led 750+ member communities</p>
+                  <p className="text-gray-300 text-sm">Led 750+ member communities</p>
                 </div>
                 
                 <div className="bg-stone-800/50 p-4 rounded-lg transform transition-transform hover:translate-x-1 hover:bg-stone-800/70">
