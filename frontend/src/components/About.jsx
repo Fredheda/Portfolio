@@ -302,7 +302,7 @@ const About = () => {
                   <div className="flex justify-between items-center mb-2">
                     <p className="text-yellow-400 font-semibold">Web Development</p>
                   </div>
-                  <p className="text-gray-300 text-sm">React, Node.js, FastAPI</p>
+                  <p className="text-gray-300 text-sm">React, CSS, FastAPI</p>
                 </div>
                 
                 <div className="bg-stone-800/50 p-4 rounded-lg transform transition-transform hover:translate-x-1 hover:bg-stone-800/70">
