@@ -153,31 +153,94 @@ const About = () => {
 
       <section
         id="website-info"
-        className="bg-stone-900 py-4 px-2.5 rounded-[15px] shadow-lg w-full max-w-[1200px] mx-auto my-2.5 text-center font-montserrat flex flex-col"
+        className="bg-gradient-to-br from-stone-900 to-stone-800 py-8 px-6 rounded-[15px] w-full max-w-[1200px] mx-auto mb-2.5 font-montserrat"
       >
-        <ExpandableBox 
-          title="About This Website" 
-          className="font-permanent-marker text-2xl text-left text-white font-semibold"
-          defaultExpanded={true}
-        >
-          <div className="flex-grow min-w-[280px] text-base text-white leading-[1.8] text-left">
-            <div className="rounded-lg mb-4">
-              <p>
-                This Portfolio website was built to introduce myself and showcase my work. It was built using <strong>React</strong> and <strong>Tailwind CSS</strong>, and is hosted on <strong>Heroku</strong>.
-                <br/>
-                In the following sections, you can find more information about my <strong>skills</strong>, <strong>projects</strong>, and <strong>interests</strong>.
-                <br /><br />
-                Say Hi to <strong>Fredbot 🤖</strong>! <br/>
-                Fredbot is a simple, chatbot that can answer questions about me and my work. <br /> Please be kind and patient when using Fredbot - it is still learning! 
-                <br /><br />
-                <strong>Draft mode</strong><br />
-                This website is currently in draft mode and is being updated regularly. I am using this website to learn more about web development and to showcase my work.
-                Many parts of this site are still under construction, not optimised, or may contain placeholder content.
-                <br /> Please check back soon for more updates!
+        <h2 className="font-permanent-marker text-3xl text-left text-white mb-8 font-semibold flex items-center">
+          <i className="fas fa-code-branch mr-4 text-blue-500"></i>The Tech Behind This Site
+        </h2>
+
+        <div className="flex flex-col md:flex-row gap-6">
+          {/* Left Column - Tech Details */}
+          <div className="md:w-1/2 space-y-4">
+            <div className="bg-stone-800/30 backdrop-blur-sm p-5 rounded-xl border border-stone-700/50 hover:border-blue-500/50 transition-all duration-300">
+              <h3 className="text-xl text-white mb-3 flex items-center">
+                <i className="fas fa-layer-group text-blue-500 mr-3"></i>
+                Built With
+              </h3>
+              <div className="grid grid-cols-2 gap-3 text-gray-300">
+                <div className="flex items-center space-x-2 bg-stone-800/50 p-2 rounded-lg">
+                  <i className="fab fa-react text-blue-400"></i>
+                  <span>React</span>
+                </div>
+                <div className="flex items-center space-x-2 bg-stone-800/50 p-2 rounded-lg">
+                  <i className="fab fa-css3 text-blue-400"></i>
+                  <span>Tailwind</span>
+                </div>
+                <div className="flex items-center space-x-2 bg-stone-800/50 p-2 rounded-lg">
+                  <i className="fas fa-server text-blue-400"></i>
+                  <span>Node.js</span>
+                </div>
+                <div className="flex items-center space-x-2 bg-stone-800/50 p-2 rounded-lg">
+                  <i className="fas fa-cloud text-blue-400"></i>
+                  <span>Heroku</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-stone-800/30 backdrop-blur-sm p-5 rounded-xl border border-stone-700/50 hover:border-yellow-500/50 transition-all duration-300">
+              <h3 className="text-xl text-white mb-3 flex items-center">
+                <i className="fas fa-robot text-yellow-500 mr-3"></i>
+                AI Integration
+              </h3>
+              <p className="text-gray-300 leading-relaxed">
+                Powered by OpenAI's GPT-4, Fredbot helps visitors learn more about my work and experience.
+                <span className="block mt-2 p-2 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+                  <i className="fas fa-info-circle text-yellow-500 mr-2"></i>
+                  Currently in beta testing
+                </span>
               </p>
             </div>
           </div>
-        </ExpandableBox>
+
+          {/* Right Column - Status & Info */}
+          <div className="md:w-1/2 space-y-4">
+            <div className="bg-stone-800/30 backdrop-blur-sm p-5 rounded-xl border border-stone-700/50 hover:border-green-500/50 transition-all duration-300">
+              <h3 className="text-xl text-white mb-3 flex items-center">
+                <i className="fas fa-code-commit text-green-500 mr-3"></i>
+                Latest Updates
+              </h3>
+              <div className="space-y-2 text-gray-300">
+                <div className="flex items-center justify-between bg-stone-800/50 p-2 rounded-lg">
+                  <span>Last Commit</span>
+                  <span className="text-green-400">February 2024</span>
+                </div>
+                <div className="flex items-center justify-between bg-stone-800/50 p-2 rounded-lg">
+                  <span>Status</span>
+                  <span className="text-green-400">Active Development</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-stone-800/30 backdrop-blur-sm p-5 rounded-xl border border-stone-700/50 hover:border-purple-500/50 transition-all duration-300">
+              <h3 className="text-xl text-white mb-3 flex items-center">
+                <i className="fas fa-wand-magic-sparkles text-purple-500 mr-3"></i>
+                Site Features
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="group bg-gradient-to-br from-stone-800/50 to-purple-900/30 p-4 rounded-xl hover:scale-105 transition-all duration-300">
+                  <i className="fas fa-palette text-purple-400 text-2xl mb-2"></i>
+                  <h4 className="text-white text-sm font-semibold">Dark Theme</h4>
+                  <p className="text-gray-400 text-xs">Optimized for readability</p>
+                </div>
+                <div className="group bg-gradient-to-br from-stone-800/50 to-blue-900/30 p-4 rounded-xl hover:scale-105 transition-all duration-300">
+                  <i className="fas fa-mobile-screen text-blue-400 text-2xl mb-2"></i>
+                  <h4 className="text-white text-sm font-semibold">Responsive</h4>
+                  <p className="text-gray-400 text-xs">Mobile-first design</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
       <section
