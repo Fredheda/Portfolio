@@ -120,50 +120,50 @@ const Chatbot = () => {
     };
   }, [isOpen, isFullscreen]);
 
-return (
-  <div className="fixed bottom-5 right-5 z-[1000]">
-    <div
-      className={`fixed transform transition-all duration-300 ease-in-out
-        ${isFullscreen
-          ? 'w-screen h-screen bottom-0 right-0 rounded-none origin-bottom-right'
-          : 'w-[400px] h-[550px] bottom-20 right-5 rounded-[15px] origin-[calc(100%-28px)_calc(100%+28px)]'
-        }
-        ${isOpen 
-          ? 'scale-100 opacity-100 visible' 
-          : 'scale-0 opacity-0 invisible'
-        }
-        bg-gradient-to-br from-stone-900 via-stone-800 to-stone-900 border border-blue-500/20 shadow-[0_0_30px_rgba(59,130,246,0.15)] flex flex-col overflow-hidden`}
-      style={{
-        height: isFullscreen ? 'calc(var(--vh, 1vh) * 100)' : undefined,
-      }}
-    >
-    {/* Header */}
-    <div className="bg-gradient-to-r from-blue-500/5 via-stone-800/95 to-stone-900 text-white py-3 px-5 flex flex-col items-center justify-center rounded-t-[15px] relative border-b border-blue-500/20">
-      <h4 className="text-xl m-0 font-permanent-marker">FredBot</h4>
-      <p className="text-sm text-gray-300 m-0">(Powered by OpenAI)</p>
-      <div className="flex space-x-1.5 absolute top-3 right-3">
-        {window.innerWidth > 768 && (
+  return (
+    <div className="fixed bottom-5 right-5 z-[1000]">
+      <div
+        className={`fixed transform transition-all duration-300 ease-in-out
+          ${isFullscreen
+            ? 'w-screen h-screen bottom-0 right-0 rounded-none origin-bottom-right'
+            : 'w-[400px] h-[550px] bottom-20 right-5 rounded-[15px] origin-[calc(100%-28px)_calc(100%+28px)]'
+          }
+          ${isOpen 
+            ? 'scale-100 opacity-100 visible' 
+            : 'scale-0 opacity-0 invisible'
+          }
+          bg-gradient-to-br from-stone-900 via-stone-800 to-stone-900 border border-blue-500/20 shadow-[0_0_30px_rgba(59,130,246,0.15)] flex flex-col overflow-hidden`}
+        style={{
+          height: isFullscreen ? 'calc(var(--vh, 1vh) * 100)' : undefined,
+        }}
+      >
+      {/* Header */}
+      <div className="bg-gradient-to-r from-blue-500/5 via-stone-800/95 to-stone-900 text-white py-3 px-5 flex flex-col items-center justify-center rounded-t-[15px] relative border-b border-blue-500/20">
+        <h4 className="text-xl m-0 font-permanent-marker">FredBot</h4>
+        <p className="text-sm text-gray-300 m-0">(Powered by OpenAI)</p>
+        <div className="flex space-x-1.5 absolute top-3 right-3">
+          {window.innerWidth > 768 && (
+            <button
+              className="bg-stone-800/50 p-1.5 rounded-lg border border-blue-500/20 hover:border-blue-500/50 transition-all duration-300 text-blue-400"
+              onClick={() => setIsFullscreen(!isFullscreen)}
+            >
+              {isFullscreen ? <FaCompress size={14} /> : <FaExpand size={14} />}
+            </button>
+          )}
+          <button
+            className="bg-stone-800/50 p-1.5 rounded-lg border border-red-500/20 hover:border-red-500/50 transition-all duration-300 text-red-400"
+            onClick={clearChat}
+          >
+            <FaTrash size={14} />
+          </button>
           <button
             className="bg-stone-800/50 p-1.5 rounded-lg border border-blue-500/20 hover:border-blue-500/50 transition-all duration-300 text-blue-400"
-            onClick={() => setIsFullscreen(!isFullscreen)}
+            onClick={toggleChatbot}
           >
-            {isFullscreen ? <FaCompress size={14} /> : <FaExpand size={14} />}
+            <FaTimes size={14} />
           </button>
-        )}
-        <button
-          className="bg-stone-800/50 p-1.5 rounded-lg border border-red-500/20 hover:border-red-500/50 transition-all duration-300 text-red-400"
-          onClick={clearChat}
-        >
-          <FaTrash size={14} />
-        </button>
-        <button
-          className="bg-stone-800/50 p-1.5 rounded-lg border border-blue-500/20 hover:border-blue-500/50 transition-all duration-300 text-blue-400"
-          onClick={toggleChatbot}
-        >
-          <FaTimes size={14} />
-        </button>
+        </div>
       </div>
-    </div>
 
       {/* Message Container */}
       <div className="flex-1 p-4 overflow-y-auto text-sm flex flex-col bg-gradient-to-br from-stone-900 to-stone-800">
