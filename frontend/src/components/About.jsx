@@ -245,55 +245,136 @@ const About = () => {
 
       <section
         id="skills"
-        className="bg-stone-900 py-4 px-2.5 rounded-[15px] shadow-lg w-full max-w-[1200px] mx-auto mt-2.5 text-center font-montserrat flex flex-col"
+        className="bg-gradient-to-br from-stone-900 via-stone-800 to-stone-900 py-8 px-6 rounded-[15px] w-full max-w-[1200px] mx-auto mb-2.5 font-montserrat relative overflow-hidden"
       >
-          <ExpandableBox title="Demonstrated Skills" className="font-permanent-marker text-2xl text-left text-white font-semibold">
-          <div className="text-left text-white mt-2.5">
-          <ExpandableBox
-            title="Machine Learning Engineering"
-            className="text-xl text-left text-white font-semibold"
-            details={[
-              '🔬 ML Development: TensorFlow, PyTorch, Scikit-learn | Deployed enterprise-grade ML models, e.g. demand forecasting, anomaly detection & clustering.',
-              '📊 Data Engineering: Built scalable data pipelines, e.g. for document processing and OCR',
-              '🔄 MLOps: Implemented CI/CD pipelines with Azure DevOps, AWS Codecommit & Sagemaker Pipelines for automated model training and deployment',
-              '📈 Time Series & Statistics: Developed forecasting models using ARIMA, Prophet, and custom deep learning architectures'
-            ]}
-          />
+        <div className="relative">
+          <h2 className="font-permanent-marker text-3xl text-left text-white mb-8 font-semibold flex items-center">
+            <i className="fas fa-microchip mr-4 text-blue-500"></i>
+            Skills & Expertise
+          </h2>
 
-          <ExpandableBox
-            title="Generative AI"
-            className="text-xl text-left text-white font-semibold"
-            details={[
-              '🤖 LLM Development: Azure OpenAI, LangChain, HuggingFace | Built enterprise-grade GenAI applications that deliver multi-million dollar value',
-              '🔍 RAG Systems: Developed production RAG solutions using custom retrieval systems',
-              '📚 Model Fine-tuning: Implemented LoRA and PEFT techniques for domain-specific LLM adaptation',
-              '🛠️ GenAI Tools: Created evaluation frameworks and productioned them as a reusable (internal) PIP library'
-            ]}
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* AI & ML */}
+            <div className="group bg-gradient-to-br from-blue-500/5 via-stone-800/95 to-stone-900 p-6 rounded-xl border border-blue-500/20 hover:border-blue-500/50 transition-all duration-500 hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(59,130,246,0.15)]">
+              <h3 className="text-xl text-white mb-4 flex items-center">
+                <i className="fas fa-brain text-blue-500 mr-3 group-hover:scale-110 transition-transform duration-300"></i>
+                AI & Machine Learning
+              </h3>
+              <div className="space-y-4">
+                <div className="bg-stone-800/50 p-4 rounded-lg transform transition-transform hover:translate-x-1 hover:bg-stone-800/70">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-blue-400 font-semibold">LLM Development</p>
+                  </div>
+                  <p className="text-gray-300 text-sm">Azure OpenAI, LangChain, HuggingFace</p>
+                </div>
+                
+                <div className="bg-stone-800/50 p-4 rounded-lg transform transition-transform hover:translate-x-1 hover:bg-stone-800/70">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-blue-400 font-semibold">ML Frameworks</p>
+                  </div>
+                  <p className="text-gray-300 text-sm">TensorFlow, PyTorch, Scikit-learn</p>
+                </div>
+                
+                <div className="bg-stone-800/50 p-4 rounded-lg transform transition-transform hover:translate-x-1 hover:bg-stone-800/70">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-blue-400 font-semibold">MLOps</p>
+                  </div>
+                  <p className="text-gray-300 text-sm">Azure ML, AWS SageMaker, MLflow</p>
+                </div>
+              </div>
+            </div>
 
-          <ExpandableBox
-            title="Software Engineering"
-            className="text-xl text-left text-white font-semibold"
-            details={[
-              '☁️ Cloud Architecture: Designed and implemented solutions using AWS and Azure cloud services',
-              '🏗️ Infrastructure: Experienced in Docker, Kubernetes, and cloud-native application development',
-              '💻 Programming: Python, SQL, Matlab, JavaScript, React | Built full-stack applications and REST APIs',
-              '🔐 Best Practices: Test-driven development, code review, documentation, and agile methodologies'
-            ]}
-          />
+            {/* Software Engineering */}
+            <div className="group bg-gradient-to-br from-yellow-500/5 via-stone-800/95 to-stone-900 p-6 rounded-xl border border-yellow-500/20 hover:border-yellow-500/50 transition-all duration-500 hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(234,179,8,0.15)]">
+              <h3 className="text-xl text-white mb-4 flex items-center">
+                <i className="fas fa-code text-yellow-500 mr-3 group-hover:scale-110 transition-transform duration-300"></i>
+                Software Engineering
+              </h3>
+              <div className="space-y-4">
+                <div className="bg-stone-800/50 p-4 rounded-lg transform transition-transform hover:translate-x-1 hover:bg-stone-800/70">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-yellow-400 font-semibold">Languages</p>
+                  </div>
+                  <p className="text-gray-300 text-sm">Python, JavaScript, SQL, MATLAB</p>
+                </div>
+                
+                <div className="bg-stone-800/50 p-4 rounded-lg transform transition-transform hover:translate-x-1 hover:bg-stone-800/70">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-yellow-400 font-semibold">Web Development</p>
+                  </div>
+                  <p className="text-gray-300 text-sm">React, Node.js, FastAPI, Django</p>
+                </div>
+                
+                <div className="bg-stone-800/50 p-4 rounded-lg transform transition-transform hover:translate-x-1 hover:bg-stone-800/70">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-yellow-400 font-semibold">Cloud & DevOps</p>
+                  </div>
+                  <p className="text-gray-300 text-sm">AWS, Azure, Docker, Kubernetes</p>
+                </div>
+              </div>
+            </div>
 
-          <ExpandableBox
-            title="Leadership"
-            className="text-xl text-left text-white font-semibold"
-            details={[
-              '👥 Team Leadership: Led cross-discipline teams of data scientists, engineers and developers in delivering data & analytics solutions',
-              '🎯 Project Management: Managed end-to-end ML projects from conception to production deployment',
-              '🤝 Stakeholder Management: Collaborated with senior business leaders to align technical solutions with business objectives',
-              '📚 Knowledge Sharing: Created and led internal communities of practice with more than 750 members'
-            ]}
-          />
+            {/* Leadership */}
+            <div className="group bg-gradient-to-br from-green-500/5 via-stone-800/95 to-stone-900 p-6 rounded-xl border border-green-500/20 hover:border-green-500/50 transition-all duration-500 hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(34,197,94,0.15)]">
+              <h3 className="text-xl text-white mb-4 flex items-center">
+                <i className="fas fa-users text-green-500 mr-3 group-hover:scale-110 transition-transform duration-300"></i>
+                Leadership
+              </h3>
+              <div className="space-y-4">
+                <div className="bg-stone-800/50 p-4 rounded-lg transform transition-transform hover:translate-x-1 hover:bg-stone-800/70">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-green-400 font-semibold">Team Management</p>
+                  </div>
+                  <p className="text-gray-300 text-sm">Led cross-functional teams of 10+ members</p>
+                </div>
+                
+                <div className="bg-stone-800/50 p-4 rounded-lg transform transition-transform hover:translate-x-1 hover:bg-stone-800/70">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-green-400 font-semibold">Community Building</p>
+                  </div>
+                  <p className="text-gray-300 text-sm">Created & led 750+ member communities</p>
+                </div>
+                
+                <div className="bg-stone-800/50 p-4 rounded-lg transform transition-transform hover:translate-x-1 hover:bg-stone-800/70">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-green-400 font-semibold">Project Management</p>
+                  </div>
+                  <p className="text-gray-300 text-sm">Delivered multi-million dollar projects</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Domain Expertise */}
+            <div className="group bg-gradient-to-br from-purple-500/5 via-stone-800/95 to-stone-900 p-6 rounded-xl border border-purple-500/20 hover:border-purple-500/50 transition-all duration-500 hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(168,85,247,0.15)]">
+              <h3 className="text-xl text-white mb-4 flex items-center">
+                <i className="fas fa-layer-group text-purple-500 mr-3 group-hover:scale-110 transition-transform duration-300"></i>
+                Domain Expertise
+              </h3>
+              <div className="space-y-4">
+                <div className="bg-stone-800/50 p-4 rounded-lg transform transition-transform hover:translate-x-1 hover:bg-stone-800/70">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-purple-400 font-semibold">Data Engineering</p>
+                  </div>
+                  <p className="text-gray-300 text-sm">ETL, Data Pipelines, Big Data</p>
+                </div>
+                
+                <div className="bg-stone-800/50 p-4 rounded-lg transform transition-transform hover:translate-x-1 hover:bg-stone-800/70">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-purple-400 font-semibold">Computer Vision</p>
+                  </div>
+                  <p className="text-gray-300 text-sm">OCR, Image Processing, Object Detection</p>
+                </div>
+                
+                <div className="bg-stone-800/50 p-4 rounded-lg transform transition-transform hover:translate-x-1 hover:bg-stone-800/70">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-purple-400 font-semibold">Time Series</p>
+                  </div>
+                  <p className="text-gray-300 text-sm">Forecasting, Anomaly Detection</p>
+                </div>
+              </div>
+            </div>
           </div>
-        </ExpandableBox>
+        </div>
       </section>
     </>
   );
