@@ -1,13 +1,15 @@
 {
     "type": "function",
-    "function": {
-        "name": "retrieve_information",
-      "description": "Retrieve information from a search index, including a wide variety of research papers that Fred has written as part of his studies.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "search_query": {"type": "string"}
+    "name": "retrieve_information",
+    "description": "Retrieve information from a search index, including a wide variety of research papers that Fred has written as part of his studies.",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "search_query": {
+                "type": "string",
+                "description": "The search query to find relevant information about Fred's background, projects, research papers, or experience"
             }
-        }
+        },
+        "required": ["search_query"]
     }
 }
