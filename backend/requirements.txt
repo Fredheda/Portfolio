@@ -1,5 +1,5 @@
 fastapi==0.115.3
-openai==1.58.1
+openai==2.9.0
 pyarrow==17.0.0
 pydantic==2.9.1
 python-dotenv==1.0.1
