@@ -1,6 +1,5 @@
 fastapi==0.115.3
-openai==1.58.1
-pyarrow==17.0.0
+openai==2.9.0
 pydantic==2.9.1
 python-dotenv==1.0.1
 uvicorn==0.32.0
@@ -9,5 +8,4 @@ azure-core==1.32.0
 azure-search-documents==11.5.2
 psycopg2-binary==2.9.10
 langchain-text-splitters==0.3.4
-docling==2.14.0
 tiktoken==0.8.0
