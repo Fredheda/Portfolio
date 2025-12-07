@@ -16,7 +16,7 @@ class OpenAIClient(LLMClient):
         self.client: OpenAI = OpenAI(api_key=self.open_ai_key)
         self.tools = tools
 
-    def generate_chat_response(self, messages: list, model: str = "gpt-4o-mini") -> str:
+    def generate_chat_response(self, messages: list, model: str = "gpt-4.1-nano") -> str:
         """
         Generates a completion using the OpenAI API based on the user input.
 
