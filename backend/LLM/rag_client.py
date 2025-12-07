@@ -33,6 +33,6 @@ class ragClient():
                 tool_call_results = self.llm_utils.retrieve_information(search_query=arguments['search_query'])
                 self.database_client.log_chatbot_interaction(arguments['search_query'], "tool_search_query", 0)
                 messages = self.prompt_manager.update_messages_with_toolcalls(messages, tool_function_name, arguments['search_query'], tool_call_results)
-                output = self.chatclient.generate_chat_response(messages)
+                response = self.chatclient.generate_chat_response(messages)
         
-        return output.output_text
+        return response.output_text
