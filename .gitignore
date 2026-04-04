@@ -7,3 +7,4 @@ dist
 testing.py
 *data/*cw*
 venv/*
+CLAUDE.md
