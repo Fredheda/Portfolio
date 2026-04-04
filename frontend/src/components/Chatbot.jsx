@@ -189,11 +189,11 @@ const Chatbot = () => {
       <div
         className={`fixed transform transition-all duration-300 ease-in-out
           ${isFullscreen
-            ? 'w-screen h-screen bottom-0 right-0 rounded-none origin-bottom-right'
+            ? 'w-screen bottom-0 right-0 rounded-none origin-bottom-right'
             : 'w-[400px] h-[550px] bottom-20 right-5 rounded-[15px] origin-[calc(100%-28px)_calc(100%+28px)]'
           }
-          ${isOpen 
-            ? 'scale-100 opacity-100 visible' 
+          ${isOpen
+            ? 'scale-100 opacity-100 visible'
             : 'scale-0 opacity-0 invisible'
           }
           bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 border border-sky-400/20 shadow-[0_0_30px_rgba(56,189,248,0.15)] flex flex-col overflow-hidden`}
@@ -204,7 +204,6 @@ const Chatbot = () => {
       {/* Header */}
       <div className="bg-gradient-to-r from-sky-400/5 via-zinc-800/95 to-zinc-900 text-white py-3 px-5 flex flex-col items-center justify-center rounded-t-[15px] relative border-b border-sky-400/20">
         <h4 className="text-xl m-0 font-permanent-marker">FredBot</h4>
-        <p className="text-sm text-zinc-300 m-0">(Powered by OpenAI)</p>
         <div className="flex space-x-1.5 absolute top-3 right-3">
           {window.innerWidth > 768 && (
             <button
@@ -273,7 +272,7 @@ const Chatbot = () => {
     <AnimatePresence>
       {!isOpen && showArrow && (
         <motion.div
-          className="fixed right-24 bottom-16 pointer-events-none z-[999] flex flex-col items-center"
+          className="fixed right-24 bottom-16 pointer-events-none z-[999] flex-col items-center hidden md:flex"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0, transition: { duration: 0 } }}
@@ -286,12 +285,14 @@ const Chatbot = () => {
 
     {/* Chatbot Toggle Button */}
     <div
-      className={`bg-gradient-to-r from-zinc-800 to-zinc-700 text-white rounded-full px-5 py-3 cursor-pointer shadow-lg
-        flex items-center gap-2.5 transition-all duration-300 ease-in-out border border-sky-400/20
-        hover:border-sky-400/50 hover:shadow-[0_0_15px_rgba(56,189,248,0.15)] ${isOpen ? 'opacity-0 invisible' : 'opacity-100 visible'}`}
+      className={`relative bg-gradient-to-r from-zinc-800 to-zinc-700 text-white rounded-full px-5 py-3 cursor-pointer shadow-lg
+        flex items-center gap-2.5 transition-all duration-300 ease-in-out border border-accent-cyan/20
+        hover:border-accent-cyan/50 hover:shadow-[0_0_20px_rgba(34,211,238,0.25)] hover:-translate-y-0.5 ${isOpen ? 'opacity-0 invisible' : 'opacity-100 visible'}`}
       onClick={toggleChatbot}
     >
-      <FaComments size={18} className="text-sky-400" />
+      {/* Pulsing glow ring */}
+      <span className="absolute inset-0 rounded-full animate-ping bg-accent-cyan/10 pointer-events-none" style={{ animationDuration: '2s' }} />
+      <FaComments size={18} className="text-accent-cyan" />
       <span className="text-sm font-semibold">Chat with FredBot</span>
     </div>
   </div>
