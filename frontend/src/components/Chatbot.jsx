@@ -189,11 +189,11 @@ const Chatbot = () => {
       <div
         className={`fixed transform transition-all duration-300 ease-in-out
           ${isFullscreen
-            ? 'w-screen h-screen bottom-0 right-0 rounded-none origin-bottom-right'
+            ? 'w-screen bottom-0 right-0 rounded-none origin-bottom-right'
             : 'w-[400px] h-[550px] bottom-20 right-5 rounded-[15px] origin-[calc(100%-28px)_calc(100%+28px)]'
           }
-          ${isOpen 
-            ? 'scale-100 opacity-100 visible' 
+          ${isOpen
+            ? 'scale-100 opacity-100 visible'
             : 'scale-0 opacity-0 invisible'
           }
           bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 border border-sky-400/20 shadow-[0_0_30px_rgba(56,189,248,0.15)] flex flex-col overflow-hidden`}
@@ -285,12 +285,14 @@ const Chatbot = () => {
 
     {/* Chatbot Toggle Button */}
     <div
-      className={`bg-gradient-to-r from-zinc-800 to-zinc-700 text-white rounded-full px-5 py-3 cursor-pointer shadow-lg
-        flex items-center gap-2.5 transition-all duration-300 ease-in-out border border-sky-400/20
-        hover:border-sky-400/50 hover:shadow-[0_0_15px_rgba(56,189,248,0.15)] ${isOpen ? 'opacity-0 invisible' : 'opacity-100 visible'}`}
+      className={`relative bg-gradient-to-r from-zinc-800 to-zinc-700 text-white rounded-full px-5 py-3 cursor-pointer shadow-lg
+        flex items-center gap-2.5 transition-all duration-300 ease-in-out border border-accent-cyan/20
+        hover:border-accent-cyan/50 hover:shadow-[0_0_20px_rgba(34,211,238,0.25)] hover:-translate-y-0.5 ${isOpen ? 'opacity-0 invisible' : 'opacity-100 visible'}`}
       onClick={toggleChatbot}
     >
-      <FaComments size={18} className="text-sky-400" />
+      {/* Pulsing glow ring */}
+      <span className="absolute inset-0 rounded-full animate-ping bg-accent-cyan/10 pointer-events-none" style={{ animationDuration: '2s' }} />
+      <FaComments size={18} className="text-accent-cyan" />
       <span className="text-sm font-semibold">Chat with FredBot</span>
     </div>
   </div>
