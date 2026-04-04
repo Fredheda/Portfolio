@@ -3,32 +3,32 @@ import { motion } from 'framer-motion';
 
 const projects = [
   {
-    title: "Arduino Bin-Picking Robot",
-    description: "Developed a sophisticated robotic arm using Arduino, capable of identifying and picking objects from a bin.",
-    link: "https://github.com/Fredheda/Arduino-Bin-Picking",
-    categories: ["Robotics", "Arduino"],
-    icon: "fa-robot"
+    title: "Paper Podcasts",
+    description: "An agentic research assistant that autonomously downloads and processes academic papers, generating podcast-style audio summaries. Built with Python using agentic AI patterns.",
+    link: "https://github.com/Fredheda/paper-podcasts",
+    categories: ["Agentic AI", "Python", "LLM"],
+    icon: "fa-podcast"
   },
   {
-    title: "Uber Rides in New York City",
-    description: "An analysis of Uber rides in NYC, exploring the impact of weather and time on ride demand.",
-    link: "https://github.com/Fredheda/NYC-Uber-Rides",
-    categories: ["Data Science", "Python"],
-    icon: "fa-chart-line"
-  },
-  {
-    title: "Chatbot Research Assistant",
-    description: "Built a chatbot that helps researchers find papers and articles on their topic of interest.",
-    link: "https://github.com/Fredheda/Fredbot",
-    categories: ["AI", "NLP"],
-    icon: "fa-brain"
-  },
-  {
-    title: "TFL Status Checker",
-    description: "A web app that checks the status of London's public transportation (TFL) and sends notifications.",
-    link: "https://github.com/Fredheda/TFL_Status",
-    categories: ["Web App", "API"],
+    title: "TFL MCP Server",
+    description: "A Model Context Protocol (MCP) server that exposes real-time Transport for London data to AI assistants, enabling natural language queries about tube lines, disruptions and service status.",
+    link: "https://github.com/Fredheda/tfl-mcp",
+    categories: ["MCP", "Python", "API"],
     icon: "fa-train"
+  },
+  {
+    title: "MCP Client",
+    description: "A lightweight Python client for interacting with Model Context Protocol (MCP) servers, enabling AI agents to discover and invoke tools exposed over the MCP standard.",
+    link: "https://github.com/Fredheda/mcp-client",
+    categories: ["MCP", "Python", "Agentic AI"],
+    icon: "fa-plug"
+  },
+  {
+    title: "SHAP — Open Source Contribution",
+    description: "Contributed to SHAP (SHapley Additive exPlanations), the leading open-source library for explaining machine learning model outputs using game-theoretic approaches.",
+    link: "https://github.com/Fredheda/shap",
+    categories: ["Open Source", "ML", "Explainability"],
+    icon: "fa-code-branch"
   }
 ];
 

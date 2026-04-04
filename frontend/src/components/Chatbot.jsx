@@ -204,7 +204,6 @@ const Chatbot = () => {
       {/* Header */}
       <div className="bg-gradient-to-r from-sky-400/5 via-zinc-800/95 to-zinc-900 text-white py-3 px-5 flex flex-col items-center justify-center rounded-t-[15px] relative border-b border-sky-400/20">
         <h4 className="text-xl m-0 font-permanent-marker">FredBot</h4>
-        <p className="text-sm text-zinc-300 m-0">(Powered by OpenAI)</p>
         <div className="flex space-x-1.5 absolute top-3 right-3">
           {window.innerWidth > 768 && (
             <button
@@ -273,7 +272,7 @@ const Chatbot = () => {
     <AnimatePresence>
       {!isOpen && showArrow && (
         <motion.div
-          className="fixed right-24 bottom-16 pointer-events-none z-[999] flex flex-col items-center"
+          className="fixed right-24 bottom-16 pointer-events-none z-[999] flex-col items-center hidden md:flex"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0, transition: { duration: 0 } }}

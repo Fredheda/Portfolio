@@ -53,7 +53,7 @@ const About = () => {
 
             {/* What I build */}
             <div className="flex flex-wrap gap-2 mb-10">
-              {['LLM Chatbots', 'Document Intelligence', 'Demand Forecasting', 'Causal Inference', 'GenAI Apps'].map(t => (
+              {['LLM Chatbots', 'Agentic AI', 'Document Intelligence', 'Demand Forecasting', 'Causal Inference', 'GenAI Apps'].map(t => (
                 <span key={t} className="text-sm px-3 py-1.5 rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700 hover:border-sky-400/50 hover:text-sky-400 transition-colors duration-300">
                   {t}
                 </span>
@@ -125,8 +125,9 @@ const About = () => {
               What I'm Working On
             </h3>
             <div className="text-zinc-300 leading-relaxed space-y-3">
-              <p>Leading BP's GenAI transformation — shipping RAG pipelines, LLM chatbots, and document intelligence tools used across the business.</p>
-              <p>Building AI that augments people, not replaces them. Democratising access to complex tech through communities of practice with 750+ members.</p>
+              <p>Leading BP's GenAI transformation — shipping agentic chatbots, document intelligence pipelines and key-term extraction tools across the front office.</p>
+              <p>Building and scaling LLM evaluation frameworks adopted by AI teams across bp.</p>
+              <p>Speaking at industry conferences including the London AI Summit &amp; Microsoft Reactor.</p>
               <span className="inline-flex items-center gap-2 text-sky-400 text-sm font-medium">
                 <i className="fas fa-chart-line"></i>Multi-million dollar value delivered to date
               </span>
@@ -159,14 +160,6 @@ const About = () => {
             </div>
           </div>
 
-          {/* Fun facts strip — full width */}
-          <div className="md:col-span-2 flex flex-wrap justify-around gap-6 py-5 px-6 bg-zinc-800/30 rounded-xl border border-zinc-700/40 text-zinc-400 text-sm">
-            <div className="flex items-center gap-2">☕☕☕ <span>Coffee per day</span></div>
-            <div className="flex items-center gap-2">🇬🇧 🇩🇪 🇵🇱 <span>Languages</span></div>
-            <div className="flex items-center gap-2"><i className="fas fa-graduation-cap text-sky-400"></i> <span>2x Masters Degrees</span></div>
-            <div className="flex items-center gap-2"><i className="fas fa-robot text-sky-400"></i> <span>3 Robots Built</span></div>
-            <div className="flex items-center gap-2"><i className="fas fa-users text-sky-400"></i> <span>750+ Community Members</span></div>
-          </div>
         </div>
       </motion.section>
 
@@ -192,7 +185,7 @@ const About = () => {
               <div>
                 <p className="text-sky-400 text-xs font-semibold uppercase tracking-wider mb-2">LLM Development</p>
                 <div className="flex flex-wrap gap-2">
-                  {['Azure OpenAI', 'LangChain', 'HuggingFace'].map(t => <PillTag key={t} text={t} />)}
+                  {['RAG', 'MCP', 'A2A', 'Azure OpenAI', 'Google AI', 'Claude Agent SDK', 'Anthropic'].map(t => <PillTag key={t} text={t} />)}
                 </div>
               </div>
               <div>
@@ -220,7 +213,7 @@ const About = () => {
               <div>
                 <p className="text-sky-400 text-xs font-semibold uppercase tracking-wider mb-2">Languages</p>
                 <div className="flex flex-wrap gap-2">
-                  {['Python', 'JavaScript', 'SQL', 'MATLAB'].map(t => <PillTag key={t} text={t} />)}
+                  {['Python', 'SQL', 'PHP', 'JavaScript'].map(t => <PillTag key={t} text={t} />)}
                 </div>
               </div>
               <div>
@@ -248,13 +241,13 @@ const About = () => {
               <div>
                 <p className="text-sky-400 text-xs font-semibold uppercase tracking-wider mb-2">Team Management</p>
                 <div className="flex flex-wrap gap-2">
-                  {['Cross-functional Teams', '6+ Members'].map(t => <PillTag key={t} text={t} />)}
+                  {['19 Direct Reports', '40+ Across 6 Teams'].map(t => <PillTag key={t} text={t} />)}
                 </div>
               </div>
               <div>
                 <p className="text-sky-400 text-xs font-semibold uppercase tracking-wider mb-2">Community Building</p>
                 <div className="flex flex-wrap gap-2">
-                  {['750+ Members', '2x CoP Lead'].map(t => <PillTag key={t} text={t} />)}
+                  {['750+ Active Members', '2x CoP Founded & Scaled'].map(t => <PillTag key={t} text={t} />)}
                 </div>
               </div>
               <div>
