@@ -71,6 +71,7 @@ const Chatbot = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [showArrow, setShowArrow] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   const toggleChatbot = () => {
     setIsOpen(!isOpen);
@@ -116,6 +117,7 @@ const Chatbot = () => {
 
       setMessages([...messages, newMessage]);
       setInput('');
+      setIsLoading(true);
 
       try {
         const REACT_APP_BACKEND_URL = import.meta.env.VITE_BACKEND_API_URL;
@@ -138,6 +140,7 @@ const Chatbot = () => {
         
         const data = await response.json();
 
+        setIsLoading(false);
         setMessages((prevMessages) => [
           ...prevMessages,
           { id: prevMessages.length, text: data.response, sender: 'bot' },
@@ -150,6 +153,7 @@ const Chatbot = () => {
             ? 'Sorry, you are rate limited. Please try again later.'
             : 'Sorry, something went wrong. Please try again later.';
 
+        setIsLoading(false);
         setMessages((prevMessages) => [
           ...prevMessages,
           {
@@ -247,6 +251,28 @@ const Chatbot = () => {
             ></p>
           </div>
         ))}
+        <AnimatePresence>
+          {isLoading && (
+            <motion.div
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 6 }}
+              transition={{ duration: 0.2 }}
+              className="p-3 my-1.5 rounded-xl self-start bg-gradient-to-r from-zinc-800/50 to-zinc-700/50 border border-zinc-600/50"
+            >
+              <div className="flex items-center gap-1.5 h-4">
+                {[0, 1, 2].map((i) => (
+                  <motion.span
+                    key={i}
+                    className="w-1.5 h-1.5 rounded-full bg-sky-400/70 block"
+                    animate={{ y: [0, -4, 0] }}
+                    transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15, ease: 'easeInOut' }}
+                  />
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Input */}

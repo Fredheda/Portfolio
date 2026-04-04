@@ -386,7 +386,7 @@ const About = () => {
                 What I'm Working On
               </h3>
               <div className="text-zinc-300 leading-relaxed space-y-3">
-                <p>Leading BP's GenAI transformation — shipping agentic chatbots, document intelligence pipelines and key-term extraction tools across the front office.</p>
+                <p>Leading BP's GenAI transformation — shipping agentic chatbots, document intelligence pipelines and NLP tools across the front office.</p>
                 <p>Building and scaling LLM evaluation frameworks adopted by AI teams across bp.</p>
                 <p>Speaking at industry conferences including the London AI Summit &amp; Microsoft Reactor.</p>
                 <span className="inline-flex items-center gap-2 text-accent-cyan text-sm font-medium">
