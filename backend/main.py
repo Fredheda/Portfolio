@@ -1,7 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -9,7 +8,6 @@ from pydantic import BaseModel, field_validator
 import asyncio
 import logging
 import os
-from LLM.gemini_client import GeminiClient
 from LLM.openai_client import OpenAIClient
 from services.database_client import database_client
 from LLM.rag_client import ragClient
@@ -31,15 +29,6 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     message = exc.errors()[0]["msg"].replace("Value error, ", "")
     logging.warning(f"400 Bad Request - {request.url.path}: {message}")
     return JSONResponse(status_code=400, content={"error": message})
-origins = [os.getenv("REACT_APP_FRONTEND_URL")]
-
-# CORS configuration
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["POST"]
-)
 
 # Define a request model
 class Message(BaseModel):
@@ -58,8 +47,7 @@ database_client = database_client()
 content_safety = ContentSafetyService()
 tool_orchestrator = ToolOrchestrator()
 tools = tool_orchestrator.get_tools(["LLM/tools/retrieve_information"])
-gemini_client = GeminiClient(tools)
-openai_client = OpenAIClient()  # used for embeddings only
+openai_client = OpenAIClient(tools)
 search_client = SearchClient(
             endpoint=os.getenv("azure_search_endpoint"),
             index_name=os.getenv("azure_index_name"),
@@ -67,7 +55,7 @@ search_client = SearchClient(
             )
 
 llm_utils = llm_utils(openai_client, search_client, prompt_manager)
-rag_client = ragClient(gemini_client, llm_utils, database_client, prompt_manager)
+rag_client = ragClient(openai_client, llm_utils, database_client, prompt_manager)
 
 
 # Run the custom message generator function asynchronously
