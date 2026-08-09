@@ -120,9 +120,7 @@ const Chatbot = () => {
       setIsLoading(true);
 
       try {
-        const REACT_APP_BACKEND_URL = import.meta.env.VITE_BACKEND_API_URL;
-
-        const response = await fetch(`${REACT_APP_BACKEND_URL}/chatbot`, {
+        const response = await fetch('/api/chatbot', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
