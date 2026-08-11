@@ -1,104 +1,48 @@
 # Deployment Guide
 
-This guide will help you deploy your frontend and backend applications to Heroku.
+Portfolio is deployed to Azure Container Apps (`rg-chatbot` / `cae-portfolio`),
+sharing its resource group and container registry with `copilot-kit-exp` but
+running in its own Container Apps environment. No CI/CD — deploys are run
+manually from your machine.
 
 ## Prerequisites
 
-Before you begin, make sure you have the following installed:
+- [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli), logged in (`az login`)
+- Docker is **not** required — images are built server-side in ACR via `az acr build`
 
-- [Git](https://git-scm.com/)
-- [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli)
+## Day-to-day deploys (code changes)
 
-## Steps
+```bash
+./scripts/ship.sh
+```
 
-### Deploying the Frontend Application
+Builds and pushes both images (tagged with the current git SHA), then rolls
+both container apps to them. Refuses to run on a dirty working tree, so the
+image tag always honestly matches what's deployed.
 
-1. **Navigate to your project directory:**
+## Infra changes (Bicep, secrets)
 
-    ```sh
-    cd Portfolio
-    ```
+```bash
+./infra/deploy.sh
+```
 
-2. **Login to Heroku:**
+Re-runs `infra/main.bicep` against `rg-chatbot`, sourcing all secrets from
+the repo-root `.env` (OpenAI key, Azure Search key, Azure SQL password —
+never stored anywhere else). Idempotent — safe to re-run any time infra or
+secrets change.
 
-    If you haven't logged in to Heroku CLI yet, run the following command and follow the instructions:
+## Logs
 
-    ```sh
-    heroku login
-    ```
+```bash
+az containerapp logs show --name ca-portfolio-web --resource-group rg-chatbot --follow
+az containerapp logs show --name ca-portfolio-backend --resource-group rg-chatbot --follow
+```
 
-3. **Add Heroku remote for the frontend:**
+## Rollback
 
-    ```sh
-    heroku git:remote -a frederik-heda-portfolio
-    ```
+```bash
+./scripts/redeploy.sh <previous-git-sha>
+```
 
-4. **Deploy your frontend application:**
-
-    Use the following command to push your frontend code to Heroku.
-
-    ```sh
-    git subtree push --prefix frontend heroku main
-    ```
-
-### Deploying the Backend Application
-
-1. **Navigate to your backend project directory:**
-
-    ```sh
-    cd Portfolio
-    ```
-
-2. **Add Heroku remote for the backend:**
-
-    ```sh
-    heroku git:remote -a frederik-heda-backend
-    ```
-
-3. **Deploy your backend application:**
-
-    Use the following command to push your backend code to Heroku. 
-
-    ```sh
-    git subtree push --prefix backend heroku main
-    ```
-
-## Additional Information
-
-- **Heroku Dashboard:**
-
-    You can manage your apps from the Heroku Dashboard: [https://dashboard.heroku.com/](https://dashboard.heroku.com/)
-
-- **Environment Variables:**
-
-    This application requires environment variables for the frontend and the backend. They can set them using the Heroku CLI:
-
-    ```sh
-    heroku config:set YOUR_VARIABLE_NAME=some_value
-    ```
-
-- **Logs:**
-
-    To view the logs of your applications, use the following command:
-
-    ```sh
-    heroku logs --tail
-    ```
-
-## Troubleshooting
-
-- **Common Issues:**
-
-    - **Build Failures:**
-        Ensure that your `package.json` and `build` scripts are correctly configured.
-
-    - **Application Errors:**
-        Check the logs using `heroku logs --tail` to diagnose any runtime errors.
-
-- **Heroku Documentation:**
-
-    For more detailed information, refer to the [Heroku Documentation](https://devcenter.heroku.com/).
-
----
-
-By following these steps, the frontend and backend applications to Heroku can be deployed.
+Full architecture and design rationale: `docs/specs/2026-08-09-azure-migration-design.md`
+and `docs/plans/2026-08-09-azure-migration.md` (workspace root).
