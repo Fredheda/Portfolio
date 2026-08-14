@@ -18,6 +18,14 @@ Requires the repo-root `.env` (`Portfolio/.env`, not a file inside
 `az login` locally) — no SQL password anywhere. See the repo root
 `CLAUDE.md` for details.
 
+## Database
+
+`sql/schema.sql` defines the `chatbot_logs` table; `scripts/init_azure_sql.py`
+runs it (idempotent — safe to re-run). `sql/grant_identity.sql` is a one-time,
+manually-run statement that grants the deployed container app's managed
+identity write access to the database — not run by any script, since
+re-running `CREATE USER` on an existing user errors.
+
 ## Deployment
 
 ```bash

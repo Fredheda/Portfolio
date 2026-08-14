@@ -7,6 +7,10 @@ load_dotenv()
 _client_id = os.getenv("AZURE_CLIENT_ID")
 _auth = f"Authentication=ActiveDirectoryMSI;User Id={_client_id};" if _client_id else "Authentication=ActiveDirectoryDefault;"
 
+_schema_path = os.path.join(os.path.dirname(__file__), "..", "sql", "schema.sql")
+with open(_schema_path) as f:
+    _schema_sql = f.read()
+
 conn = mssql_python.connect(
     f"Server={os.environ['AZURE_SQL_SERVER']};"
     f"Database={os.environ['AZURE_SQL_DATABASE']};"
@@ -14,18 +18,7 @@ conn = mssql_python.connect(
     "Encrypt=yes;"
 )
 cursor = conn.cursor()
-cursor.execute("""
-IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'chatbot_logs')
-BEGIN
-    CREATE TABLE chatbot_logs (
-        id INT IDENTITY(1,1) PRIMARY KEY,
-        timestamp DATETIME2 NOT NULL,
-        message_type NVARCHAR(50) NOT NULL,
-        message NVARCHAR(MAX) NOT NULL,
-        duration INT NOT NULL
-    );
-END
-""")
+cursor.execute(_schema_sql)
 conn.commit()
 cursor.close()
 conn.close()

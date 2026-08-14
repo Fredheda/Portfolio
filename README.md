@@ -28,7 +28,7 @@ Welcome to my portfolio website repository! This site showcases my work as a Sen
 
 ### Backend
 - **API Framework:** FastAPI
-- **Language:** Python 3.11
+- **Language:** Python 3.13
 - **Key Features:**
   - REST API endpoints for chatbot integration
   - Async request handling
@@ -46,8 +46,8 @@ Fredbot is an AI-powered chatbot that helps visitors learn more about my work an
 
 ### Technical Implementation
 - Built using OpenAI's GPT models
-- Content Safety Filterting
-- Context-aware responses using RAG (Not yet implemented)
+- Content Safety Filtering
+- Context-aware responses using RAG (Azure AI Search vector retrieval)
 - Custom knowledge base of my projects and experience
-- Real-time response streaming
+- Real-time response streaming (Not yet implemented)
 - Conversation history management (Not yet implemented)

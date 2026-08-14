@@ -27,9 +27,10 @@ image tag always honestly matches what's deployed.
 ```
 
 Re-runs `infra/main.bicep` against `rg-chatbot`, sourcing all secrets from
-the repo-root `.env` (OpenAI key, Azure Search key, Azure SQL password —
-never stored anywhere else). Idempotent — safe to re-run any time infra or
-secrets change.
+the repo-root `.env` (OpenAI key, Azure Search key — never stored anywhere
+else). Azure SQL access is passwordless (Microsoft Entra ID via the managed
+identity Bicep creates), so there's no SQL secret to source. Idempotent —
+safe to re-run any time infra or secrets change.
 
 ## Logs
 

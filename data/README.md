@@ -20,4 +20,4 @@ poetry install
 
 ## Important Note
 
-The dependencies in this folder (especially `docling`) include large ML frameworks with CUDA support (~2-4GB). They are intentionally separated from `/backend/requirements.txt` to keep the production container image small.
+The dependencies in this folder (especially `docling`) include large ML frameworks with CUDA support (~2-4GB). They are intentionally kept in their own Poetry project, separate from `/backend/pyproject.toml`, to keep the production container image small.
