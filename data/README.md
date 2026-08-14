@@ -9,7 +9,7 @@ These scripts require additional dependencies (including heavy ML libraries) tha
 ```bash
 # Install data processing dependencies
 cd data
-pip install -r requirements.txt
+poetry install
 ```
 
 ## Scripts
@@ -20,4 +20,4 @@ pip install -r requirements.txt
 
 ## Important Note
 
-The dependencies in this folder (especially `docling`) include large ML frameworks with CUDA support (~2-4GB). They are intentionally separated from `/backend/requirements.txt` to keep the production deployment size manageable on Heroku.
+The dependencies in this folder (especially `docling`) include large ML frameworks with CUDA support (~2-4GB). They are intentionally kept in their own Poetry project, separate from `/backend/pyproject.toml`, to keep the production container image small.

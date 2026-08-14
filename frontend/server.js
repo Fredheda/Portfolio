@@ -7,13 +7,12 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const BACKEND_URL = process.env.BACKEND_URL || 'http://ca-portfolio-backend';
 
-// Middleware to enforce HTTPS on Heroku
+// www.frederikheda.com -> frederikheda.com
 app.use((req, res, next) => {
-  // Check if the request is using HTTP (Heroku sets X-Forwarded-Proto header)
-  if (req.headers['x-forwarded-proto'] !== 'https' && process.env.NODE_ENV === 'production') {
-    // Redirect to HTTPS
-    return res.redirect(301, `https://${req.headers.host}${req.url}`);
+  if (req.headers.host === 'www.frederikheda.com') {
+    return res.redirect(301, `https://frederikheda.com${req.url}`);
   }
   next();
 });
@@ -38,6 +37,24 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use(express.json());
+
+// Proxy chatbot requests to the internal-only backend container app.
+app.post('/api/chatbot', async (req, res) => {
+  try {
+    const backendRes = await fetch(`${BACKEND_URL}/chatbot`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(req.body),
+    });
+    const data = await backendRes.json();
+    res.status(backendRes.status).json(data);
+  } catch (err) {
+    console.error('Error proxying to backend:', err);
+    res.status(502).json({ error: 'Backend unavailable' });
+  }
+});
+
 // Serve static files from the dist directory
 app.use(express.static(path.join(__dirname, 'dist')));
 
@@ -48,5 +65,4 @@ app.get('*', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
-  console.log(`HTTPS enforcement: ${process.env.NODE_ENV === 'production' ? 'enabled' : 'disabled (development)'}`);
 });

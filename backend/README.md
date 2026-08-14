@@ -1,6 +1,8 @@
 # Portfolio Backend
 
-FastAPI backend for the portfolio site's RAG chatbot (`/chatbot`), deployed to Heroku.
+FastAPI backend for the portfolio site's RAG chatbot (`/chatbot`), deployed
+to Azure Container Apps as `ca-portfolio-backend` (internal ingress only —
+not reachable from the public internet directly; the frontend proxies to it).
 
 ## Development
 
@@ -9,12 +11,30 @@ poetry install
 poetry run uvicorn main:app --reload
 ```
 
-Requires a `.env` with `OPENAI_API_KEY`, `REACT_APP_FRONTEND_URL`, `azure_search_endpoint`, `azure_index_name`, `azure_search_api_key`, and `DATABASE_URL` — see the repo root `CLAUDE.md` for details.
+Requires the repo-root `.env` (`Portfolio/.env`, not a file inside
+`backend/`) with `OPENAI_API_KEY`, `azure_search_endpoint`,
+`azure_index_name`, `azure_search_api_key`, `AZURE_SQL_SERVER`, and
+`AZURE_SQL_DATABASE`. Azure SQL auth is passwordless (Microsoft Entra ID via
+`az login` locally) — no SQL password anywhere. See the repo root
+`CLAUDE.md` for details.
+
+## Database
+
+`sql/schema.sql` defines the `chatbot_logs` table; `scripts/init_azure_sql.py`
+runs it (idempotent — safe to re-run). `sql/grant_identity.sql` is a one-time,
+manually-run statement that grants the deployed container app's managed
+identity write access to the database — not run by any script, since
+re-running `CREATE USER` on an existing user errors.
 
 ## Deployment
 
 ```bash
-git subtree push --prefix backend heroku main
+./scripts/ship.sh
 ```
 
-Dependencies are managed by Poetry (`pyproject.toml` + `poetry.lock`, Python 3.13 pinned by `.python-version`). Heroku's Python buildpack auto-detects `poetry.lock` and runs `poetry sync --only main` — no other build config is needed.
+Run from the `Portfolio/` repo root. See `Portfolio/Deployment.md` for the
+full deploy/rollback workflow.
+
+Dependencies are managed by Poetry (`pyproject.toml` + `poetry.lock`, Python
+3.13 pinned by `.python-version`). The container image is built from
+`backend/Dockerfile` via `az acr build` — no local Docker required.
