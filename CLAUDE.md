@@ -45,7 +45,7 @@ Dependencies for `backend/` and `data/` are managed by separate Poetry projects 
 ### Frontend
 Single-page app with React Router. Two routes: `/` (main portfolio) and `/privacy-policy`. The `Chatbot` component renders globally (outside routes) as a floating widget. Components: `Header`, `About`, `Projects`, `Footer`, `Chatbot`, `PrivacyPolicy`.
 
-`server.js` (the production Express server, not Vite) also handles: an application-level 301 redirect from `www.frederikheda.com` to `https://frederikheda.com` (apex is canonical), the `/api/chatbot` proxy to the backend, and security headers (HSTS, X-Frame-Options, etc). Both `frederikheda.com` and `www.frederikheda.com` are bound as custom domains on `ca-portfolio-web` with free Azure-managed certificates — see `docs/plans/2026-08-09-azure-migration.md` Task 7 for the DNS/binding setup if it ever needs redoing (e.g. cert renewal issues, DNS provider migration).
+`server.js` (the production Express server, not Vite) also handles: an application-level 301 redirect from `www.frederikheda.com` to `https://frederikheda.com` (apex is canonical), the `/api/chatbot` proxy to the backend, and security headers (HSTS, X-Frame-Options, etc). Both `frederikheda.com` and `www.frederikheda.com` are bound as custom domains on `ca-portfolio-web` with free Azure-managed certificates — see `docs/Portfolio/plans/2026-08-09-azure-migration.md` Task 7 for the DNS/binding setup if it ever needs redoing (e.g. cert renewal issues, DNS provider migration).
 
 ### Backend
 FastAPI app with a single POST endpoint `/chatbot` (rate-limited to 5/minute per IP). Request flow:
@@ -83,6 +83,6 @@ The rule of thumb: if you are about to write code that calls an external library
 **Backend** (set via the repo-root `.env` (local) or Container Apps env vars (deployed, via `infra/deploy.sh`)):
 - `OPENAI_API_KEY`
 - `azure_search_endpoint`, `azure_index_name`, `azure_search_api_key`
-- `AZURE_SQL_SERVER`, `AZURE_SQL_DATABASE` — no password, Microsoft Entra ID auth (see `docs/specs/2026-08-09-azure-migration-design.md`)
+- `AZURE_SQL_SERVER`, `AZURE_SQL_DATABASE` — no password, Microsoft Entra ID auth (see `docs/Portfolio/specs/2026-08-09-azure-migration-design.md`)
 
 **Frontend**: `BACKEND_URL` — read by `server.js` (Node), not the browser bundle. Defaults to `http://ca-portfolio-backend` (the in-environment Container Apps address, set by Bicep); for local `npm start` testing against a local backend, set it to `http://localhost:8000`.

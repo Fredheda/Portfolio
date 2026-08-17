@@ -45,5 +45,5 @@ az containerapp logs show --name ca-portfolio-backend --resource-group rg-chatbo
 ./scripts/redeploy.sh <previous-git-sha>
 ```
 
-Full architecture and design rationale: `docs/specs/2026-08-09-azure-migration-design.md`
-and `docs/plans/2026-08-09-azure-migration.md` (workspace root).
+Full architecture and design rationale: `docs/Portfolio/specs/2026-08-09-azure-migration-design.md`
+and `docs/Portfolio/plans/2026-08-09-azure-migration.md` (workspace root).
