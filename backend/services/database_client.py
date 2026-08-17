@@ -26,7 +26,7 @@ class database_client:
 
     def _connection_string(self) -> str:
         if self.managed_identity_client_id:
-            auth = f"Authentication=ActiveDirectoryMSI;User Id={self.managed_identity_client_id};"
+            auth = f"Authentication=ActiveDirectoryMSI;Uid={self.managed_identity_client_id};"
         else:
             auth = "Authentication=ActiveDirectoryDefault;"
         return (
