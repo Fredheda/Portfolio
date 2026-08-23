@@ -1,6 +1,9 @@
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { CopilotRuntime } from '@copilotkit/runtime/v2';
+import { LangGraphHttpAgent } from '@copilotkit/runtime/langgraph';
+import { createCopilotExpressHandler } from '@copilotkit/runtime/v2/express';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -37,23 +40,18 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(express.json());
+const AGENT_URL =
+  process.env.AGENT_URL ?? `${BACKEND_URL}/agent/portfolio_agent`;
 
-// Proxy chatbot requests to the internal-only backend container app.
-app.post('/api/chatbot', async (req, res) => {
-  try {
-    const backendRes = await fetch(`${BACKEND_URL}/chatbot`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(req.body),
-    });
-    const data = await backendRes.json();
-    res.status(backendRes.status).json(data);
-  } catch (err) {
-    console.error('Error proxying to backend:', err);
-    res.status(502).json({ error: 'Backend unavailable' });
-  }
+const runtime = new CopilotRuntime({
+  agents: {
+    portfolio_agent: new LangGraphHttpAgent({ url: AGENT_URL }),
+  },
 });
+
+// Multi-route mode (the default): exposes POST /api/copilotkit/agent/:agentId/run
+// and friends. Dedicated Express adapter, not a hand-rolled Fetch bridge.
+app.use(createCopilotExpressHandler({ runtime, basePath: '/api/copilotkit' }));
 
 // Serve static files from the dist directory
 app.use(express.static(path.join(__dirname, 'dist')));
