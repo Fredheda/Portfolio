@@ -1,40 +1,7 @@
 import { motion } from 'framer-motion';
+import siteContent from '../../../content/site-content.json';
 
-const projects = [
-  {
-    title: "Paper Podcasts",
-    description: "An agentic research assistant that autonomously downloads and processes academic papers, generating podcast-style audio summaries. Built with Python using agentic AI patterns.",
-    link: "https://github.com/Fredheda/paper-podcasts",
-    categories: ["Agentic AI", "Python", "LLM"],
-    icon: "fa-podcast",
-    accent: 'cyan',
-    featured: true,
-  },
-  {
-    title: "TFL MCP Server",
-    description: "A Model Context Protocol (MCP) server that exposes real-time Transport for London data to AI assistants, enabling natural language queries about tube lines, disruptions and service status.",
-    link: "https://github.com/Fredheda/tfl-mcp",
-    categories: ["MCP", "Python", "API"],
-    icon: "fa-train",
-    accent: 'violet',
-  },
-  {
-    title: "MCP Client",
-    description: "A lightweight Python client for interacting with Model Context Protocol (MCP) servers, enabling AI agents to discover and invoke tools exposed over the MCP standard.",
-    link: "https://github.com/Fredheda/mcp-client",
-    categories: ["MCP", "Python", "Agentic AI"],
-    icon: "fa-plug",
-    accent: 'violet',
-  },
-  {
-    title: "SHAP — Open Source Contribution",
-    description: "Contributed to SHAP (SHapley Additive exPlanations), the leading open-source library for explaining machine learning model outputs using game-theoretic approaches.",
-    link: "https://github.com/Fredheda/shap",
-    categories: ["Open Source", "ML", "Explainability"],
-    icon: "fa-code-branch",
-    accent: 'gold',
-  }
-];
+const projects = siteContent.projects;
 
 const accentMap = {
   cyan: {
@@ -132,7 +99,7 @@ const Projects = () => {
         {rest.map((project, index) => {
           const colors = accentMap[project.accent];
           return (
-            <motion.div key={index} custom={index + 1} variants={cardVariant}>
+            <motion.div key={project.id} custom={index + 1} variants={cardVariant}>
               <a
                 href={project.link}
                 target="_blank"
