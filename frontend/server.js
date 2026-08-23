@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import { CopilotRuntime } from '@copilotkit/runtime/v2';
 import { LangGraphHttpAgent } from '@copilotkit/runtime/langgraph';
 import { createCopilotExpressHandler } from '@copilotkit/runtime/v2/express';
+import { rateLimit } from 'express-rate-limit';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -48,6 +49,18 @@ const runtime = new CopilotRuntime({
     portfolio_agent: new LangGraphHttpAgent({ url: AGENT_URL }),
   },
 });
+
+// Same granularity as the retired backend's slowapi limit -- 5 requests per
+// minute per IP; each chat turn is one request to this route, so this is
+// "5 messages per minute per visitor".
+const copilotKitLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 5,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { error: 'Rate limit exceeded' },
+});
+app.use('/api/copilotkit', copilotKitLimiter);
 
 // Multi-route mode (the default): exposes POST /api/copilotkit/agent/:agentId/run
 // and friends. Dedicated Express adapter, not a hand-rolled Fetch bridge.
