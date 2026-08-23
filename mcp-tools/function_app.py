@@ -4,6 +4,7 @@ import logging
 import azure.functions as func
 
 from content_loader import load_content
+from search_client import retrieve_information as _retrieve_information
 
 app = func.FunctionApp()
 
@@ -15,6 +16,17 @@ _GET_PROJECT_DETAILS_PROPERTIES = json.dumps(
             "propertyName": "project_id",
             "propertyType": "string",
             "description": "The stable id of the project, e.g. 'paper-podcasts'.",
+            "isRequired": True,
+        }
+    ]
+)
+
+_RETRIEVE_INFORMATION_PROPERTIES = json.dumps(
+    [
+        {
+            "propertyName": "search_query",
+            "propertyType": "string",
+            "description": "A short natural-language query describing what to search for.",
             "isRequired": True,
         }
     ]
@@ -56,3 +68,17 @@ def get_project_details(context) -> str:
 
     logging.info("get_project_details: returning %s", project_id)
     return json.dumps(match)
+
+
+@app.mcp_tool_trigger(
+    arg_name="context",
+    tool_name="retrieve_information",
+    description="Search Frederik's background documents (CV, project write-ups, bio) for information relevant to a query.",
+    tool_properties=_RETRIEVE_INFORMATION_PROPERTIES,
+)
+def retrieve_information(context) -> str:
+    invocation = json.loads(context)
+    search_query = invocation["arguments"].get("search_query")
+    if not search_query:
+        return "Error: search_query is required."
+    return _retrieve_information(search_query)

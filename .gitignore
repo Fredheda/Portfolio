@@ -10,3 +10,5 @@ venv/*
 .venv/
 backup
 mcp-tools/content/
+mcp-tools/.azurite/
+mcp-tools/local.settings.json
