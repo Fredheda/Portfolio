@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import siteContent from '../../../content/site-content.json';
+import { useAgentUI } from '../context/AgentUIContext';
 
 const projects = siteContent.projects;
 
@@ -42,6 +43,7 @@ const Projects = () => {
   const featured = projects[0];
   const rest = projects.slice(1);
   const featuredColors = accentMap[featured.accent];
+  const { highlightedProjectIds, expandedProjectId } = useAgentUI();
 
   return (
     <motion.section
@@ -66,7 +68,9 @@ const Projects = () => {
           href={featured.link}
           target="_blank"
           rel="noopener noreferrer"
-          className={`group block bg-gradient-to-br ${featuredColors.gradient} rounded-xl border ${featuredColors.border} transition-all duration-500 hover:-translate-y-1 ${featuredColors.glow} no-underline`}
+          className={`group block bg-gradient-to-br ${featuredColors.gradient} rounded-xl border ${featuredColors.border} transition-all duration-500 hover:-translate-y-1 ${featuredColors.glow} no-underline ${
+            highlightedProjectIds.includes(featured.id) ? 'ring-2 ring-accent-cyan ring-offset-2 ring-offset-surface-900' : ''
+          }`}
         >
           <div className="p-8 flex flex-col md:flex-row md:items-center gap-6">
             <div className="flex-1">
@@ -92,6 +96,21 @@ const Projects = () => {
             </div>
           </div>
         </a>
+        {expandedProjectId === featured.id && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            className="mt-3 p-4 rounded-lg bg-zinc-800/70 border border-zinc-700 text-sm text-zinc-300"
+          >
+            <p className="font-semibold text-white mb-1">{featured.title}</p>
+            <p>{featured.description}</p>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {featured.categories.map((c) => (
+                <span key={c} className="text-xs px-2 py-1 rounded-full border border-zinc-600">{c}</span>
+              ))}
+            </div>
+          </motion.div>
+        )}
       </motion.div>
 
       {/* Remaining projects — grid */}
@@ -104,7 +123,9 @@ const Projects = () => {
                 href={project.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`group block h-full bg-gradient-to-br ${colors.gradient} rounded-xl border ${colors.border} transition-all duration-500 hover:-translate-y-1 ${colors.glow} no-underline`}
+                className={`group block h-full bg-gradient-to-br ${colors.gradient} rounded-xl border ${colors.border} transition-all duration-500 hover:-translate-y-1 ${colors.glow} no-underline ${
+                  highlightedProjectIds.includes(project.id) ? 'ring-2 ring-accent-cyan ring-offset-2 ring-offset-surface-900' : ''
+                }`}
               >
                 <div className="p-6 flex flex-col h-full">
                   <div className="flex items-center justify-between mb-3">
@@ -135,6 +156,21 @@ const Projects = () => {
                   </div>
                 </div>
               </a>
+              {expandedProjectId === project.id && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  className="mt-3 p-4 rounded-lg bg-zinc-800/70 border border-zinc-700 text-sm text-zinc-300"
+                >
+                  <p className="font-semibold text-white mb-1">{project.title}</p>
+                  <p>{project.description}</p>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {project.categories.map((c) => (
+                      <span key={c} className="text-xs px-2 py-1 rounded-full border border-zinc-600">{c}</span>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
             </motion.div>
           );
         })}

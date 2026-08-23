@@ -6,6 +6,7 @@ import About from './components/About';
 import Projects from './components/Projects';
 import Footer from './components/Footer';
 import Chatbot from './components/Chatbot';
+import AgentTools from './components/AgentTools';
 import SectionDivider from './components/ui/SectionDivider';
 
 const PrivacyPolicy = React.lazy(() => import('./components/PrivacyPolicy'));
@@ -46,6 +47,7 @@ function App() {
         </main>
         <Footer />
         <Chatbot />
+        <AgentTools />
       </div>
     </Router>
   );
