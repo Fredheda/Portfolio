@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
+import { VegaEmbed } from 'react-vega';
 import GradientMesh from './ui/GradientMesh';
+import { useAgentUI } from '../context/AgentUIContext';
 import siteContent from '../../../content/site-content.json';
 
 /* ─── animation variants ─── */
@@ -155,6 +157,7 @@ const TiltCard = ({ children, className = '' }) => {
 const About = () => {
   const headlineWords = "Hi! I'm Fred".split(' ');
   const skillPills = ['LLM Chatbots', 'Agentic AI', 'Document Intelligence', 'Demand Forecasting', 'Causal Inference', 'GenAI Apps'];
+  const { skillsChartSpec } = useAgentUI();
 
   return (
     <>
@@ -379,6 +382,12 @@ const About = () => {
           </i>
           <span>Skills &amp; Expertise</span>
         </motion.h2>
+
+        {skillsChartSpec && (
+          <div className="mb-8 p-4 rounded-xl bg-zinc-800/50 border border-zinc-700">
+            <VegaEmbed spec={skillsChartSpec} options={{ actions: false }} />
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {skillCategories.map((cat) => (
