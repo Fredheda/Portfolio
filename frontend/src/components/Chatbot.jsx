@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { FaComments, FaTimes, FaTrash, FaExpand, FaCompress } from 'react-icons/fa';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
 import DOMPurify from 'dompurify';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { useAgent, useCopilotKit } from '@copilotkit/react-core/v2';
+import { useChatThread } from '../context/ChatThreadContext';
 
 // Bezier control points matching the SVG path "M 20 10 C 60 30, 70 60, 55 100"
 const P = [{ x: 20, y: 10 }, { x: 60, y: 30 }, { x: 70, y: 60 }, { x: 55, y: 100 }];
@@ -68,10 +72,17 @@ const ArrowAnimation = ({ onDone }) => {
 const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState('');
   const [showArrow, setShowArrow] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
+
+  const { agent } = useAgent();
+  const { copilotkit } = useCopilotKit();
+  const { resetThread } = useChatThread();
+  const [input, setInput] = useState('');
+
+  const messages = (agent?.messages ?? []).filter(
+    (m) => (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string' && m.content.length > 0
+  );
+  const isLoading = agent?.isRunning ?? false;
 
   const toggleChatbot = () => {
     setIsOpen(!isOpen);
@@ -107,61 +118,17 @@ const Chatbot = () => {
   };
 
   const handleSendMessage = async () => {
-    if (input.trim()) {
-      const sanitizedInput = DOMPurify.sanitize(input);
-      const newMessage = {
-        id: messages.length,
-        text: sanitizedInput,
-        sender: 'user',
-      };
+    const trimmed = input.trim();
+    if (!trimmed || !agent) return;
 
-      setMessages([...messages, newMessage]);
-      setInput('');
-      setIsLoading(true);
-
-      try {
-        const response = await fetch('/api/chatbot', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ text: sanitizedInput }),
-        });
-        
-        if (!response.ok) {
-          throw new Error(
-            response.status === 429
-              ? 'Rate limit exceeded'
-              : `HTTP error! Status: ${response.status}`
-          );
-        }
-        
-        const data = await response.json();
-
-        setIsLoading(false);
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          { id: prevMessages.length, text: data.response, sender: 'bot' },
-        ]);
-      } catch (error) {
-        console.error('Error communicating with the backend:', error);
-
-        const errorMessage =
-          error.message === 'Rate limit exceeded'
-            ? 'Sorry, you are rate limited. Please try again later.'
-            : 'Sorry, something went wrong. Please try again later.';
-
-        setIsLoading(false);
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          {
-            id: prevMessages.length,
-            text: errorMessage,
-            sender: 'bot',
-          },
-        ]);
-      }
-    }
+    const sanitizedInput = DOMPurify.sanitize(trimmed);
+    setInput('');
+    agent.addMessage({
+      id: crypto.randomUUID(),
+      role: 'user',
+      content: sanitizedInput,
+    });
+    await copilotkit.runAgent({ agent });
   };
 
   const handleKeyDown = (event) => {
@@ -171,7 +138,14 @@ const Chatbot = () => {
   };
 
   const clearChat = () => {
-    setMessages([]);
+    // setMessages clears what's on screen immediately and deterministically.
+    // resetThread() switches to a fresh threadId so the *next* message
+    // doesn't reload old history from the backend's MemorySaver checkpoint
+    // (the original bug) -- relying on <CopilotKit threadId> alone to
+    // reactively re-derive an empty agent didn't visibly clear the list in
+    // testing, so this does both explicitly rather than depending on that.
+    agent?.setMessages([]);
+    resetThread();
   };
 
   useEffect(() => {
@@ -231,22 +205,27 @@ const Chatbot = () => {
       </div>
 
       {/* Message Container */}
-      <div className="flex-1 p-4 overflow-y-auto text-sm flex flex-col bg-gradient-to-br from-zinc-900 to-zinc-800">
+      <div
+        data-lenis-prevent
+        className="flex-1 p-4 overflow-y-auto text-sm flex flex-col bg-gradient-to-br from-zinc-900 to-zinc-800"
+      >
         {messages.map((message) => (
           <div
             key={message.id}
             className={`p-3 my-1.5 rounded-xl max-w-3/4 break-words backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] ${
-              message.sender === 'user'
+              message.role === 'user'
                 ? 'bg-gradient-to-r from-sky-400/20 to-sky-500/20 border border-sky-400/20 text-white self-end text-right'
                 : 'bg-gradient-to-r from-zinc-800/50 to-zinc-700/50 border border-zinc-600/50 text-zinc-300 self-start text-left'
             }`}
           >
-            <p
-              className="m-0"
-              dangerouslySetInnerHTML={{
-                __html: DOMPurify.sanitize(message.text),
-              }}
-            ></p>
+            <div
+              className="[&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&_p]:m-0 [&_p+p]:mt-2
+                [&_ul]:list-disc [&_ul]:pl-4 [&_ul]:my-2 [&_ol]:list-decimal [&_ol]:pl-4 [&_ol]:my-2
+                [&_li]:my-0.5 [&_strong]:font-semibold [&_a]:underline [&_a]:text-sky-300
+                [&_code]:bg-black/20 [&_code]:rounded [&_code]:px-1 [&_code]:py-0.5"
+            >
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
+            </div>
           </div>
         ))}
         <AnimatePresence>

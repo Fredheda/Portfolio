@@ -52,7 +52,14 @@ const runtime = new CopilotRuntime({
 
 // Same granularity as the retired backend's slowapi limit -- 5 requests per
 // minute per IP; each chat turn is one request to this route, so this is
-// "5 messages per minute per visitor".
+// "5 messages per minute per visitor". Scoped to just the run endpoint
+// (POST /api/copilotkit/agent/:agentId/run), not the whole /api/copilotkit
+// prefix -- multi-route mode also serves GET /info (fetched once per
+// CopilotKit provider mount, i.e. every page load) and GET
+// /agent/:agentId/connect under that same prefix, neither of which is a
+// chat message; mounting the limiter broadly meant a handful of page
+// reloads could exhaust the budget before a single real message was sent
+// (confirmed live).
 const copilotKitLimiter = rateLimit({
   windowMs: 60 * 1000,
   limit: 5,
@@ -60,7 +67,7 @@ const copilotKitLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: 'Rate limit exceeded' },
 });
-app.use('/api/copilotkit', copilotKitLimiter);
+app.use('/api/copilotkit/agent/:agentId/run', copilotKitLimiter);
 
 // Multi-route mode (the default): exposes POST /api/copilotkit/agent/:agentId/run
 // and friends. Dedicated Express adapter, not a hand-rolled Fetch bridge.
