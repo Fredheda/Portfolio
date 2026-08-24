@@ -48,6 +48,16 @@ param azureIndexName string
 param azureSqlServer string
 param azureSqlDatabase string
 
+@description('Azure Function App name (MCP tools server).')
+param functionAppName string = 'func-portfolio-mcp-tools'
+
+@description('Storage account backing the Function App (name must be globally unique, lowercase, no dashes).')
+param functionStorageAccountName string = 'stportfoliomcp'
+
+@secure()
+@description('MCP extension system key for the Function App, fetched post-deploy (see infra/deploy.sh). Empty on first deploy.')
+param functionMcpKey string = ''
+
 // Built-in AcrPull role definition ID (constant across all tenants).
 var acrPullRoleId = '7f951dda-4ed3-4680-a7ca-43fe172d538d'
 var loginServer = '${acrName}.azurecr.io'
@@ -81,6 +91,46 @@ resource environment 'Microsoft.App/managedEnvironments@2025-01-01' = {
   properties: {}
 }
 
+resource functionStorage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+  name: functionStorageAccountName
+  location: location
+  sku: { name: 'Standard_LRS' }
+  kind: 'StorageV2'
+  properties: {
+    minimumTlsVersion: 'TLS1_2'
+    allowBlobPublicAccess: false
+  }
+}
+
+resource functionPlan 'Microsoft.Web/serverfarms@2023-12-01' = {
+  name: '${functionAppName}-plan'
+  location: location
+  sku: { name: 'Y1', tier: 'Dynamic' }
+  properties: {}
+}
+
+resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
+  name: functionAppName
+  location: location
+  kind: 'functionapp,linux'
+  properties: {
+    serverFarmId: functionPlan.id
+    siteConfig: {
+      linuxFxVersion: 'PYTHON|3.13'
+      appSettings: [
+        { name: 'AzureWebJobsStorage', value: 'DefaultEndpointsProtocol=https;AccountName=${functionStorage.name};AccountKey=${functionStorage.listKeys().keys[0].value};EndpointSuffix=core.windows.net' }
+        { name: 'FUNCTIONS_WORKER_RUNTIME', value: 'python' }
+        { name: 'FUNCTIONS_EXTENSION_VERSION', value: '~4' }
+        { name: 'OPENAI_API_KEY', value: openaiApiKey }
+        { name: 'azure_search_api_key', value: azureSearchApiKey }
+        { name: 'azure_search_endpoint', value: azureSearchEndpoint }
+        { name: 'azure_index_name', value: azureIndexName }
+      ]
+    }
+    httpsOnly: true
+  }
+}
+
 // Backend: internal ingress only — no public endpoint. Reachable in-environment
 // as http://ca-portfolio-backend (port 80 -> targetPort 8000).
 resource backend 'Microsoft.App/containerApps@2025-01-01' = {
@@ -112,7 +162,7 @@ resource backend 'Microsoft.App/containerApps@2025-01-01' = {
       ]
       secrets: [
         { name: 'openai-api-key', value: openaiApiKey }
-        { name: 'azure-search-api-key', value: azureSearchApiKey }
+        { name: 'function-mcp-key', value: functionMcpKey }
       ]
     }
     template: {
@@ -126,9 +176,8 @@ resource backend 'Microsoft.App/containerApps@2025-01-01' = {
           }
           env: [
             { name: 'OPENAI_API_KEY', secretRef: 'openai-api-key' }
-            { name: 'azure_search_api_key', secretRef: 'azure-search-api-key' }
-            { name: 'azure_search_endpoint', value: azureSearchEndpoint }
-            { name: 'azure_index_name', value: azureIndexName }
+            { name: 'FUNCTION_APP_URL', value: 'https://${functionApp.properties.defaultHostName}' }
+            { name: 'FUNCTION_MCP_KEY', secretRef: 'function-mcp-key' }
             { name: 'AZURE_SQL_SERVER', value: azureSqlServer }
             { name: 'AZURE_SQL_DATABASE', value: azureSqlDatabase }
             // Presence of this var is what makes database_client.py pick
@@ -201,3 +250,4 @@ resource frontend 'Microsoft.App/containerApps@2025-01-01' = {
 output frontendFqdn string = frontend.properties.configuration.ingress.fqdn
 output backendFqdn string = backend.properties.configuration.ingress.fqdn
 output identityName string = identity.name
+output functionAppUrl string = 'https://${functionApp.properties.defaultHostName}'
