@@ -1,7 +1,7 @@
 import { useFrontendTool } from '@copilotkit/react-core/v2';
 import { z } from 'zod';
 import { useAgentUI } from '../context/AgentUIContext';
-import { validateSpec } from '../lib/vega-spec';
+import { normalizeSpec, validateSpec } from '../lib/vega-spec';
 import siteContent from '../../../content/site-content.json';
 
 const KNOWN_IDS = siteContent.projects.map((p) => p.id);
@@ -59,7 +59,7 @@ export default function AgentTools() {
       if (problem) {
         return `Error: that Vega-Lite spec is invalid and was not rendered (${problem}). Fix the spec and call renderSkillsChart again.`;
       }
-      setSkillsChartSpec(spec);
+      setSkillsChartSpec(normalizeSpec(spec));
       document.getElementById('skills')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       return 'Chart rendered in the Skills & Expertise section.';
     },

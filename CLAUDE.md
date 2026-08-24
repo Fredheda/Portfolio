@@ -35,6 +35,16 @@ poetry run python populate_index.py    # Process documents and upload to Azure A
 
 Dependencies for `backend/` and `data/` are managed by separate Poetry projects (`pyproject.toml` + `poetry.lock` in each), not a shared venv — `backend` and `data` pin conflicting `tiktoken` versions, so they can't share one.
 
+### Local development (all services)
+Running the chatbot end-to-end locally needs four processes: Azurite (storage emulator), `mcp-tools` (Azure Functions), `backend` (FastAPI agent), and `frontend`. A repo-root `Procfile` runs all four together via [honcho](https://github.com/nickstenning/honcho):
+```bash
+pipx install honcho   # one-time; global+isolated since there's no repo-root Python project to add it as a dependency to (backend/data/mcp-tools are separate Poetry projects)
+honcho start           # from Portfolio/ — Ctrl-C stops all four
+```
+`Portfolio/.env` needs `FUNCTION_APP_URL=http://localhost:7071` and `frontend/.env` needs `BACKEND_URL=http://localhost:8000` (both gitignored, local-only). The `Procfile` pins `PORT` explicitly on the `backend`/`frontend` lines — `honcho` otherwise auto-assigns its own `PORT` per process (Foreman convention), which collides with `main.py`'s and `server.js`'s own `PORT` defaults. The `backend` line also waits for `mcp-tools`'s `func start` to actually finish binding `:7071` (not just print its startup banner) before running, via a `curl`/`sleep` poll loop.
+
+Each service can still be run individually with its own command above if you don't need the full stack — see `docs/Portfolio/plans/2026-08-22-agentic-chatbot-design.md` Task 14 for the manual three-terminal version this replaces.
+
 ### Deployment
 ```bash
 ./scripts/ship.sh
