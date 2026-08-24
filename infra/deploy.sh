@@ -39,8 +39,17 @@ az deployment group create \
     azureIndexName="$azure_index_name" \
     azureSqlServer="$AZURE_SQL_SERVER" \
     azureSqlDatabase="$AZURE_SQL_DATABASE" \
+    functionMcpKey="${FUNCTION_MCP_KEY:-}" \
   --query "properties.provisioningState" -o tsv
 
 FQDN=$(az containerapp show -n ca-portfolio-web -g "$RG" \
   --query properties.configuration.ingress.fqdn -o tsv)
 echo "Frontend: https://$FQDN"
+
+echo ""
+echo "Function App provisioned. Next steps (first deploy only, or after"
+echo "recreating the Function App):"
+echo "  1. ./scripts/deploy-mcp-tools.sh"
+echo "  2. FUNCTION_MCP_KEY=\$(az functionapp keys list -g $RG -n func-portfolio-mcp-tools --query systemKeys.mcp_extension -o tsv)"
+echo "  3. az containerapp secret set -g $RG -n ca-portfolio-backend --secrets function-mcp-key=\"\$FUNCTION_MCP_KEY\""
+echo "  4. az containerapp update -g $RG -n ca-portfolio-backend --set-env-vars FUNCTION_MCP_KEY=secretref:function-mcp-key"
