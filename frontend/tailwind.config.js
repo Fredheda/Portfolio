@@ -24,6 +24,7 @@ export default {
         heading: ['Montserrat', 'sans-serif'],
         'permanent-marker': ['"Permanent Marker"', 'cursive'],
         caveat: ['Caveat', 'cursive'],
+        mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
       },
     },
   },

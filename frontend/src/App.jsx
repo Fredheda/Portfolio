@@ -2,12 +2,11 @@ import React, { Suspense, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Lenis from 'lenis';
 import Header from './components/Headers';
-import About from './components/About';
+import TerminalHero from './components/TerminalHero';
 import Projects from './components/Projects';
+import About from './components/About';
 import Footer from './components/Footer';
-import Chatbot from './components/Chatbot';
 import AgentTools from './components/AgentTools';
-import SectionDivider from './components/ui/SectionDivider';
 
 const PrivacyPolicy = React.lazy(() => import('./components/PrivacyPolicy'));
 
@@ -46,7 +45,6 @@ function App() {
           </Routes>
         </main>
         <Footer />
-        <Chatbot />
         <AgentTools />
       </div>
     </Router>
@@ -56,13 +54,9 @@ function App() {
 function MainContent() {
   return (
     <div>
-      <section>
-        <About />
-      </section>
-      <SectionDivider />
-      <section>
-        <Projects />
-      </section>
+      <TerminalHero />
+      <Projects />
+      <About />
     </div>
   );
 }

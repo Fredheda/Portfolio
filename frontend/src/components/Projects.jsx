@@ -1,181 +1,49 @@
-import { motion } from 'framer-motion';
 import siteContent from '../../content/site-content.json';
 import { useAgentUI } from '../context/AgentUIContext';
 
 const projects = siteContent.projects;
 
-const accentMap = {
-  cyan: {
-    pill: 'bg-accent-cyan/10 text-accent-cyan border-accent-cyan/20',
-    border: 'border-accent-cyan/20 hover:border-accent-cyan/50',
-    gradient: 'from-cyan-500/5 via-zinc-800/95 to-zinc-900',
-    glow: 'hover:shadow-[0_0_30px_rgba(34,211,238,0.15)]',
-    titleHover: 'group-hover:text-accent-cyan',
-    iconColor: 'text-accent-cyan',
-  },
-  violet: {
-    pill: 'bg-accent-violet/10 text-accent-violet border-accent-violet/20',
-    border: 'border-accent-violet/20 hover:border-accent-violet/50',
-    gradient: 'from-violet-500/5 via-zinc-800/95 to-zinc-900',
-    glow: 'hover:shadow-[0_0_30px_rgba(167,139,250,0.15)]',
-    titleHover: 'group-hover:text-accent-violet',
-    iconColor: 'text-accent-violet',
-  },
-  gold: {
-    pill: 'bg-amber-400/10 text-accent-gold border-amber-400/20',
-    border: 'border-amber-400/20 hover:border-amber-400/50',
-    gradient: 'from-amber-400/5 via-zinc-800/95 to-zinc-900',
-    glow: 'hover:shadow-[0_0_30px_rgba(251,191,36,0.15)]',
-    titleHover: 'group-hover:text-accent-gold',
-    iconColor: 'text-accent-gold',
-  },
-};
-
-const cardVariant = {
-  hidden: { opacity: 0, y: 30 },
-  visible: (i) => ({
-    opacity: 1, y: 0,
-    transition: { duration: 0.6, delay: i * 0.12, ease: [0.22, 1, 0.36, 1] },
-  }),
-};
-
 const Projects = () => {
-  const featured = projects[0];
-  const rest = projects.slice(1);
-  const featuredColors = accentMap[featured.accent];
   const { highlightedProjectIds, expandedProjectId } = useAgentUI();
 
   return (
-    <motion.section
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, amount: 0.15 }}
-      id="projects"
-      className="bg-gradient-to-br from-surface-900 via-surface-800 to-surface-900 px-6 md:px-12 py-8 rounded-[15px] max-w-[1200px] mx-auto mb-12 relative overflow-hidden scroll-mt-20"
-    >
-      <motion.h2
-        custom={0}
-        variants={cardVariant}
-        className="font-heading text-2xl font-bold tracking-tight text-left text-white mb-8 flex items-center"
-      >
-        <i className="fas fa-rocket mr-4 gradient-text" style={{ WebkitTextFillColor: 'unset' }} />
-        Featured Projects
-      </motion.h2>
+    <section id="projects" className="max-w-[1200px] mx-auto mb-12 px-2 scroll-mt-20">
+      <div className="font-mono text-xs text-zinc-500 mb-4 tracking-wide">$ ls projects/</div>
 
-      {/* Featured project — full width */}
-      <motion.div custom={0} variants={cardVariant} className="mb-6">
-        <a
-          href={featured.link}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`group block bg-gradient-to-br ${featuredColors.gradient} rounded-xl border ${featuredColors.border} transition-all duration-500 hover:-translate-y-1 ${featuredColors.glow} no-underline ${
-            highlightedProjectIds.includes(featured.id) ? 'ring-2 ring-accent-cyan ring-offset-2 ring-offset-surface-900' : ''
-          }`}
-        >
-          <div className="p-8 flex flex-col md:flex-row md:items-center gap-6">
-            <div className="flex-1">
-              <div className="flex flex-wrap gap-2 mb-3">
-                {featured.categories.map((cat, i) => (
-                  <span key={i} className={`text-xs px-2 py-1 rounded-full border ${featuredColors.pill}`}>{cat}</span>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {projects.map((project) => (
+          <div key={project.id}>
+            <a
+              href={project.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`group block bg-zinc-900/80 border rounded-lg p-4 transition-all duration-300 hover:border-zinc-500 no-underline ${
+                highlightedProjectIds.includes(project.id)
+                  ? 'border-white/70 ring-2 ring-white/40 ring-offset-2 ring-offset-surface-950'
+                  : 'border-zinc-800'
+              }`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm text-white font-semibold group-hover:text-zinc-200">{project.title}</h3>
+                <i className={`fas ${project.icon} text-zinc-500 text-sm`} />
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {project.categories.map((category) => (
+                  <span key={category} className="text-[10px] px-2 py-0.5 rounded-full border border-zinc-700 text-zinc-400">
+                    {category}
+                  </span>
                 ))}
               </div>
-              <h3 className={`text-2xl md:text-3xl text-white font-bold mb-3 ${featuredColors.titleHover} transition-colors duration-300`}>
-                {featured.title}
-              </h3>
-              <p className="text-zinc-300 text-base leading-relaxed mb-4">
-                {featured.description}
-              </p>
-              <span className="inline-flex items-center text-sm text-white font-semibold py-2 px-4 rounded-lg bg-zinc-800/50 border border-zinc-700/50 group-hover:border-accent-cyan/50 transition-all duration-300">
-                <i className="fab fa-github mr-2" />
-                View Project
-                <i className="fas fa-arrow-right ml-2 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
-              </span>
-            </div>
-            <div className="shrink-0 flex items-center justify-center">
-              <i className={`fas ${featured.icon} ${featuredColors.iconColor} text-5xl md:text-6xl group-hover:scale-110 transition-transform duration-300`} />
-            </div>
+            </a>
+            {expandedProjectId === project.id && (
+              <div className="mt-2 p-3 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-zinc-400">
+                <p>{project.description}</p>
+              </div>
+            )}
           </div>
-        </a>
-        {expandedProjectId === featured.id && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            className="mt-3 p-4 rounded-lg bg-zinc-800/70 border border-zinc-700 text-sm text-zinc-300"
-          >
-            <p className="font-semibold text-white mb-1">{featured.title}</p>
-            <p>{featured.description}</p>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {featured.categories.map((c) => (
-                <span key={c} className="text-xs px-2 py-1 rounded-full border border-zinc-600">{c}</span>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </motion.div>
-
-      {/* Remaining projects — grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {rest.map((project, index) => {
-          const colors = accentMap[project.accent];
-          return (
-            <motion.div key={project.id} custom={index + 1} variants={cardVariant}>
-              <a
-                href={project.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`group block h-full bg-gradient-to-br ${colors.gradient} rounded-xl border ${colors.border} transition-all duration-500 hover:-translate-y-1 ${colors.glow} no-underline ${
-                  highlightedProjectIds.includes(project.id) ? 'ring-2 ring-accent-cyan ring-offset-2 ring-offset-surface-900' : ''
-                }`}
-              >
-                <div className="p-6 flex flex-col h-full">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className={`text-lg text-white font-semibold ${colors.titleHover} transition-colors duration-300`}>
-                      {project.title}
-                    </h3>
-                    <i className={`fas ${project.icon} ${colors.iconColor} text-xl group-hover:scale-110 transition-transform duration-300`} />
-                  </div>
-
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {project.categories.map((category, i) => (
-                      <span key={i} className={`text-xs px-2 py-1 rounded-full border ${colors.pill}`}>
-                        {category}
-                      </span>
-                    ))}
-                  </div>
-
-                  <p className="text-zinc-300 text-sm leading-relaxed flex-grow">
-                    {project.description}
-                  </p>
-
-                  <div className="mt-6">
-                    <span className="inline-flex items-center text-sm text-white font-semibold py-2 px-4 rounded-lg bg-zinc-800/50 border border-zinc-700/50 group-hover:border-zinc-500/50 transition-all duration-300">
-                      <i className="fab fa-github mr-2" />
-                      View Project
-                      <i className="fas fa-arrow-right ml-2 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
-                    </span>
-                  </div>
-                </div>
-              </a>
-              {expandedProjectId === project.id && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  className="mt-3 p-4 rounded-lg bg-zinc-800/70 border border-zinc-700 text-sm text-zinc-300"
-                >
-                  <p className="font-semibold text-white mb-1">{project.title}</p>
-                  <p>{project.description}</p>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {project.categories.map((c) => (
-                      <span key={c} className="text-xs px-2 py-1 rounded-full border border-zinc-600">{c}</span>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </motion.div>
-          );
-        })}
+        ))}
       </div>
-    </motion.section>
+    </section>
   );
 };
 
