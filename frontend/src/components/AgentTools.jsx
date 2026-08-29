@@ -2,7 +2,7 @@ import { useFrontendTool } from '@copilotkit/react-core/v2';
 import { z } from 'zod';
 import { useAgentUI } from '../context/AgentUIContext';
 import { normalizeSpec, validateSpec } from '../lib/vega-spec';
-import siteContent from '../../../content/site-content.json';
+import siteContent from '../../content/site-content.json';
 
 const KNOWN_IDS = siteContent.projects.map((p) => p.id);
 

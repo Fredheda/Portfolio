@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import siteContent from '../../../content/site-content.json';
+import siteContent from '../../content/site-content.json';
 import { useAgentUI } from '../context/AgentUIContext';
 
 const projects = siteContent.projects;

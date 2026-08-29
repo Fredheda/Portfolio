@@ -3,7 +3,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { VegaEmbed } from 'react-vega';
 import GradientMesh from './ui/GradientMesh';
 import { useAgentUI } from '../context/AgentUIContext';
-import siteContent from '../../../content/site-content.json';
+import siteContent from '../../content/site-content.json';
 
 /* ─── animation variants ─── */
 const staggerContainer = {
