@@ -251,6 +251,25 @@ resource frontend 'Microsoft.App/containerApps@2025-01-01' = {
         external: true
         targetPort: 3000
         transport: 'auto'
+        // ARM's PUT on this Container App treats the whole `ingress` object
+        // as authoritative, so any redeploy that omits customDomains wipes
+        // the production domain binding (this happened — see git history
+        // around 2026-08-29). The two hostnames/certs below were originally
+        // bound imperatively (docs/Portfolio/plans/2026-08-09-azure-migration.md
+        // Task 7); declaring them here makes every future deploy preserve
+        // them instead of resetting them.
+        customDomains: [
+          {
+            name: 'frederikheda.com'
+            bindingType: 'SniEnabled'
+            certificateId: '${environment.id}/managedCertificates/mc-cae-portfolio-frederikheda-com-0627'
+          }
+          {
+            name: 'www.frederikheda.com'
+            bindingType: 'SniEnabled'
+            certificateId: '${environment.id}/managedCertificates/mc-cae-portfolio-www-frederikheda-4249'
+          }
+        ]
       }
       registries: [
         {
