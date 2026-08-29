@@ -27,7 +27,7 @@ const AGENT_ID = 'portfolio_agent';
 // agent id, and reassigning it on later renders hit an undocumented
 // propagation timing issue -- confirmed live (the clear-chat button
 // silently did nothing). ChatThreadProvider exposes resetThread() down to
-// Chatbot.jsx's clear button without prop-drilling through App.jsx.
+// TerminalHero.jsx's clear button without prop-drilling through App.jsx.
 function Root() {
   const [threadId, setThreadId] = useState(() => crypto.randomUUID());
 

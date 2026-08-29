@@ -1,12 +1,12 @@
 from langchain_text_splitters import MarkdownHeaderTextSplitter, RecursiveCharacterTextSplitter
-from docling.document_converter import DocumentConverter
+from markitdown import MarkItDown
 import re
 import os
 import tiktoken
 
 class DocumentProcessor:
     def __init__(self):
-        self.converter = DocumentConverter()
+        self.converter = MarkItDown()
 
     def open_document(self, path):
         with open(path, "r", encoding="utf-8") as file:
@@ -100,10 +100,7 @@ class DocumentProcessor:
         return paths
     
     def extract_text_from_document(self, path):
-        processed_file = self.converter.convert(path)
-        markdown_content = processed_file.document.export_to_markdown()
-
-        return markdown_content
+        return self.converter.convert(path).text_content
     
     def save_text_to_file(self, filename, content):
         txt_filename = filename.replace(".pdf", ".txt").replace(".docx", ".txt")

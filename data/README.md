@@ -14,10 +14,10 @@ poetry install
 
 ## Scripts
 
-- **DocumentProcessor.py** - Converts documents to embeddings using Docling
+- **DocumentProcessor.py** - Converts documents to embeddings using MarkItDown
 - **IndexCreator.py** - Creates Azure search indices
 - **populate_index.py** - Populates the search index with processed documents
 
 ## Important Note
 
-The dependencies in this folder (especially `docling`) include large ML frameworks with CUDA support (~2-4GB). They are intentionally kept in their own Poetry project, separate from `/backend/pyproject.toml`, to keep the production container image small.
+These dependencies are intentionally kept in their own Poetry project, separate from `/backend/pyproject.toml`, so they never end up in the production container image.

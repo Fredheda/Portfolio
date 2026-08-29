@@ -88,6 +88,10 @@ class IndexCreator:
             documents = self.search_client.search(search_text="*", include_total_count=True)
             document_keys = [doc['document_name'] for doc in documents]
 
+            if not document_keys:
+                print("No documents to delete.")
+                return
+
             # Delete documents by their keys
             self.search_client.delete_documents(documents=[{"document_name": key} for key in document_keys])
             print(f"Deleted {len(document_keys)} documents from the index.")

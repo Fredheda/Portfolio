@@ -23,41 +23,6 @@
   background: #22d3ee;
 }
 
-/* ---- Utility classes ---- */
-@layer utilities {
-  .gradient-text {
-    background: linear-gradient(135deg, #22d3ee, #38bdf8, #a78bfa);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .gradient-text-gold {
-    background: linear-gradient(135deg, #fbbf24, #f59e0b);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-}
-
-/* ---- Animated gradient ring ---- */
-@property --angle {
-  syntax: '<angle>';
-  initial-value: 0deg;
-  inherits: false;
-}
-
-@keyframes rotate-gradient {
-  to {
-    --angle: 360deg;
-  }
-}
-
-.gradient-ring {
-  background: conic-gradient(from var(--angle), #22d3ee, #38bdf8, #a78bfa, #22d3ee);
-  animation: rotate-gradient 4s linear infinite;
-}
-
 /* ---- Noise texture overlay ---- */
 .noise-overlay {
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
@@ -85,21 +50,6 @@
   transform: scaleX(1);
 }
 
-/* ---- Floating animation for icons ---- */
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
-}
-@keyframes spin-slow {
-  to { transform: rotate(360deg); }
-}
-.animate-float {
-  animation: float 3s ease-in-out infinite;
-}
-.animate-spin-slow {
-  animation: spin-slow 8s linear infinite;
-}
-
 /* ---- Reduced motion ---- */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -107,20 +57,54 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  .gradient-ring {
-    animation: none;
-  }
 }
 
-/* ---- Touch feedback for mobile ---- */
-@media (pointer: coarse) {
-  .hover\:scale-\[1\.02\]:hover {
-    transform: none;
-  }
-  .hover\:-translate-y-1:hover {
-    transform: none;
-  }
-  .active\:scale-95:active {
-    transform: scale(0.95);
-  }
+/* ---- Terminal (mono-glow) ---- */
+@keyframes terminal-blink {
+  0%, 45% { opacity: 1; }
+  50%, 95% { opacity: 0; }
+  100% { opacity: 1; }
+}
+@keyframes terminal-scan {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 40px; }
+}
+
+.terminal-cursor {
+  display: inline-block;
+  width: 7px;
+  height: 14px;
+  vertical-align: -2px;
+  background: #f2f2f2;
+  box-shadow: 0 0 6px rgba(242, 242, 242, 0.6);
+  animation: terminal-blink 1s steps(1) infinite;
+}
+
+.terminal-scanlines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(255, 255, 255, 0.035) 0px,
+    rgba(255, 255, 255, 0.035) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  animation: terminal-scan 0.6s linear infinite;
+}
+
+.terminal-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 80px 15px rgba(0, 0, 0, 0.65);
+}
+
+.terminal-glow {
+  text-shadow: 0 0 5px rgba(242, 242, 242, 0.4);
+}
+
+.terminal-glow-user {
+  text-shadow: 0 0 5px rgba(255, 154, 60, 0.45);
 }

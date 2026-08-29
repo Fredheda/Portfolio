@@ -13,3 +13,4 @@ mcp-tools/content/
 frontend/content/
 mcp-tools/.azurite/
 mcp-tools/local.settings.json
+.superpowers/
