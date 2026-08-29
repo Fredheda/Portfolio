@@ -3,8 +3,11 @@
 # both container apps to them. Just `build-push.sh` followed by `redeploy.sh`,
 # with a clean-working-tree guard so the SHA-tagged image honestly matches HEAD.
 #
-# Use this for CODE changes (backend/ or frontend/). For INFRA changes
-# (infra/main.bicep, secrets) use ./infra/deploy.sh instead.
+# Use this for CODE changes to backend/ or frontend/ ONLY -- it does not
+# touch mcp-tools/ (a separate Azure Function App, not a Container App; use
+# ./scripts/deploy-mcp-tools.sh for that) or INFRA changes (infra/main.bicep,
+# secrets; use ./infra/deploy.sh for those). See Deployment.md for the full
+# picture of all three.
 #
 # Usage: ./scripts/ship.sh
 set -euo pipefail

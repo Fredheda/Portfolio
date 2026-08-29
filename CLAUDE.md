@@ -38,7 +38,7 @@ Dependencies for `backend/` and `data/` are managed by separate Poetry projects 
 ### Local development (all services)
 Running the chatbot end-to-end locally needs four processes: Azurite (storage emulator), `mcp-tools` (Azure Functions), `backend` (FastAPI agent), and `frontend`. A repo-root `Procfile` runs all four together via [honcho](https://github.com/nickstenning/honcho):
 ```bash
-pipx install honcho   # one-time; global+isolated since there's no repo-root Python project to add it as a dependency to (backend/data/mcp-tools are separate Poetry projects)
+pipx install honcho   # one-time; global+isolated since there's no repo-root Python project to add it as a dependency to (backend/data are separate Poetry projects; mcp-tools uses a plain venv + requirements.txt, not Poetry, per Azure Functions Core Tools' own Python packaging expectations)
 honcho start           # from Portfolio/ — Ctrl-C stops all four
 ```
 `Portfolio/.env` needs `FUNCTION_APP_URL=http://localhost:7071` and `frontend/.env` needs `BACKEND_URL=http://localhost:8000` (both gitignored, local-only). The `Procfile` pins `PORT` explicitly on the `backend`/`frontend` lines — `honcho` otherwise auto-assigns its own `PORT` per process (Foreman convention), which collides with `main.py`'s and `server.js`'s own `PORT` defaults. The `backend` line also waits for `mcp-tools`'s `func start` to actually finish binding `:7071` (not just print its startup banner) before running, via a `curl`/`sleep` poll loop.
@@ -46,14 +46,18 @@ honcho start           # from Portfolio/ — Ctrl-C stops all four
 Each service can still be run individually with its own command above if you don't need the full stack — see `docs/Portfolio/plans/2026-08-22-agentic-chatbot-design.md` Task 14 for the manual three-terminal version this replaces.
 
 ### Deployment
+Three independent deploy targets, each with its own script — run only the one matching what you changed:
 ```bash
-./scripts/ship.sh
+./scripts/ship.sh              # frontend/ or backend/ code -> both Container Apps
+./scripts/deploy-mcp-tools.sh  # mcp-tools/ code, or content/site-content.json -> the Function App
+./infra/deploy.sh              # infra/main.bicep or a .env secret -> re-run Bicep
 ```
+Full workflow (prerequisites, rollback, first-deploy Function-key setup): `Deployment.md`.
 
 ## Architecture
 
 ### Frontend
-Single-page app with React Router. Two routes: `/` (main portfolio) and `/privacy-policy`. The `Chatbot` component renders globally (outside routes) as a floating widget. Components: `Header`, `About`, `Projects`, `Footer`, `Chatbot`, `PrivacyPolicy`.
+Single-page app with React Router. Two routes: `/` (main portfolio) and `/privacy-policy`. `TerminalHero` is the chat-first hero (absorbed the old floating `Chatbot` widget's CopilotKit wiring), followed by condensed `Projects`/`About` sections styled as terminal echoes. Components: `Header`, `TerminalHero`, `Projects`, `About`, `Footer`, `PrivacyPolicy`.
 
 `server.js` (the production Express server, not Vite) also handles: an application-level 301 redirect from `www.frederikheda.com` to `https://frederikheda.com` (apex is canonical), the `/api/chatbot` proxy to the backend, and security headers (HSTS, X-Frame-Options, etc). Both `frederikheda.com` and `www.frederikheda.com` are bound as custom domains on `ca-portfolio-web` with free Azure-managed certificates — see `docs/Portfolio/plans/2026-08-09-azure-migration.md` Task 7 for the DNS/binding setup if it ever needs redoing (e.g. cert renewal issues, DNS provider migration).
 
