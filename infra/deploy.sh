@@ -39,8 +39,20 @@ az deployment group create \
     azureIndexName="$azure_index_name" \
     azureSqlServer="$AZURE_SQL_SERVER" \
     azureSqlDatabase="$AZURE_SQL_DATABASE" \
+    functionMcpKey="${FUNCTION_MCP_KEY:-}" \
   --query "properties.provisioningState" -o tsv
 
 FQDN=$(az containerapp show -n ca-portfolio-web -g "$RG" \
   --query properties.configuration.ingress.fqdn -o tsv)
 echo "Frontend: https://$FQDN"
+
+if [ -z "${FUNCTION_MCP_KEY:-}" ]; then
+  echo ""
+  echo "FUNCTION_MCP_KEY is unset -- this looks like a first deploy, or a"
+  echo "redeploy after recreating the Function App. Next steps:"
+  echo "  1. ./scripts/deploy-mcp-tools.sh"
+  echo "  2. FUNCTION_MCP_KEY=\$(az functionapp keys list -g $RG -n func-portfolio-mcp-tools --query systemKeys.mcp_extension -o tsv)"
+  echo "  3. az containerapp secret set -g $RG -n ca-portfolio-backend --secrets function-mcp-key=\"\$FUNCTION_MCP_KEY\""
+  echo "  4. az containerapp update -g $RG -n ca-portfolio-backend --set-env-vars FUNCTION_MCP_KEY=secretref:function-mcp-key"
+  echo "  5. Add FUNCTION_MCP_KEY=<value> to .env so future deploys don't need this again"
+fi

@@ -48,6 +48,16 @@ param azureIndexName string
 param azureSqlServer string
 param azureSqlDatabase string
 
+@description('Azure Function App name (MCP tools server).')
+param functionAppName string = 'func-portfolio-mcp-tools'
+
+@description('Storage account backing the Function App (name must be globally unique, lowercase, no dashes).')
+param functionStorageAccountName string = 'stportfoliomcp'
+
+@secure()
+@description('MCP extension system key for the Function App, fetched post-deploy (see infra/deploy.sh). Empty on first deploy.')
+param functionMcpKey string = ''
+
 // Built-in AcrPull role definition ID (constant across all tenants).
 var acrPullRoleId = '7f951dda-4ed3-4680-a7ca-43fe172d538d'
 var loginServer = '${acrName}.azurecr.io'
@@ -81,6 +91,77 @@ resource environment 'Microsoft.App/managedEnvironments@2025-01-01' = {
   properties: {}
 }
 
+resource functionStorage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+  name: functionStorageAccountName
+  location: location
+  sku: { name: 'Standard_LRS' }
+  kind: 'StorageV2'
+  properties: {
+    minimumTlsVersion: 'TLS1_2'
+    allowBlobPublicAccess: false
+  }
+}
+
+// Flex Consumption ships code from a blob container rather than
+// WEBSITE_RUN_FROM_PACKAGE — this is that deployment target.
+resource functionDeploymentContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
+  name: '${functionStorage.name}/default/deployments'
+}
+
+resource functionPlan 'Microsoft.Web/serverfarms@2024-04-01' = {
+  name: '${functionAppName}-plan'
+  location: location
+  kind: 'functionapp'
+  sku: { name: 'FC1', tier: 'FlexConsumption' }
+  properties: {
+    reserved: true
+  }
+}
+
+resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
+  name: functionAppName
+  location: location
+  kind: 'functionapp,linux'
+  properties: {
+    serverFarmId: functionPlan.id
+    // Flex Consumption moves language/version and deployment source out of
+    // siteConfig.linuxFxVersion and into this block. 3.13 (unlike on Linux
+    // Consumption) is GA here, matching the Python version used everywhere
+    // else in this project.
+    functionAppConfig: {
+      deployment: {
+        storage: {
+          type: 'blobContainer'
+          value: '${functionStorage.properties.primaryEndpoints.blob}deployments'
+          authentication: {
+            type: 'StorageAccountConnectionString'
+            storageAccountConnectionStringName: 'DEPLOYMENT_STORAGE_CONNECTION_STRING'
+          }
+        }
+      }
+      runtime: {
+        name: 'python'
+        version: '3.13'
+      }
+      scaleAndConcurrency: {
+        maximumInstanceCount: 40
+        instanceMemoryMB: 2048
+      }
+    }
+    siteConfig: {
+      appSettings: [
+        { name: 'AzureWebJobsStorage', value: 'DefaultEndpointsProtocol=https;AccountName=${functionStorage.name};AccountKey=${functionStorage.listKeys().keys[0].value};EndpointSuffix=core.windows.net' }
+        { name: 'DEPLOYMENT_STORAGE_CONNECTION_STRING', value: 'DefaultEndpointsProtocol=https;AccountName=${functionStorage.name};AccountKey=${functionStorage.listKeys().keys[0].value};EndpointSuffix=core.windows.net' }
+        { name: 'OPENAI_API_KEY', value: openaiApiKey }
+        { name: 'azure_search_api_key', value: azureSearchApiKey }
+        { name: 'azure_search_endpoint', value: azureSearchEndpoint }
+        { name: 'azure_index_name', value: azureIndexName }
+      ]
+    }
+    httpsOnly: true
+  }
+}
+
 // Backend: internal ingress only — no public endpoint. Reachable in-environment
 // as http://ca-portfolio-backend (port 80 -> targetPort 8000).
 resource backend 'Microsoft.App/containerApps@2025-01-01' = {
@@ -112,7 +193,11 @@ resource backend 'Microsoft.App/containerApps@2025-01-01' = {
       ]
       secrets: [
         { name: 'openai-api-key', value: openaiApiKey }
-        { name: 'azure-search-api-key', value: azureSearchApiKey }
+        // Container Apps rejects an empty secret value, so fall back to a
+        // placeholder on first deploy (before the real MCP key is known) —
+        // infra/deploy.sh's post-deploy steps replace it via `az containerapp
+        // secret set` once the Function App's system key can be fetched.
+        { name: 'function-mcp-key', value: empty(functionMcpKey) ? 'unset' : functionMcpKey }
       ]
     }
     template: {
@@ -126,9 +211,8 @@ resource backend 'Microsoft.App/containerApps@2025-01-01' = {
           }
           env: [
             { name: 'OPENAI_API_KEY', secretRef: 'openai-api-key' }
-            { name: 'azure_search_api_key', secretRef: 'azure-search-api-key' }
-            { name: 'azure_search_endpoint', value: azureSearchEndpoint }
-            { name: 'azure_index_name', value: azureIndexName }
+            { name: 'FUNCTION_APP_URL', value: 'https://${functionApp.properties.defaultHostName}' }
+            { name: 'FUNCTION_MCP_KEY', secretRef: 'function-mcp-key' }
             { name: 'AZURE_SQL_SERVER', value: azureSqlServer }
             { name: 'AZURE_SQL_DATABASE', value: azureSqlDatabase }
             // Presence of this var is what makes database_client.py pick
@@ -167,6 +251,25 @@ resource frontend 'Microsoft.App/containerApps@2025-01-01' = {
         external: true
         targetPort: 3000
         transport: 'auto'
+        // ARM's PUT on this Container App treats the whole `ingress` object
+        // as authoritative, so any redeploy that omits customDomains wipes
+        // the production domain binding (this happened — see git history
+        // around 2026-08-29). The two hostnames/certs below were originally
+        // bound imperatively (docs/Portfolio/plans/2026-08-09-azure-migration.md
+        // Task 7); declaring them here makes every future deploy preserve
+        // them instead of resetting them.
+        customDomains: [
+          {
+            name: 'frederikheda.com'
+            bindingType: 'SniEnabled'
+            certificateId: '${environment.id}/managedCertificates/mc-cae-portfolio-frederikheda-com-0627'
+          }
+          {
+            name: 'www.frederikheda.com'
+            bindingType: 'SniEnabled'
+            certificateId: '${environment.id}/managedCertificates/mc-cae-portfolio-www-frederikheda-4249'
+          }
+        ]
       }
       registries: [
         {
@@ -201,3 +304,4 @@ resource frontend 'Microsoft.App/containerApps@2025-01-01' = {
 output frontendFqdn string = frontend.properties.configuration.ingress.fqdn
 output backendFqdn string = backend.properties.configuration.ingress.fqdn
 output identityName string = identity.name
+output functionAppUrl string = 'https://${functionApp.properties.defaultHostName}'

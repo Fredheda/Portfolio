@@ -1,0 +1,4 @@
+azure-functions>=1.24.0
+azure-search-documents==11.5.2
+azure-core==1.32.0
+openai==2.9.0

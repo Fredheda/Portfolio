@@ -16,6 +16,13 @@ SHA=$(git rev-parse HEAD)
 az acr build --registry "$ACR" --file backend/Dockerfile \
   --image portfolio-backend:latest --image "portfolio-backend:$SHA" backend
 
+# frontend/'s components import the canonical content file from
+# frontend/content/ (gitignored) — az acr build's context is frontend/ alone,
+# so that copy has to happen before packaging, same as deploy-mcp-tools.sh
+# does for mcp-tools/content/.
+mkdir -p frontend/content
+cp content/site-content.json frontend/content/site-content.json
+
 az acr build --registry "$ACR" --file frontend/Dockerfile \
   --image portfolio-web:latest --image "portfolio-web:$SHA" frontend
 

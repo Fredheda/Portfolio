@@ -51,3 +51,12 @@ Fredbot is an AI-powered chatbot that helps visitors learn more about my work an
 - Custom knowledge base of my projects and experience
 - Real-time response streaming (Not yet implemented)
 - Conversation history management (Not yet implemented)
+
+## 🧑‍💻 Local Development
+
+The full stack (Azurite, MCP tools, backend agent, frontend) runs together with one command via [honcho](https://github.com/nickstenning/honcho) and the repo-root `Procfile`:
+```bash
+pipx install honcho   # one-time
+honcho start
+```
+See `CLAUDE.md` for per-service commands and required `.env` values.

@@ -1,6 +1,11 @@
+import 'dotenv/config';
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { CopilotRuntime } from '@copilotkit/runtime/v2';
+import { LangGraphHttpAgent } from '@copilotkit/runtime/langgraph';
+import { createCopilotExpressHandler } from '@copilotkit/runtime/v2/express';
+import { rateLimit } from 'express-rate-limit';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -37,23 +42,37 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(express.json());
+const AGENT_URL =
+  process.env.AGENT_URL ?? `${BACKEND_URL}/agent/portfolio_agent`;
 
-// Proxy chatbot requests to the internal-only backend container app.
-app.post('/api/chatbot', async (req, res) => {
-  try {
-    const backendRes = await fetch(`${BACKEND_URL}/chatbot`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(req.body),
-    });
-    const data = await backendRes.json();
-    res.status(backendRes.status).json(data);
-  } catch (err) {
-    console.error('Error proxying to backend:', err);
-    res.status(502).json({ error: 'Backend unavailable' });
-  }
+const runtime = new CopilotRuntime({
+  agents: {
+    portfolio_agent: new LangGraphHttpAgent({ url: AGENT_URL }),
+  },
 });
+
+// Same granularity as the retired backend's slowapi limit -- 5 requests per
+// minute per IP; each chat turn is one request to this route, so this is
+// "5 messages per minute per visitor". Scoped to just the run endpoint
+// (POST /api/copilotkit/agent/:agentId/run), not the whole /api/copilotkit
+// prefix -- multi-route mode also serves GET /info (fetched once per
+// CopilotKit provider mount, i.e. every page load) and GET
+// /agent/:agentId/connect under that same prefix, neither of which is a
+// chat message; mounting the limiter broadly meant a handful of page
+// reloads could exhaust the budget before a single real message was sent
+// (confirmed live).
+const copilotKitLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 5,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { error: 'Rate limit exceeded' },
+});
+app.use('/api/copilotkit/agent/:agentId/run', copilotKitLimiter);
+
+// Multi-route mode (the default): exposes POST /api/copilotkit/agent/:agentId/run
+// and friends. Dedicated Express adapter, not a hand-rolled Fetch bridge.
+app.use(createCopilotExpressHandler({ runtime, basePath: '/api/copilotkit' }));
 
 // Serve static files from the dist directory
 app.use(express.static(path.join(__dirname, 'dist')));

@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
+import { VegaEmbed } from 'react-vega';
 import GradientMesh from './ui/GradientMesh';
+import { useAgentUI } from '../context/AgentUIContext';
+import siteContent from '../../content/site-content.json';
 
 /* ─── animation variants ─── */
 const staggerContainer = {
@@ -74,72 +77,7 @@ const pillReveal = {
 };
 
 /* ─── skill categories config ─── */
-const skillCategories = [
-  {
-    title: 'AI & Machine Learning',
-    icon: 'fas fa-brain',
-    accent: 'cyan',
-    colors: {
-      border: 'border-accent-cyan/20 hover:border-accent-cyan/50',
-      gradient: 'from-cyan-500/5 via-zinc-800/95 to-zinc-900',
-      text: 'text-accent-cyan',
-      glow: 'hover:shadow-[0_0_30px_rgba(34,211,238,0.15)]',
-    },
-    groups: [
-      { label: 'LLM Development', items: ['RAG', 'MCP', 'A2A', 'Azure OpenAI', 'Google AI', 'Claude Agent SDK', 'Anthropic'] },
-      { label: 'ML Frameworks', items: ['TensorFlow', 'PyTorch', 'Scikit-learn'] },
-      { label: 'MLOps', items: ['Azure ML', 'AWS SageMaker', 'MLflow'] },
-    ],
-  },
-  {
-    title: 'Software Engineering',
-    icon: 'fas fa-code',
-    accent: 'blue',
-    colors: {
-      border: 'border-accent-blue/20 hover:border-accent-blue/50',
-      gradient: 'from-sky-400/5 via-zinc-800/95 to-zinc-900',
-      text: 'text-accent-blue',
-      glow: 'hover:shadow-[0_0_30px_rgba(56,189,248,0.15)]',
-    },
-    groups: [
-      { label: 'Languages', items: ['Python', 'SQL', 'PHP', 'JavaScript'] },
-      { label: 'Web Development', items: ['React', 'CSS', 'FastAPI'] },
-      { label: 'Cloud & DevOps', items: ['AWS', 'Azure', 'Docker', 'Kubernetes'] },
-    ],
-  },
-  {
-    title: 'Leadership',
-    icon: 'fas fa-users',
-    accent: 'violet',
-    colors: {
-      border: 'border-accent-violet/20 hover:border-accent-violet/50',
-      gradient: 'from-violet-500/5 via-zinc-800/95 to-zinc-900',
-      text: 'text-accent-violet',
-      glow: 'hover:shadow-[0_0_30px_rgba(167,139,250,0.15)]',
-    },
-    groups: [
-      { label: 'Team Management', items: ['19 Direct Reports', '40+ Across 6 Teams'] },
-      { label: 'Community Building', items: ['750+ Active Members', '2x CoP Founded & Scaled'] },
-      { label: 'Delivery', items: ['Multi-million $ Projects', 'Agile', 'Stakeholder Mgmt'] },
-    ],
-  },
-  {
-    title: 'Domain Expertise',
-    icon: 'fas fa-layer-group',
-    accent: 'gold',
-    colors: {
-      border: 'border-amber-400/20 hover:border-amber-400/50',
-      gradient: 'from-amber-400/5 via-zinc-800/95 to-zinc-900',
-      text: 'text-accent-gold',
-      glow: 'hover:shadow-[0_0_30px_rgba(251,191,36,0.15)]',
-    },
-    groups: [
-      { label: 'Data Engineering', items: ['ETL', 'Data Pipelines', 'Big Data'] },
-      { label: 'Computer Vision', items: ['OCR', 'Image Processing', 'Object Detection'] },
-      { label: 'Time Series', items: ['Forecasting', 'Anomaly Detection'] },
-    ],
-  },
-];
+const skillCategories = siteContent.skillCategories;
 
 /* ─── components ─── */
 
@@ -219,6 +157,7 @@ const TiltCard = ({ children, className = '' }) => {
 const About = () => {
   const headlineWords = "Hi! I'm Fred".split(' ');
   const skillPills = ['LLM Chatbots', 'Agentic AI', 'Document Intelligence', 'Demand Forecasting', 'Causal Inference', 'GenAI Apps'];
+  const { skillsChartSpec } = useAgentUI();
 
   return (
     <>
@@ -443,6 +382,12 @@ const About = () => {
           </i>
           <span>Skills &amp; Expertise</span>
         </motion.h2>
+
+        {skillsChartSpec && (
+          <div className="mb-8 p-4 rounded-xl bg-zinc-800/50 border border-zinc-700">
+            <VegaEmbed spec={skillsChartSpec} options={{ actions: false }} />
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {skillCategories.map((cat) => (
