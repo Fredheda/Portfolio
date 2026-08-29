@@ -102,11 +102,20 @@ resource functionStorage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   }
 }
 
-resource functionPlan 'Microsoft.Web/serverfarms@2023-12-01' = {
+// Flex Consumption ships code from a blob container rather than
+// WEBSITE_RUN_FROM_PACKAGE — this is that deployment target.
+resource functionDeploymentContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
+  name: '${functionStorage.name}/default/deployments'
+}
+
+resource functionPlan 'Microsoft.Web/serverfarms@2024-04-01' = {
   name: '${functionAppName}-plan'
   location: location
-  sku: { name: 'Y1', tier: 'Dynamic' }
-  properties: {}
+  kind: 'functionapp'
+  sku: { name: 'FC1', tier: 'FlexConsumption' }
+  properties: {
+    reserved: true
+  }
 }
 
 resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
@@ -115,12 +124,34 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
   kind: 'functionapp,linux'
   properties: {
     serverFarmId: functionPlan.id
+    // Flex Consumption moves language/version and deployment source out of
+    // siteConfig.linuxFxVersion and into this block. 3.13 (unlike on Linux
+    // Consumption) is GA here, matching the Python version used everywhere
+    // else in this project.
+    functionAppConfig: {
+      deployment: {
+        storage: {
+          type: 'blobContainer'
+          value: '${functionStorage.properties.primaryEndpoints.blob}deployments'
+          authentication: {
+            type: 'StorageAccountConnectionString'
+            storageAccountConnectionStringName: 'DEPLOYMENT_STORAGE_CONNECTION_STRING'
+          }
+        }
+      }
+      runtime: {
+        name: 'python'
+        version: '3.13'
+      }
+      scaleAndConcurrency: {
+        maximumInstanceCount: 40
+        instanceMemoryMB: 2048
+      }
+    }
     siteConfig: {
-      linuxFxVersion: 'PYTHON|3.13'
       appSettings: [
         { name: 'AzureWebJobsStorage', value: 'DefaultEndpointsProtocol=https;AccountName=${functionStorage.name};AccountKey=${functionStorage.listKeys().keys[0].value};EndpointSuffix=core.windows.net' }
-        { name: 'FUNCTIONS_WORKER_RUNTIME', value: 'python' }
-        { name: 'FUNCTIONS_EXTENSION_VERSION', value: '~4' }
+        { name: 'DEPLOYMENT_STORAGE_CONNECTION_STRING', value: 'DefaultEndpointsProtocol=https;AccountName=${functionStorage.name};AccountKey=${functionStorage.listKeys().keys[0].value};EndpointSuffix=core.windows.net' }
         { name: 'OPENAI_API_KEY', value: openaiApiKey }
         { name: 'azure_search_api_key', value: azureSearchApiKey }
         { name: 'azure_search_endpoint', value: azureSearchEndpoint }
@@ -162,7 +193,11 @@ resource backend 'Microsoft.App/containerApps@2025-01-01' = {
       ]
       secrets: [
         { name: 'openai-api-key', value: openaiApiKey }
-        { name: 'function-mcp-key', value: functionMcpKey }
+        // Container Apps rejects an empty secret value, so fall back to a
+        // placeholder on first deploy (before the real MCP key is known) —
+        // infra/deploy.sh's post-deploy steps replace it via `az containerapp
+        // secret set` once the Function App's system key can be fetched.
+        { name: 'function-mcp-key', value: empty(functionMcpKey) ? 'unset' : functionMcpKey }
       ]
     }
     template: {
