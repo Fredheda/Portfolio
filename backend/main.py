@@ -1,5 +1,5 @@
-import asyncio
 import os
+from contextlib import asynccontextmanager
 
 from ag_ui_langgraph import add_langgraph_fastapi_endpoint
 from copilotkit import LangGraphAGUIAgent
@@ -15,19 +15,27 @@ if not os.getenv("OPENAI_API_KEY"):
 if not os.getenv("FUNCTION_APP_URL"):
     raise RuntimeError("FUNCTION_APP_URL is not set (the MCP tools Function App URL).")
 
-app = FastAPI()
 
-graph = asyncio.run(build_graph())
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # build_graph() is async, so it has to run inside the ASGI server's own
+    # event loop (FastAPI startup) rather than via asyncio.run() at import
+    # time — asyncio.run() can't nest inside the loop uvicorn is already
+    # running when it imports this module to resolve "main:app".
+    graph = await build_graph()
+    add_langgraph_fastapi_endpoint(
+        app=app,
+        agent=LangGraphAGUIAgent(
+            name="portfolio_agent",
+            description="Frederik Heda's portfolio assistant.",
+            graph=graph,
+        ),
+        path="/agent/portfolio_agent",
+    )
+    yield
 
-add_langgraph_fastapi_endpoint(
-    app=app,
-    agent=LangGraphAGUIAgent(
-        name="portfolio_agent",
-        description="Frederik Heda's portfolio assistant.",
-        graph=graph,
-    ),
-    path="/agent/portfolio_agent",
-)
+
+app = FastAPI(lifespan=lifespan)
 
 
 @app.get("/health")
