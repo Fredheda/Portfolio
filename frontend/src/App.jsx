@@ -29,7 +29,7 @@ function App() {
 
   return (
     <Router>
-      <div className="relative flex flex-col min-h-screen bg-surface-950">
+      <div className="relative flex flex-col min-h-screen bg-surface-900">
         {/* Noise texture overlay */}
         <div className="noise-overlay fixed inset-0 z-50 pointer-events-none" />
 
