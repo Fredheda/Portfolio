@@ -3,8 +3,6 @@ import { Link as RouterLink } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const navLinks = [
-  { href: '/#about', label: 'About' },
-  { href: '/#skills', label: 'Skills' },
   { href: '/#projects', label: 'Projects' },
 ];
 
@@ -35,7 +33,7 @@ const Header = () => {
       >
         {/* Logo */}
         <RouterLink to="/" className="flex items-center gap-2 text-zinc-300 hover:text-accent-cyan transition-colors duration-300 no-underline">
-          <img src="/images/logo.png" alt="FH" className="h-7 w-7 rounded" />
+          <span className="font-mono text-base font-semibold tracking-wide">FH</span>
         </RouterLink>
 
         {/* Desktop nav */}
