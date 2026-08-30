@@ -4,7 +4,6 @@ import Lenis from 'lenis';
 import Header from './components/Headers';
 import TerminalHero from './components/TerminalHero';
 import Projects from './components/Projects';
-import About from './components/About';
 import Footer from './components/Footer';
 import AgentTools from './components/AgentTools';
 
@@ -56,7 +55,6 @@ function MainContent() {
     <div>
       <TerminalHero />
       <Projects />
-      <About />
     </div>
   );
 }
