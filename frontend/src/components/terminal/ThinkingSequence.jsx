@@ -1,62 +1,79 @@
 import { useEffect, useRef, useState } from 'react';
 
-// Pool of fake process lines -- a random subset/order is picked per run so
-// it never plays identically twice, and the fast tempo below is meant to
-// read as "a large program executing lots of processes very quickly"
-// rather than a deliberate, evenly-paced readout.
-const LINE_POOL = [
-  'CROSS-REFERENCING: knowledge_base.idx',
-  'LOADING: profile.dat ... OK',
-  'PARSING QUERY VECTOR',
-  'SCANNING: 14208 RECORDS',
-  'MATCH FOUND: subject_profile',
-  'DECRYPTING: response_cache',
-  'VERIFYING: identity_token',
-  'INDEXING: project_graph.bin',
-  'RESOLVING: context_window',
-  'ALLOCATING: inference_thread [0x7f3a]',
-  'QUERY CLASSIFIED: informational',
-  'FETCHING: embeddings.vec',
-  'CHECKSUM: 4f2a9c ... VALID',
-  'SPAWNING: worker_04',
-  'SPAWNING: worker_11',
-  'SPAWNING: worker_17',
-  'MERGING: context_fragments',
-  'CROSS-REFERENCING: project_index',
-  'BUFFERING: response_stream',
-  'SYNCING: session_state',
-  'PING: inference_node ... 12ms',
-  'CACHE: HIT (0.9421)',
-  'TRACE: request_id 8823-fa',
-  'ANALYZING SENTIMENT ... NEUTRAL',
-  'ROUTING: query_classifier',
-  'READING: skills_index.json',
-  'NORMALIZING: token_stream',
-  'OPENING SOCKET: 127.0.0.1:8843',
-  'HANDSHAKE: TLS 1.3 ... OK',
-  'MOUNTING: /var/cache/rag',
-  'TOKENIZING INPUT ... 214 tokens',
-  'WEIGHTS LOADED: 7.2GB',
-  'GPU UTIL: 94%',
-  'THREAD POOL: 8 workers active',
-  'COMPILING: response_graph.dot',
-  'DEDUPING: candidate_answers',
-  'RANKING: relevance_scores',
-  'FLUSHING: stdout buffer',
-  'HEAP: 412MB / 2048MB',
-  'LOCK ACQUIRED: session_mutex',
-  'LOCK RELEASED: session_mutex',
-  'WATCHDOG: heartbeat OK',
-  'WRITING: audit_log.jsonl',
-  'RATE LIMIT CHECK ... PASS',
-  'SANDBOX: isolation verified',
-  'DNS RESOLVED: api.internal (4ms)',
-  'FORKING: subprocess_02',
-  'REAPING: subprocess_02 [exit 0]',
-  'SIGNATURE VALID: response_payload',
-  'ENTROPY POOL: 4096 bits',
-  'SCHEDULING: next_tick',
-];
+// Lines are grouped into stages that always play in this order -- each run
+// picks a random subset from each stage (shuffled within the stage) so the
+// content varies, but the story stays coherent: authenticate, retrieve,
+// infer, respond. This replaces a single flat, globally-shuffled pool.
+const STAGE_ORDER = ['AUTH', 'RETRIEVAL', 'INFERENCE', 'RESPONSE'];
+
+const STAGES = {
+  AUTH: [
+    'VERIFYING: identity_token',
+    'HANDSHAKE: TLS 1.3 ... OK',
+    'OPENING SOCKET: 127.0.0.1:8843',
+    'DNS RESOLVED: api.internal (4ms)',
+    'RATE LIMIT CHECK ... PASS',
+    'SANDBOX: isolation verified',
+    'AUTH TOKEN SCOPE: read:profile read:projects',
+    'SESSION KEY DERIVED: hkdf-sha256',
+    'CHECKING: origin_header ... OK',
+    'PING: inference_node ... 12ms',
+    'LOADING: profile.dat ... OK',
+    'SIGNATURE VALID: request_payload',
+  ],
+  RETRIEVAL: [
+    'CROSS-REFERENCING: knowledge_base.idx',
+    'PARSING QUERY VECTOR',
+    'SCANNING: 14208 RECORDS',
+    'MATCH FOUND: subject_profile',
+    'INDEXING: project_graph.bin',
+    'FETCHING: embeddings.vec',
+    'CHECKSUM: 4f2a9c ... VALID',
+    'CROSS-REFERENCING: project_index',
+    'MOUNTING: /var/cache/rag',
+    'READING: skills_index.json',
+    'QUERY CLASSIFIED: informational',
+    'VECTOR SEARCH: k=5 nearest neighbors',
+    'CACHE: HIT (0.9421)',
+    'DEDUPING: candidate_answers',
+    'RANKING: relevance_scores',
+    'RESOLVING: context_window',
+  ],
+  INFERENCE: [
+    'DECRYPTING: response_cache',
+    'ALLOCATING: inference_thread [0x7f3a]',
+    'SPAWNING: worker_04',
+    'SPAWNING: worker_11',
+    'SPAWNING: worker_17',
+    'MERGING: context_fragments',
+    'BUFFERING: response_stream',
+    'SYNCING: session_state',
+    'TRACE: request_id 8823-fa',
+    'ANALYZING SENTIMENT ... NEUTRAL',
+    'ROUTING: query_classifier',
+    'NORMALIZING: token_stream',
+    'TOKENIZING INPUT ... 214 tokens',
+    'WEIGHTS LOADED: 7.2GB',
+    'GPU UTIL: 94%',
+    'THREAD POOL: 8 workers active',
+    'COMPILING: response_graph.dot',
+    'HEAP: 412MB / 2048MB',
+    'LOCK ACQUIRED: session_mutex',
+    'LOCK RELEASED: session_mutex',
+    'FORKING: subprocess_02',
+    'REAPING: subprocess_02 [exit 0]',
+    'ENTROPY POOL: 4096 bits',
+  ],
+  RESPONSE: [
+    'WATCHDOG: heartbeat OK',
+    'WRITING: audit_log.jsonl',
+    'FLUSHING: stdout buffer',
+    'SIGNATURE VALID: response_payload',
+    'SCHEDULING: next_tick',
+    'FINALIZING: response_object',
+    'STREAM STATUS: ready',
+  ],
+};
 
 // Styled identically to the pool lines (same text-zinc-500, no glow) --
 // no visual distinction at all from the rest of the fake log, so nothing
@@ -64,8 +81,6 @@ const LINE_POOL = [
 const IDENTITY_LINE = { text: 'IDENTITY CONFIRMED: visitor', className: 'text-zinc-500' };
 const FINAL_LINE = { text: 'RESPONSE READY', className: 'text-zinc-500' };
 
-const MIN_LINES = 8;
-const MAX_LINES = 13;
 const MIN_DELAY_MS = 40;
 const MAX_DELAY_MS = 100;
 // First-message (non-loop) only: how long the final "IDENTITY
@@ -76,9 +91,14 @@ const MIN_HOLD_MS = 1000;
 const MAX_HOLD_MS = 2000;
 
 function buildSequence(withTail = true) {
-  const shuffled = [...LINE_POOL].sort(() => Math.random() - 0.5);
-  const count = MIN_LINES + Math.floor(Math.random() * (MAX_LINES - MIN_LINES + 1));
-  const picked = shuffled.slice(0, count).map((text) => ({ text, className: 'text-zinc-500' }));
+  const MIN_PER_STAGE = 2;
+  const MAX_PER_STAGE = 4;
+  const picked = STAGE_ORDER.flatMap((stage) => {
+    const pool = STAGES[stage];
+    const shuffled = [...pool].sort(() => Math.random() - 0.5);
+    const count = MIN_PER_STAGE + Math.floor(Math.random() * (MAX_PER_STAGE - MIN_PER_STAGE + 1));
+    return shuffled.slice(0, Math.min(count, pool.length)).map((text) => ({ text, className: 'text-zinc-500' }));
+  });
   return withTail ? [...picked, IDENTITY_LINE, FINAL_LINE] : picked;
 }
 
