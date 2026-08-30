@@ -69,6 +69,15 @@
   0% { background-position: 0 0; }
   100% { background-position: 0 40px; }
 }
+@keyframes terminal-bar-fill {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+
+.terminal-bar-fill {
+  animation: terminal-bar-fill 1.2s ease-out forwards;
+  box-shadow: 0 0 6px rgba(34, 211, 238, 0.5);
+}
 
 .terminal-cursor {
   display: inline-block;

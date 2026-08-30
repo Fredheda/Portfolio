@@ -28,6 +28,9 @@ const STAGES = {
     { text: 'MATCH FOUND: subject_profile', category: 'default' },
     { text: 'INDEXING: project_graph.bin', category: 'default' },
     { text: 'FETCHING: embeddings.vec', category: 'io' },
+    { text: 'LOADING: embeddings.vec', category: 'io', type: 'bar' },
+    { text: 'LOADING: knowledge_base.idx', category: 'io', type: 'bar' },
+    { text: 'DOWNLOADING: context_cache.bin', category: 'io', type: 'bar' },
     { text: 'CHECKSUM: 4f2a9c ... VALID', category: 'default' },
     { text: 'CROSS-REFERENCING: project_index', category: 'default' },
     { text: 'MOUNTING: /var/cache/rag', category: 'io' },
@@ -110,12 +113,28 @@ function buildSequence(withTail = true) {
   const MAX_PER_STAGE = 4;
   const picked = STAGE_ORDER.flatMap((stage) => {
     const pool = STAGES[stage];
-    const shuffled = [...pool].sort(() => Math.random() - 0.5);
+    const regularPool = pool.filter((line) => line.type !== 'bar');
+    const barLines = pool.filter((line) => line.type === 'bar');
+
+    const shuffled = [...regularPool].sort(() => Math.random() - 0.5);
     const count = MIN_PER_STAGE + Math.floor(Math.random() * (MAX_PER_STAGE - MIN_PER_STAGE + 1));
-    return shuffled.slice(0, Math.min(count, pool.length)).map((line) => ({
+    const selected = shuffled.slice(0, Math.min(count, regularPool.length));
+
+    // Exactly one bar line always plays per stage that has any -- picked
+    // randomly from that stage's options, so a bar always appears but which
+    // one varies between runs.
+    if (barLines.length > 0) {
+      selected.push(barLines[Math.floor(Math.random() * barLines.length)]);
+    }
+    // Re-shuffle so the bar line lands at a random position within the
+    // stage, rather than always playing last.
+    selected.sort(() => Math.random() - 0.5);
+
+    return selected.map((line) => ({
       text: line.text,
       className: CATEGORY_CLASSNAMES[line.category] ?? CATEGORY_CLASSNAMES.default,
-      holdMs: line.holdMs ?? DEFAULT_HOLD_MS,
+      holdMs: line.type === 'bar' ? [1200, 1500] : (line.holdMs ?? DEFAULT_HOLD_MS),
+      type: line.type ?? 'text',
     }));
   });
   return withTail ? [...picked, IDENTITY_LINE, FINAL_LINE] : picked;
@@ -175,9 +194,20 @@ export default function ThinkingSequence({ onDone, loop = false }) {
 
   return (
     <div className="py-1 font-mono text-xs leading-relaxed" aria-live="polite">
-      {lines.slice(0, visibleCount).map((line, index) => (
-        <div key={index} className={line.className}>{line.text}</div>
-      ))}
+      {lines.slice(0, visibleCount).map((line, index) =>
+        line.type === 'bar' ? (
+          <div key={index} className={`flex items-center gap-2 ${line.className}`}>
+            <span>{line.text}</span>
+            <span className="text-zinc-600">[</span>
+            <span className="relative inline-block w-24 h-2 bg-zinc-800 rounded-sm overflow-hidden align-middle">
+              <span className="absolute inset-y-0 left-0 bg-accent-cyan terminal-bar-fill" />
+            </span>
+            <span className="text-zinc-600">]</span>
+          </div>
+        ) : (
+          <div key={index} className={line.className}>{line.text}</div>
+        )
+      )}
     </div>
   );
 }
