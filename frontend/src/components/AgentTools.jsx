@@ -7,7 +7,7 @@ import siteContent from '../../content/site-content.json';
 const KNOWN_IDS = siteContent.projects.map((p) => p.id);
 
 export default function AgentTools() {
-  const { setHighlightedProjectIds, setExpandedProjectId, setSkillsChartSpec } = useAgentUI();
+  const { setHighlightedProjectIds, setExpandedProjectId, setChartSpec } = useAgentUI();
 
   useFrontendTool({
     name: 'highlightProjects',
@@ -45,23 +45,23 @@ export default function AgentTools() {
   });
 
   useFrontendTool({
-    name: 'renderSkillsChart',
+    name: 'renderChart',
     description:
-      'Draw a Vega-Lite v5 chart into the Skills & Expertise section. Only chart ' +
-      'real counts derived from the skill categories/groups shown on the page — ' +
-      'never invented proficiency scores. Inline data under data.values; omit ' +
-      'width/height.',
+      'Draw a Vega-Lite v5 chart in the chart panel below the terminal, to help ' +
+      'illustrate an answer -- e.g. comparing skills, project categories, or other ' +
+      'structured data. Only chart real data already established in this ' +
+      'conversation or in retrieved site content -- never invented numbers. Inline ' +
+      'data under data.values; omit width/height.',
     parameters: z.object({
       spec: z.record(z.string(), z.any()).describe('A Vega-Lite v5 specification object.'),
     }),
     handler: async ({ spec }) => {
       const problem = validateSpec(spec);
       if (problem) {
-        return `Error: that Vega-Lite spec is invalid and was not rendered (${problem}). Fix the spec and call renderSkillsChart again.`;
+        return `Error: that Vega-Lite spec is invalid and was not rendered (${problem}). Fix the spec and call renderChart again.`;
       }
-      setSkillsChartSpec(normalizeSpec(spec));
-      document.getElementById('skills')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      return 'Chart rendered in the Skills & Expertise section.';
+      setChartSpec(normalizeSpec(spec));
+      return 'Chart rendered below the terminal.';
     },
   });
 

@@ -62,12 +62,21 @@ Single-page app with React Router. Two routes: `/` (main portfolio) and `/privac
 `server.js` (the production Express server, not Vite) also handles: an application-level 301 redirect from `www.frederikheda.com` to `https://frederikheda.com` (apex is canonical), the `/api/chatbot` proxy to the backend, and security headers (HSTS, X-Frame-Options, etc). Both `frederikheda.com` and `www.frederikheda.com` are bound as custom domains on `ca-portfolio-web` with free Azure-managed certificates — see `docs/Portfolio/plans/2026-08-09-azure-migration.md` Task 7 for the DNS/binding setup if it ever needs redoing (e.g. cert renewal issues, DNS provider migration).
 
 ### Backend
-FastAPI app with a single POST endpoint `/chatbot` (rate-limited to 5/minute per IP). Request flow:
-1. `ContentSafetyService` (Azure OpenAI) screens the user input
-2. `rag_client.generate_rag_response()` is called
-3. `PromptManager` assembles messages from `.txt` prompt files configured in `LLM/prompts/config.json`
-4. `ragClient` calls OpenAI with tool support — if the model calls the `retrieve_information` tool, `llm_utils` performs a vector search against Azure AI Search and appends retrieved context to messages
-5. Final OpenAI call produces the answer; interaction is logged to Azure SQL via `database_client` (fire-and-forget, background thread)
+FastAPI app (`main.py`) that exposes a LangGraph agent over CopilotKit's AG-UI protocol at `/agent/portfolio_agent` (via `add_langgraph_fastapi_endpoint` + `LangGraphAGUIAgent`) — not a custom REST endpoint; the frontend's CopilotKit v2 client talks to this directly. Also serves `/health`. Request flow:
+1. `ContentSafetyMiddleware` screens the latest user message via OpenAI's moderation API (`omni-moderation-latest`) before the model runs; a flagged message short-circuits straight to a refusal, skipping the model call entirely.
+2. `CopilotKitMiddleware` (from the `copilotkit` package) bridges the AG-UI protocol — this is what merges the frontend's `useFrontendTool`-registered tools (e.g. `highlightProjects`, `renderChart`) into the set of tools available to the model, alongside the MCP tools below.
+3. The LangGraph agent (`create_agent`, in `agent/agent.py`) runs with `gpt-5.6-luna` (`ChatOpenAI`, `reasoning_effort="none"` — the model 400s on tool calls without it); its behavior comes from `agent/system_prompt.md`.
+4. Backend-side tools (`list_projects`, `get_project_details`, `retrieve_information`) aren't defined locally — they're loaded at startup from the `mcp-tools` Azure Function App over MCP (`agent/mcp_tools.py`, streamable-http, using `FUNCTION_APP_URL`/`FUNCTION_MCP_KEY`). `retrieve_information` is what performs the Azure AI Search vector query — that logic lives in `mcp-tools/`, not here.
+5. `LoggingMiddleware` logs both the user's message and the model's reply to Azure SQL via `services/database_client.py` (fire-and-forget, background thread), after the agent finishes.
+
+### Agent (`backend/agent/`)
+- `agent.py` — builds the LangGraph graph: `create_agent(model=ChatOpenAI(...), tools=<MCP tools>, system_prompt=..., middleware=[...], checkpointer=MemorySaver())`
+- `system_prompt.md` — the agent's full behavioral prompt: tone/style plus a description of every backend and frontend tool it has access to. Edit this whenever a tool is added, renamed, or its behavior changes — the frontend tool's own `description` field is not what the model actually reads its instructions from.
+- `mcp_tools.py` — connects to the `mcp-tools` Function App via `MultiServerMCPClient` (streamable-http) and loads its tools at startup
+- `content_safety_middleware.py` — pre-model moderation gate (OpenAI's moderation API, not Azure Content Safety)
+- `logging_middleware.py` — post-agent Azure SQL logging via `services/database_client.py`
+
+There is no local `backend/LLM/` directory, `PromptManager`, `OpenAIClient`, or `ToolOrchestrator` — an earlier implementation shaped that way was replaced by the LangGraph agent above (see `docs/Portfolio/plans/2026-08-22-agentic-chatbot-design.md` for the migration).
 
 ### LLM Layer (`backend/LLM/`)
 - `LLMClient` — abstract base class
@@ -95,8 +104,10 @@ The rule of thumb: if you are about to write code that calls an external library
 ## Environment Variables
 
 **Backend** (set via the repo-root `.env` (local) or Container Apps env vars (deployed, via `infra/deploy.sh`)):
-- `OPENAI_API_KEY`
-- `azure_search_endpoint`, `azure_index_name`, `azure_search_api_key`
+- `OPENAI_API_KEY` — used directly (moderation API, `ChatOpenAI`); required at startup
+- `FUNCTION_APP_URL`, `FUNCTION_MCP_KEY` — the `mcp-tools` Function App this backend loads its MCP tools from (`FUNCTION_APP_URL` required at startup; `FUNCTION_MCP_KEY` optional locally, required once the Function App enforces its function key in Azure)
 - `AZURE_SQL_SERVER`, `AZURE_SQL_DATABASE` — no password, Microsoft Entra ID auth (see `docs/Portfolio/specs/2026-08-09-azure-migration-design.md`)
+
+`azure_search_endpoint`/`azure_index_name`/`azure_search_api_key` are **not** backend env vars — that's `mcp-tools/`'s configuration (it's what actually performs the Azure AI Search vector query, behind the `retrieve_information` MCP tool).
 
 **Frontend**: `BACKEND_URL` — read by `server.js` (Node), not the browser bundle. Defaults to `http://ca-portfolio-backend` (the in-environment Container Apps address, set by Bicep); for local `npm start` testing against a local backend, set it to `http://localhost:8000`.

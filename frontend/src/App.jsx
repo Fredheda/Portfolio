@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Lenis from 'lenis';
 import Header from './components/Headers';
 import TerminalHero from './components/TerminalHero';
+import ChartPanel from './components/ChartPanel';
 import Projects from './components/Projects';
 import Footer from './components/Footer';
 import AgentTools from './components/AgentTools';
@@ -54,6 +55,7 @@ function MainContent() {
   return (
     <div>
       <TerminalHero />
+      <ChartPanel />
       <Projects />
     </div>
   );

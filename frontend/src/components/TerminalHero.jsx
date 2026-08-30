@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useAgent, useCopilotKit } from '@copilotkit/react-core/v2';
 import { useChatThread } from '../context/ChatThreadContext';
+import { useAgentUI } from '../context/AgentUIContext';
 import ThinkingSequence from './terminal/ThinkingSequence';
 import TypedMarkdown from './terminal/TypedMarkdown';
 
@@ -13,6 +14,7 @@ const TerminalHero = () => {
   const { agent } = useAgent();
   const { copilotkit } = useCopilotKit();
   const { resetThread } = useChatThread();
+  const { setChartSpec } = useAgentUI();
 
   const [input, setInput] = useState('');
   const [booted, setBooted] = useState(false);
@@ -125,6 +127,7 @@ const TerminalHero = () => {
   const clearChat = () => {
     agent?.setMessages([]);
     resetThread();
+    setChartSpec(null);
     // A cleared thread is a new session -- the intro sequence should play
     // again on its first message.
     setHasSentFirstMessage(false);
