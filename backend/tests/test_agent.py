@@ -8,7 +8,7 @@ from agent.agent import SYSTEM_PROMPT, build_graph
 def test_system_prompt_loads_and_documents_frontend_tools():
     assert SYSTEM_PROMPT.strip()
     assert "highlightProjects" in SYSTEM_PROMPT
-    assert "renderSkillsChart" in SYSTEM_PROMPT
+    assert "renderProjectCard" in SYSTEM_PROMPT
 
 
 @pytest.mark.asyncio

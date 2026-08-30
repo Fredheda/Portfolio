@@ -2,6 +2,12 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+> This repo lives inside a multi-repo workspace with its own root `CLAUDE.md`
+> (`../CLAUDE.md`, one level up) covering workspace-wide conventions — where
+> specs/plans go, the git-narration rule, shared MCP/skill usage. Keep that
+> file's per-project facts about this repo (test-suite status, architecture
+> pointers, etc.) in sync whenever they drift from what's true here.
+
 ## Project Overview
 
 A personal portfolio website for Frederik Heda (Senior ML Engineer), live at
@@ -64,7 +70,7 @@ Single-page app with React Router. Two routes: `/` (main portfolio) and `/privac
 ### Backend
 FastAPI app (`main.py`) that exposes a LangGraph agent over CopilotKit's AG-UI protocol at `/agent/portfolio_agent` (via `add_langgraph_fastapi_endpoint` + `LangGraphAGUIAgent`) — not a custom REST endpoint; the frontend's CopilotKit v2 client talks to this directly. Also serves `/health`. Request flow:
 1. `ContentSafetyMiddleware` screens the latest user message via OpenAI's moderation API (`omni-moderation-latest`) before the model runs; a flagged message short-circuits straight to a refusal, skipping the model call entirely.
-2. `CopilotKitMiddleware` (from the `copilotkit` package) bridges the AG-UI protocol — this is what merges the frontend's `useFrontendTool`-registered tools (e.g. `highlightProjects`, `renderChart`) into the set of tools available to the model, alongside the MCP tools below.
+2. `CopilotKitMiddleware` (from the `copilotkit` package) bridges the AG-UI protocol — this is what merges the frontend's `useFrontendTool`-registered tools (`highlightProjects`, `renderProjectCard`) into the set of tools available to the model, alongside the MCP tools below.
 3. The LangGraph agent (`create_agent`, in `agent/agent.py`) runs with `gpt-5.6-luna` (`ChatOpenAI`, `reasoning_effort="none"` — the model 400s on tool calls without it); its behavior comes from `agent/system_prompt.md`.
 4. Backend-side tools (`list_projects`, `get_project_details`, `retrieve_information`) aren't defined locally — they're loaded at startup from the `mcp-tools` Azure Function App over MCP (`agent/mcp_tools.py`, streamable-http, using `FUNCTION_APP_URL`/`FUNCTION_MCP_KEY`). `retrieve_information` is what performs the Azure AI Search vector query — that logic lives in `mcp-tools/`, not here.
 5. `LoggingMiddleware` logs both the user's message and the model's reply to Azure SQL via `services/database_client.py` (fire-and-forget, background thread), after the agent finishes.
