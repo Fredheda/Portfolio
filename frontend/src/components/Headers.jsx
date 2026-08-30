@@ -2,9 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const navLinks = [
-  { href: '/#projects', label: 'Projects' },
-];
+const navLinks = [];
 
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
