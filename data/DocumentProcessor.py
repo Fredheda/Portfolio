@@ -25,12 +25,17 @@ class DocumentProcessor:
         splitter = MarkdownHeaderTextSplitter(headers_to_split_on)
         splits = splitter.split_text(content)
 
+        # The index prefix guarantees a unique key per chunk even when two
+        # sections in the same file share identical header text (e.g. two
+        # "Results" sections) -- without it, the index's key field silently
+        # upserts one over the other, so uploads succeed but the chunk with
+        # the repeated header never actually makes it into the index.
         processed_splits = [
             {
-                "header": self.process_headers(filename ,str(split.metadata)),
+                "header": self.process_headers(filename, f"{i}_{split.metadata}"),
                 "content": self.remove_whitespace(split.page_content)
             }
-            for split in splits
+            for i, split in enumerate(splits)
         ]
 
         return processed_splits

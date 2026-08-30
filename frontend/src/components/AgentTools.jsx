@@ -1,13 +1,12 @@
 import { useFrontendTool } from '@copilotkit/react-core/v2';
 import { z } from 'zod';
 import { useAgentUI } from '../context/AgentUIContext';
-import { normalizeSpec, validateSpec } from '../lib/vega-spec';
 import siteContent from '../../content/site-content.json';
 
 const KNOWN_IDS = siteContent.projects.map((p) => p.id);
 
 export default function AgentTools() {
-  const { setHighlightedProjectIds, setExpandedProjectId, setSkillsChartSpec } = useAgentUI();
+  const { setHighlightedProjectIds, setExpandedProjectId } = useAgentUI();
 
   useFrontendTool({
     name: 'highlightProjects',
@@ -41,27 +40,6 @@ export default function AgentTools() {
       setExpandedProjectId(projectId);
       document.getElementById('projects')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       return `Opened detail panel for ${projectId}.`;
-    },
-  });
-
-  useFrontendTool({
-    name: 'renderSkillsChart',
-    description:
-      'Draw a Vega-Lite v5 chart into the Skills & Expertise section. Only chart ' +
-      'real counts derived from the skill categories/groups shown on the page — ' +
-      'never invented proficiency scores. Inline data under data.values; omit ' +
-      'width/height.',
-    parameters: z.object({
-      spec: z.record(z.string(), z.any()).describe('A Vega-Lite v5 specification object.'),
-    }),
-    handler: async ({ spec }) => {
-      const problem = validateSpec(spec);
-      if (problem) {
-        return `Error: that Vega-Lite spec is invalid and was not rendered (${problem}). Fix the spec and call renderSkillsChart again.`;
-      }
-      setSkillsChartSpec(normalizeSpec(spec));
-      document.getElementById('skills')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      return 'Chart rendered in the Skills & Expertise section.';
     },
   });
 

@@ -4,7 +4,6 @@ import Lenis from 'lenis';
 import Header from './components/Headers';
 import TerminalHero from './components/TerminalHero';
 import Projects from './components/Projects';
-import About from './components/About';
 import Footer from './components/Footer';
 import AgentTools from './components/AgentTools';
 
@@ -29,7 +28,7 @@ function App() {
 
   return (
     <Router>
-      <div className="relative flex flex-col min-h-screen bg-surface-950">
+      <div className="relative flex flex-col min-h-screen bg-surface-900">
         {/* Noise texture overlay */}
         <div className="noise-overlay fixed inset-0 z-50 pointer-events-none" />
 
@@ -56,7 +55,6 @@ function MainContent() {
     <div>
       <TerminalHero />
       <Projects />
-      <About />
     </div>
   );
 }

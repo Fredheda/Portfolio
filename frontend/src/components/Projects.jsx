@@ -19,7 +19,7 @@ const Projects = () => {
               rel="noopener noreferrer"
               className={`group block bg-zinc-900/80 border rounded-lg p-4 transition-all duration-300 hover:border-zinc-500 no-underline ${
                 highlightedProjectIds.includes(project.id)
-                  ? 'border-white/70 ring-2 ring-white/40 ring-offset-2 ring-offset-surface-950'
+                  ? 'border-white/70 ring-2 ring-white/40 ring-offset-2 ring-offset-surface-900'
                   : 'border-zinc-800'
               }`}
             >

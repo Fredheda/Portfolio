@@ -2,11 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const navLinks = [
-  { href: '/#about', label: 'About' },
-  { href: '/#skills', label: 'Skills' },
-  { href: '/#projects', label: 'Projects' },
-];
+const navLinks = [];
 
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -29,13 +25,13 @@ const Header = () => {
       <header
         className={`sticky top-0 z-40 flex flex-row justify-between items-center px-6 backdrop-blur-md text-white transition-all duration-300 border-b ${
           scrolled
-            ? 'py-3 bg-surface-950/95 border-zinc-800'
-            : 'py-4 bg-surface-950/80 border-accent-cyan/20'
+            ? 'py-3 bg-surface-900/95 border-zinc-800'
+            : 'py-4 bg-surface-900/80 border-accent-cyan/20'
         }`}
       >
         {/* Logo */}
         <RouterLink to="/" className="flex items-center gap-2 text-zinc-300 hover:text-accent-cyan transition-colors duration-300 no-underline">
-          <img src="/images/logo.png" alt="FH" className="h-7 w-7 rounded" />
+          <span className="font-mono text-base font-semibold tracking-wide">FH</span>
         </RouterLink>
 
         {/* Desktop nav */}
@@ -109,7 +105,7 @@ const Header = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-30 bg-surface-950/98 backdrop-blur-lg flex flex-col items-center justify-center gap-8"
+            className="fixed inset-0 z-30 bg-surface-900/98 backdrop-blur-lg flex flex-col items-center justify-center gap-8"
           >
             {navLinks.map((link, i) => (
               <motion.a

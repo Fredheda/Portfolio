@@ -1,73 +1,106 @@
 import { useEffect, useRef, useState } from 'react';
 
-// Pool of fake process lines -- a random subset/order is picked per run so
-// it never plays identically twice, and the fast tempo below is meant to
-// read as "a large program executing lots of processes very quickly"
-// rather than a deliberate, evenly-paced readout.
-const LINE_POOL = [
-  'CROSS-REFERENCING: knowledge_base.idx',
-  'LOADING: profile.dat ... OK',
-  'PARSING QUERY VECTOR',
-  'SCANNING: 14208 RECORDS',
-  'MATCH FOUND: subject_profile',
-  'DECRYPTING: response_cache',
-  'VERIFYING: identity_token',
-  'INDEXING: project_graph.bin',
-  'RESOLVING: context_window',
-  'ALLOCATING: inference_thread [0x7f3a]',
-  'QUERY CLASSIFIED: informational',
-  'FETCHING: embeddings.vec',
-  'CHECKSUM: 4f2a9c ... VALID',
-  'SPAWNING: worker_04',
-  'SPAWNING: worker_11',
-  'SPAWNING: worker_17',
-  'MERGING: context_fragments',
-  'CROSS-REFERENCING: project_index',
-  'BUFFERING: response_stream',
-  'SYNCING: session_state',
-  'PING: inference_node ... 12ms',
-  'CACHE: HIT (0.9421)',
-  'TRACE: request_id 8823-fa',
-  'ANALYZING SENTIMENT ... NEUTRAL',
-  'ROUTING: query_classifier',
-  'READING: skills_index.json',
-  'NORMALIZING: token_stream',
-  'OPENING SOCKET: 127.0.0.1:8843',
-  'HANDSHAKE: TLS 1.3 ... OK',
-  'MOUNTING: /var/cache/rag',
-  'TOKENIZING INPUT ... 214 tokens',
-  'WEIGHTS LOADED: 7.2GB',
-  'GPU UTIL: 94%',
-  'THREAD POOL: 8 workers active',
-  'COMPILING: response_graph.dot',
-  'DEDUPING: candidate_answers',
-  'RANKING: relevance_scores',
-  'FLUSHING: stdout buffer',
-  'HEAP: 412MB / 2048MB',
-  'LOCK ACQUIRED: session_mutex',
-  'LOCK RELEASED: session_mutex',
-  'WATCHDOG: heartbeat OK',
-  'WRITING: audit_log.jsonl',
-  'RATE LIMIT CHECK ... PASS',
-  'SANDBOX: isolation verified',
-  'DNS RESOLVED: api.internal (4ms)',
-  'FORKING: subprocess_02',
-  'REAPING: subprocess_02 [exit 0]',
-  'SIGNATURE VALID: response_payload',
-  'ENTROPY POOL: 4096 bits',
-  'SCHEDULING: next_tick',
-];
+// Lines are grouped into stages that always play in this order -- each run
+// picks a random subset from each stage (shuffled within the stage) so the
+// content varies, but the story stays coherent: authenticate, retrieve,
+// infer, respond. This replaces a single flat, globally-shuffled pool.
+const STAGE_ORDER = ['AUTH', 'RETRIEVAL', 'INFERENCE', 'RESPONSE'];
+
+const STAGES = {
+  AUTH: [
+    { text: 'VERIFYING: identity_token', category: 'default' },
+    { text: 'HANDSHAKE: TLS 1.3 ... OK', category: 'io' },
+    { text: 'OPENING SOCKET: 127.0.0.1:8843', category: 'io' },
+    { text: 'DNS RESOLVED: api.internal (4ms)', category: 'io' },
+    { text: 'RATE LIMIT CHECK ... PASS', category: 'default' },
+    { text: 'SANDBOX: isolation verified', category: 'default' },
+    { text: 'AUTH TOKEN SCOPE: read:profile read:projects', category: 'default' },
+    { text: 'SESSION KEY DERIVED: hkdf-sha256', category: 'compute' },
+    { text: 'CHECKING: origin_header ... OK', category: 'io' },
+    { text: 'PING: inference_node ... 12ms', category: 'io' },
+    { text: 'LOADING: profile.dat ... OK', category: 'default' },
+    { text: 'SIGNATURE VALID: request_payload', category: 'default' },
+  ],
+  RETRIEVAL: [
+    { text: 'CROSS-REFERENCING: knowledge_base.idx', category: 'default' },
+    { text: 'PARSING QUERY VECTOR', category: 'compute' },
+    { text: 'SCANNING: 14208 RECORDS', category: 'default', holdMs: [500, 900] },
+    { text: 'MATCH FOUND: subject_profile', category: 'default' },
+    { text: 'INDEXING: project_graph.bin', category: 'default' },
+    { text: 'FETCHING: embeddings.vec', category: 'io' },
+    { text: 'LOADING: embeddings.vec', category: 'io', type: 'bar' },
+    { text: 'LOADING: knowledge_base.idx', category: 'io', type: 'bar' },
+    { text: 'DOWNLOADING: context_cache.bin', category: 'io', type: 'bar' },
+    { text: 'CHECKSUM: 4f2a9c ... VALID', category: 'default' },
+    { text: 'CROSS-REFERENCING: project_index', category: 'default' },
+    { text: 'MOUNTING: /var/cache/rag', category: 'io' },
+    { text: 'READING: skills_index.json', category: 'io' },
+    { text: 'QUERY CLASSIFIED: informational', category: 'default' },
+    { text: 'VECTOR SEARCH: k=5 nearest neighbors', category: 'compute', holdMs: [400, 700] },
+    { text: 'CACHE: HIT (0.9421)', category: 'default' },
+    { text: 'DEDUPING: candidate_answers', category: 'default' },
+    { text: 'RANKING: relevance_scores', category: 'compute' },
+    { text: 'RESOLVING: context_window', category: 'default' },
+  ],
+  INFERENCE: [
+    { text: 'DECRYPTING: response_cache', category: 'default' },
+    { text: 'ALLOCATING: inference_thread [0x7f3a]', category: 'compute' },
+    { text: 'SPAWNING: worker_04', category: 'default' },
+    { text: 'SPAWNING: worker_11', category: 'default' },
+    { text: 'SPAWNING: worker_17', category: 'default' },
+    { text: 'MERGING: context_fragments', category: 'compute' },
+    { text: 'BUFFERING: response_stream', category: 'io' },
+    { text: 'SYNCING: session_state', category: 'io' },
+    { text: 'TRACE: request_id 8823-fa', category: 'default' },
+    { text: 'ANALYZING SENTIMENT ... NEUTRAL', category: 'compute' },
+    { text: 'ROUTING: query_classifier', category: 'default' },
+    { text: 'NORMALIZING: token_stream', category: 'default' },
+    { text: 'TOKENIZING INPUT ... 214 tokens', category: 'default' },
+    { text: 'WEIGHTS LOADED: 7.2GB', category: 'compute', holdMs: [600, 1200] },
+    { text: 'GPU UTIL: 94%', category: 'compute' },
+    { text: 'THREAD POOL: 8 workers active', category: 'default' },
+    { text: 'COMPILING: response_graph.dot', category: 'compute', holdMs: [500, 1000] },
+    { text: 'HEAP: 412MB / 2048MB', category: 'default' },
+    { text: 'LOCK ACQUIRED: session_mutex', category: 'default' },
+    { text: 'LOCK RELEASED: session_mutex', category: 'default' },
+    { text: 'FORKING: subprocess_02', category: 'default' },
+    { text: 'REAPING: subprocess_02 [exit 0]', category: 'default' },
+    { text: 'ENTROPY POOL: 4096 bits', category: 'warn' },
+  ],
+  RESPONSE: [
+    { text: 'WATCHDOG: heartbeat OK', category: 'default' },
+    { text: 'WRITING: audit_log.jsonl', category: 'io' },
+    { text: 'FLUSHING: stdout buffer', category: 'io' },
+    { text: 'SIGNATURE VALID: response_payload', category: 'default' },
+    { text: 'SCHEDULING: next_tick', category: 'default' },
+    { text: 'FINALIZING: response_object', category: 'default' },
+    { text: 'STREAM STATUS: ready', category: 'default' },
+  ],
+};
+
+// Category -> className. `default` stays the majority (plain dim gray) so
+// color reads as a rare accent, not noise, at the fast per-line pace below.
+// No real `WARN:`-prefixed cautionary line exists in the pastiche pool, so
+// `ENTROPY POOL: 4096 bits` above is tagged `warn` purely as a visual accent
+// choice (not a real warning) -- keeps the tone strictly technical while
+// still exercising the category.
+const CATEGORY_CLASSNAMES = {
+  default: 'text-zinc-500',
+  io: 'text-cyan-700',
+  compute: 'text-violet-700',
+  warn: 'text-accent-gold/70',
+};
+
+const MIN_DELAY_MS = 40;
+const MAX_DELAY_MS = 100;
+const DEFAULT_HOLD_MS = [MIN_DELAY_MS, MAX_DELAY_MS];
 
 // Styled identically to the pool lines (same text-zinc-500, no glow) --
 // no visual distinction at all from the rest of the fake log, so nothing
 // in this sequence is ever mistaken for the real assistant reply.
-const IDENTITY_LINE = { text: 'IDENTITY CONFIRMED: visitor', className: 'text-zinc-500' };
-const FINAL_LINE = { text: 'RESPONSE READY', className: 'text-zinc-500' };
+const IDENTITY_LINE = { text: 'IDENTITY CONFIRMED: visitor', className: 'text-zinc-500', holdMs: DEFAULT_HOLD_MS };
+const FINAL_LINE = { text: 'RESPONSE READY', className: 'text-zinc-500', holdMs: DEFAULT_HOLD_MS };
 
-const MIN_LINES = 8;
-const MAX_LINES = 13;
-const MIN_DELAY_MS = 40;
-const MAX_DELAY_MS = 100;
 // First-message (non-loop) only: how long the final "IDENTITY
 // CONFIRMED"/"RESPONSE READY" pair holds on screen before handing off --
 // long enough to actually read them, rather than flashing by at the same
@@ -76,9 +109,34 @@ const MIN_HOLD_MS = 1000;
 const MAX_HOLD_MS = 2000;
 
 function buildSequence(withTail = true) {
-  const shuffled = [...LINE_POOL].sort(() => Math.random() - 0.5);
-  const count = MIN_LINES + Math.floor(Math.random() * (MAX_LINES - MIN_LINES + 1));
-  const picked = shuffled.slice(0, count).map((text) => ({ text, className: 'text-zinc-500' }));
+  const MIN_PER_STAGE = 2;
+  const MAX_PER_STAGE = 4;
+  const picked = STAGE_ORDER.flatMap((stage) => {
+    const pool = STAGES[stage];
+    const regularPool = pool.filter((line) => line.type !== 'bar');
+    const barLines = pool.filter((line) => line.type === 'bar');
+
+    const shuffled = [...regularPool].sort(() => Math.random() - 0.5);
+    const count = MIN_PER_STAGE + Math.floor(Math.random() * (MAX_PER_STAGE - MIN_PER_STAGE + 1));
+    const selected = shuffled.slice(0, Math.min(count, regularPool.length));
+
+    // Exactly one bar line always plays per stage that has any -- picked
+    // randomly from that stage's options, so a bar always appears but which
+    // one varies between runs.
+    if (barLines.length > 0) {
+      selected.push(barLines[Math.floor(Math.random() * barLines.length)]);
+    }
+    // Re-shuffle so the bar line lands at a random position within the
+    // stage, rather than always playing last.
+    selected.sort(() => Math.random() - 0.5);
+
+    return selected.map((line) => ({
+      text: line.text,
+      className: CATEGORY_CLASSNAMES[line.category] ?? CATEGORY_CLASSNAMES.default,
+      holdMs: line.type === 'bar' ? [1200, 1500] : (line.holdMs ?? DEFAULT_HOLD_MS),
+      type: line.type ?? 'text',
+    }));
+  });
   return withTail ? [...picked, IDENTITY_LINE, FINAL_LINE] : picked;
 }
 
@@ -102,7 +160,8 @@ export default function ThinkingSequence({ onDone, loop = false }) {
       for (let i = 1; i <= sequence.length; i++) {
         if (cancelled) return;
         setVisibleCount(i);
-        const delay = MIN_DELAY_MS + Math.random() * (MAX_DELAY_MS - MIN_DELAY_MS);
+        const [minMs, maxMs] = sequence[i - 1].holdMs;
+        const delay = minMs + Math.random() * (maxMs - minMs);
         await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
@@ -135,9 +194,20 @@ export default function ThinkingSequence({ onDone, loop = false }) {
 
   return (
     <div className="py-1 font-mono text-xs leading-relaxed" aria-live="polite">
-      {lines.slice(0, visibleCount).map((line, index) => (
-        <div key={index} className={line.className}>{line.text}</div>
-      ))}
+      {lines.slice(0, visibleCount).map((line, index) =>
+        line.type === 'bar' ? (
+          <div key={index} className={`flex items-center gap-2 ${line.className}`}>
+            <span>{line.text}</span>
+            <span className="text-zinc-600">[</span>
+            <span className="relative inline-block w-24 h-2 bg-zinc-800 rounded-sm overflow-hidden align-middle">
+              <span className="absolute inset-y-0 left-0 bg-accent-cyan terminal-bar-fill" />
+            </span>
+            <span className="text-zinc-600">]</span>
+          </div>
+        ) : (
+          <div key={index} className={line.className}>{line.text}</div>
+        )
+      )}
     </div>
   );
 }
