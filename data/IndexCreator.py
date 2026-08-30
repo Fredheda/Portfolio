@@ -68,12 +68,28 @@ class IndexCreator:
     
     def upload_documents(self, document_list):
         documents=[
-            {"document_name": document_list[i]['header'], 
+            {"document_name": document_list[i]['header'],
              "content": document_list[i]['content'],
              "embedding": self.create_embedding(document_list[i]['content'])} for i in range(len(document_list))
              ]
+
+        # Catch same-key collisions client-side, before even calling the API --
+        # cheaper and more informative than waiting on a response that may not
+        # surface it clearly either.
+        keys = [d["document_name"] for d in documents]
+        duplicate_keys = sorted({k for k in keys if keys.count(k) > 1})
+        if duplicate_keys:
+            print(f"WARNING: {len(duplicate_keys)} duplicate document_name key(s) in this batch (later entries silently overwrite earlier ones with the same key): {duplicate_keys}")
+
         response = self.search_client.upload_documents(documents=documents)
-        print(f"Uploaded {len(documents)} documents to the index.")
+        # upload_documents doesn't raise on a partial batch failure -- each
+        # action's real outcome is only visible in the per-item response.
+        failed = [r for r in response if not r.succeeded]
+        if failed:
+            print(f"WARNING: {len(failed)} of {len(documents)} upload actions failed:")
+            for r in failed:
+                print(f"  key={r.key!r} status={r.status_code} error={r.error_message}")
+        print(f"Uploaded {len(documents) - len(failed)} of {len(documents)} documents to the index.")
     
     def index_exists(self, index_name):
         try:
