@@ -8,6 +8,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 > file's per-project facts about this repo (test-suite status, architecture
 > pointers, etc.) in sync whenever they drift from what's true here.
 
+**Git:** the user runs all state-changing git operations themselves, including
+`push`, `pull`, `fetch`, and merging pull requests (`gh pr merge`, or via the
+GitHub UI) — hand over the exact command or PR URL instead of running it.
+Full rule and rationale in the root `CLAUDE.md` linked above.
+
 ## Project Overview
 
 A personal portfolio website for Frederik Heda (Senior ML Engineer), live at
