@@ -108,6 +108,11 @@ const FINAL_LINE = { text: 'RESPONSE READY', className: 'text-zinc-500', holdMs:
 const MIN_HOLD_MS = 1000;
 const MAX_HOLD_MS = 2000;
 
+// Loop mode caps how many lines it keeps around -- old ones roll off the
+// front once this is hit, same as a real terminal's scrollback eventually
+// dropping earliest lines, rather than the pane ever wiping and restarting.
+const MAX_RETAINED_LINES = 40;
+
 function buildSequence(withTail = true) {
   const MIN_PER_STAGE = 2;
   const MAX_PER_STAGE = 4;
@@ -140,13 +145,23 @@ function buildSequence(withTail = true) {
   return withTail ? [...picked, IDENTITY_LINE, FINAL_LINE] : picked;
 }
 
-// `loop`: keeps regenerating and replaying fresh sequences indefinitely
-// instead of running once and calling `onDone` -- used while waiting out a
-// real, variable-length backend call (e.g. an MCP tool call) rather than
-// playing a fixed-duration intro. The parent decides when to stop it by
-// unmounting the component once real content arrives; no fixed "response
-// ready" tail is shown between passes since there's nothing to announce yet.
-export default function ThinkingSequence({ onDone, loop = false }) {
+// `loop` only controls what the FIRST pass looks like: `false` plays the
+// themed intro (with the IDENTITY CONFIRMED/RESPONSE READY tail and a longer
+// hold before `onDone` fires), `true` skips straight to a plain batch. Either
+// way, once that first pass finishes, the component always keeps
+// regenerating and appending fresh batches for as long as it stays mounted
+// (capped at MAX_RETAINED_LINES, oldest dropped first) rather than replacing
+// the whole log -- so it reads as one continuously scrolling terminal
+// instead of visibly clearing and restarting every pass. Critically, the
+// same instance keeps running across the intro -> "still waiting" handoff
+// too: a parent that plays the intro (`loop={false}`) and wants to keep
+// showing this while a real reply is still pending must keep this same
+// element mounted rather than swapping in a second, freshly-mounted
+// instance once `onDone` fires -- mounting a second one reintroduces the
+// exact "wipe and restart" look this was built to avoid, just moved to that
+// handoff instead of happening within a single instance. The parent decides
+// when to actually stop it by unmounting once real content arrives.
+export default function ThinkingSequence({ onDone, loop = false, scrollContainerRef }) {
   const [lines, setLines] = useState(() => buildSequence(!loop));
   const [visibleCount, setVisibleCount] = useState(0);
   const onDoneRef = useRef(onDone);
@@ -155,19 +170,25 @@ export default function ThinkingSequence({ onDone, loop = false }) {
 
   useEffect(() => {
     let cancelled = false;
+    // Mutable locals mirroring the rendered state -- the loop below needs
+    // the up-to-date line list/count between passes without waiting on a
+    // render, and this effect only ever runs once per `loop` value.
+    let currentLines = lines;
+    let currentVisible = 0;
 
-    async function playOnce(sequence) {
-      for (let i = 1; i <= sequence.length; i++) {
+    async function revealFrom(sequence, fromIndex, toIndex) {
+      for (let i = fromIndex; i < toIndex; i++) {
         if (cancelled) return;
-        setVisibleCount(i);
-        const [minMs, maxMs] = sequence[i - 1].holdMs;
+        currentVisible = i + 1;
+        setVisibleCount(currentVisible);
+        const [minMs, maxMs] = sequence[i].holdMs;
         const delay = minMs + Math.random() * (maxMs - minMs);
         await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
 
     async function run() {
-      await playOnce(lines);
+      await revealFrom(currentLines, 0, currentLines.length);
       if (cancelled) return;
 
       if (!loop) {
@@ -175,15 +196,33 @@ export default function ThinkingSequence({ onDone, loop = false }) {
         await new Promise((resolve) => setTimeout(resolve, holdMs));
         if (cancelled) return;
         onDoneRef.current();
-        return;
+        // Deliberately no `return` here: if the parent keeps this instance
+        // mounted past the intro (the real reply still isn't ready), it
+        // should fall straight into the same continuous-append loop below
+        // instead of stopping -- otherwise the parent's only option is to
+        // mount a *second*, fresh ThinkingSequence for the ongoing wait,
+        // which is exactly the visible "wipe and restart" this was meant to
+        // fix, just moved to the intro/wait handoff instead of within it.
       }
 
       while (!cancelled) {
         await new Promise((resolve) => setTimeout(resolve, 250));
-        const next = buildSequence(false);
-        setLines(next);
-        setVisibleCount(0);
-        await playOnce(next);
+        const nextBatch = buildSequence(false);
+        const appendAt = currentLines.length;
+        let combined = [...currentLines, ...nextBatch];
+        let revealFromIndex = appendAt;
+
+        if (combined.length > MAX_RETAINED_LINES) {
+          const overflow = combined.length - MAX_RETAINED_LINES;
+          combined = combined.slice(overflow);
+          revealFromIndex = appendAt - overflow;
+          currentVisible = Math.max(0, currentVisible - overflow);
+          setVisibleCount(currentVisible);
+        }
+
+        currentLines = combined;
+        setLines(combined);
+        await revealFrom(combined, revealFromIndex, combined.length);
       }
     }
 
@@ -192,8 +231,20 @@ export default function ThinkingSequence({ onDone, loop = false }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loop]);
 
+  // Keep the growing log in view the same way TypedMarkdown follows the real
+  // reply -- only auto-follow while already scrolled near the bottom, so it
+  // doesn't fight a manual scroll-up.
+  useEffect(() => {
+    const container = scrollContainerRef?.current;
+    if (!container) return;
+    const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+    if (distanceFromBottom <= 64) {
+      container.scrollTo({ top: container.scrollHeight });
+    }
+  }, [visibleCount, scrollContainerRef]);
+
   return (
-    <div className="py-1 font-mono text-xs leading-relaxed" aria-live="polite">
+    <div className="py-1 font-mono text-xs leading-relaxed max-w-md" aria-live="polite">
       {lines.slice(0, visibleCount).map((line, index) =>
         line.type === 'bar' ? (
           <div key={index} className={`flex items-center gap-2 ${line.className}`}>

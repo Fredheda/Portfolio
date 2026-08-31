@@ -2,6 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import DOMPurify from 'dompurify';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
+import { normalizeMathDelimiters } from '../lib/markdown';
 import { useAgent, useCopilotKit } from '@copilotkit/react-core/v2';
 import { useChatThread } from '../context/ChatThreadContext';
 import ThinkingSequence from './terminal/ThinkingSequence';
@@ -17,6 +21,14 @@ const TerminalHero = () => {
   const [input, setInput] = useState('');
   const [booted, setBooted] = useState(false);
   const [sequenceActive, setSequenceActive] = useState(false);
+  // True from the first message's send until its real reply starts
+  // arriving -- spans both the intro theater AND whatever escalating wait
+  // follows it, so the SAME ThinkingSequence instance stays mounted for the
+  // whole stretch instead of being swapped for a second, freshly-mounted
+  // one once the intro's own first pass ends (see ThinkingSequence's own
+  // comment on why that handoff would look like a reset even though a
+  // single instance never resets itself).
+  const [introWaitActive, setIntroWaitActive] = useState(false);
   const [hasSentFirstMessage, setHasSentFirstMessage] = useState(false);
   const [replySettled, setReplySettled] = useState(true);
   // Escalating "still working" indicator for messages after the first one
@@ -47,11 +59,16 @@ const TerminalHero = () => {
 
   // The moment real content starts arriving for the in-flight reply, the
   // escalating indicator above has done its job -- stop it immediately
-  // rather than waiting for its own timers to unwind.
+  // rather than waiting for its own timers to unwind. Also drops
+  // `introWaitActive`, which unmounts the intro/wait ThinkingSequence (see
+  // its own declaration above) now that the real reply has something to show.
   useEffect(() => {
-    if (pendingAssistantContentStarted && waitStage !== 'none') {
-      clearWaitTimers();
-      setWaitStage('none');
+    if (pendingAssistantContentStarted) {
+      if (waitStage !== 'none') {
+        clearWaitTimers();
+        setWaitStage('none');
+      }
+      setIntroWaitActive(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingAssistantContentStarted]);
@@ -60,6 +77,17 @@ const TerminalHero = () => {
   useEffect(() => {
     const t = setTimeout(() => setBooted(true), BOOT_DELAY_MS);
     return () => clearTimeout(t);
+  }, []);
+
+  // Fire-and-forget warm-up ping as soon as the hero mounts. The backend
+  // container app scales to zero, and its FastAPI lifespan hook builds the
+  // LangGraph agent -- which loads MCP tools from the (also scale-to-zero)
+  // mcp-tools Function App -- before it can serve even `/health`. Pinging
+  // here means that whole cold-start chain runs while the visitor is
+  // reading the intro line / typing their first message, instead of only
+  // starting once they hit enter.
+  useEffect(() => {
+    fetch('/api/warmup').catch(() => {});
   }, []);
 
   // Jump to bottom only on a genuinely new turn (message count changing --
@@ -98,6 +126,7 @@ const TerminalHero = () => {
     if (!hasSentFirstMessage) {
       setHasSentFirstMessage(true);
       setSequenceActive(true);
+      setIntroWaitActive(true);
     }
 
     // Escalating "still working" indicator, armed on every send: the
@@ -131,6 +160,8 @@ const TerminalHero = () => {
     setReplySettled(true);
     clearWaitTimers();
     setWaitStage('none');
+    setSequenceActive(false);
+    setIntroWaitActive(false);
   };
 
   const handleSequenceDone = () => setSequenceActive(false);
@@ -194,23 +225,29 @@ const TerminalHero = () => {
                       />
                     ) : (
                       <div className={contentClassName}>
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
+                        <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+                          {normalizeMathDelimiters(message.content)}
+                        </ReactMarkdown>
                       </div>
                     )}
                   </div>
                 );
               })}
 
-              {sequenceActive && <ThinkingSequence onDone={handleSequenceDone} />}
+              {introWaitActive && (
+                <ThinkingSequence onDone={handleSequenceDone} scrollContainerRef={logRef} />
+              )}
 
-              {!sequenceActive && busy && !pendingAssistantContentStarted && (
+              {!introWaitActive && busy && !pendingAssistantContentStarted && (
                 <div className="mb-4 flex items-start gap-2">
                   <span className="shrink-0 text-zinc-600">fredbot ~ %</span>
                   <div className="min-w-0 flex-1">
                     {waitStage === 'thinking' && (
                       <div className="py-1 font-mono text-xs leading-relaxed text-zinc-500">thinking ...</div>
                     )}
-                    {waitStage === 'sequence' && <ThinkingSequence loop />}
+                    {waitStage === 'sequence' && (
+                      <ThinkingSequence loop scrollContainerRef={logRef} />
+                    )}
                   </div>
                 </div>
               )}

@@ -70,6 +70,25 @@ const copilotKitLimiter = rateLimit({
 });
 app.use('/api/copilotkit/agent/:agentId/run', copilotKitLimiter);
 
+// Warm-up ping: fired by the frontend as soon as the hero mounts, so the
+// backend's cold start (scale-to-zero container + its FastAPI lifespan hook
+// building the LangGraph agent, which loads MCP tools from the mcp-tools
+// Function App) begins before the visitor's first real message instead of
+// after it. Fire-and-forget -- the browser gets an immediate response and
+// never waits on the backend actually finishing its wake-up. Rate-limited
+// generously since it's otherwise a free way to keep the backend
+// permanently warm and defeat scale-to-zero.
+const warmupLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 10,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+});
+app.get('/api/warmup', warmupLimiter, (req, res) => {
+  fetch(`${BACKEND_URL}/health`).catch(() => {});
+  res.sendStatus(204);
+});
+
 // Multi-route mode (the default): exposes POST /api/copilotkit/agent/:agentId/run
 // and friends. Dedicated Express adapter, not a hand-rolled Fetch bridge.
 app.use(createCopilotExpressHandler({ runtime, basePath: '/api/copilotkit' }));
