@@ -68,9 +68,9 @@ Full workflow (prerequisites, rollback, first-deploy Function-key setup): `Deplo
 ## Architecture
 
 ### Frontend
-Single-page app with React Router. Two routes: `/` (main portfolio) and `/privacy-policy`. `TerminalHero` is the chat-first hero (absorbed the old floating `Chatbot` widget's CopilotKit wiring), followed by condensed `Projects`/`About` sections styled as terminal echoes. Components: `Header`, `TerminalHero`, `Projects`, `About`, `Footer`, `PrivacyPolicy`.
+Single-page app with React Router. Two routes: `/` (main portfolio) and `/privacy-policy`. `TerminalHero` is the chat-first hero (absorbed the old floating `Chatbot` widget's CopilotKit wiring), followed by condensed `Projects`/`About` sections styled as terminal echoes. Components: `Header`, `TerminalHero`, `Projects`, `About`, `Footer`, `PrivacyPolicy`. On mount, `TerminalHero` fires a fire-and-forget `GET /api/warmup` to start the backend's cold-start chain (container wake + MCP tool loading) as early as possible, before the visitor's first real message. Assistant replies (`TypedMarkdown`) and user messages both render through `react-markdown` with `remark-math`/`rehype-katex` (+ `katex` CSS), so LaTeX math (`$...$`/`$$...$$`) in a reply renders as typeset equations, not literal text.
 
-`server.js` (the production Express server, not Vite) also handles: an application-level 301 redirect from `www.frederikheda.com` to `https://frederikheda.com` (apex is canonical), the `/api/chatbot` proxy to the backend, and security headers (HSTS, X-Frame-Options, etc). Both `frederikheda.com` and `www.frederikheda.com` are bound as custom domains on `ca-portfolio-web` with free Azure-managed certificates — see `docs/Portfolio/plans/2026-08-09-azure-migration.md` Task 7 for the DNS/binding setup if it ever needs redoing (e.g. cert renewal issues, DNS provider migration).
+`server.js` (the production Express server, not Vite) also handles: an application-level 301 redirect from `www.frederikheda.com` to `https://frederikheda.com` (apex is canonical), the `/api/chatbot` proxy to the backend, the `/api/warmup` route (rate-limited; pings the backend's `/health` in the background and returns immediately), and security headers (HSTS, X-Frame-Options, etc). Both `frederikheda.com` and `www.frederikheda.com` are bound as custom domains on `ca-portfolio-web` with free Azure-managed certificates — see `docs/Portfolio/plans/2026-08-09-azure-migration.md` Task 7 for the DNS/binding setup if it ever needs redoing (e.g. cert renewal issues, DNS provider migration).
 
 ### Backend
 FastAPI app (`main.py`) that exposes a LangGraph agent over CopilotKit's AG-UI protocol at `/agent/portfolio_agent` (via `add_langgraph_fastapi_endpoint` + `LangGraphAGUIAgent`) — not a custom REST endpoint; the frontend's CopilotKit v2 client talks to this directly. Also serves `/health`. Request flow:
@@ -89,13 +89,6 @@ FastAPI app (`main.py`) that exposes a LangGraph agent over CopilotKit's AG-UI p
 
 There is no local `backend/LLM/` directory, `PromptManager`, `OpenAIClient`, or `ToolOrchestrator` — an earlier implementation shaped that way was replaced by the LangGraph agent above (see `docs/Portfolio/plans/2026-08-22-agentic-chatbot-design.md` for the migration).
 
-### LLM Layer (`backend/LLM/`)
-- `LLMClient` — abstract base class
-- `OpenAIClient` — concrete implementation using `gpt-4.1-nano` via the Responses API (`client.responses.create`), embeddings via `text-embedding-3-large`
-- `PromptManager` — loads all prompts from `.txt` files at startup using `LLM/prompts/config.json` as a manifest; assembles them into a base prompt via Python `string.Template`
-- `ToolOrchestrator` — loads tool definitions from JSON files (e.g. `LLM/tools/retrieve_information.json`)
-- `llm_utils` — wraps Azure AI Search vector queries (k=5 nearest neighbors on the `embedding` field)
-
 ### Data Pipeline (`data/`)
 - `DocumentProcessor` — converts `.txt`, `.docx`, `.pdf` files into chunks; uses `MarkdownHeaderTextSplitter` first, falls back to `RecursiveCharacterTextSplitter` (5000 tokens, 500 overlap) if headers produce oversized chunks
 - `IndexCreator` — creates/manages the Azure AI Search index and uploads embeddings
@@ -107,7 +100,7 @@ Always prefer up-to-date external sources over training knowledge when working o
 
 - **context7** (`mcp__context7__resolve-library-id` + `mcp__context7__query-docs`): Use for any library or framework used in this project — React, Vite, Tailwind, FastAPI, OpenAI SDK, Azure SDK, LangChain, etc. Fetch current docs before writing or modifying code that touches these libraries.
 - **Microsoft Learn** (`microsoft_docs_search`, `microsoft_docs_fetch`, `microsoft_code_sample_search`): Use when working with Azure AI Search, Azure OpenAI, or any other Azure/Microsoft service — API shapes, SDK versions, configuration options, and billing/pricing/scaling questions (e.g. Container Apps consumption-plan idle vs. active billing, `minReplicas` cost tradeoffs, free grants) all belong here, always, not just as a first try. Its billing docs cover the billing model and rate structure even when they don't quote exact per-unit dollar figures (those live only on the separate, non-Learn `azure.microsoft.com/pricing` page) — if a specific number isn't in Microsoft Learn, say so and ask how to proceed rather than reaching for WebFetch/WebSearch.
-- **`claude-api` skill**: Use when touching the OpenAI Responses API integration (`backend/LLM/openai_client.py`) or adding new LLM features. The skill provides current Anthropic/OpenAI SDK guidance and best practices.
+- **`claude-api` skill**: Use when touching an OpenAI SDK call site — the direct `openai` client in `backend/agent/content_safety_middleware.py` (moderation API) or `ChatOpenAI` in `backend/agent/agent.py` — or adding new LLM features. The skill provides current Anthropic/OpenAI SDK guidance and best practices.
 - **`frontend-design` skill**: Use when making UI changes to keep the frontend quality high.
 
 The rule of thumb: if you are about to write code that calls an external library or cloud API, fetch its current docs first.
