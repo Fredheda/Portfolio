@@ -15,7 +15,7 @@ Full rule and rationale in the root `CLAUDE.md` linked above.
 
 ## Project Overview
 
-A personal portfolio website for Frederik Heda (Senior ML Engineer), live at
+A personal portfolio website for Frederik Heda (Staff Data Scientist), live at
 [frederikheda.com](https://frederikheda.com). It consists of:
 - **Frontend**: React + Vite + Tailwind CSS, deployed to Azure Container Apps (`ca-portfolio-web`), bound to the custom domain with a free managed TLS certificate
 - **Backend**: FastAPI (Python), deployed to Azure Container Apps (`ca-portfolio-backend`)
