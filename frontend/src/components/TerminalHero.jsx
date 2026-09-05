@@ -196,7 +196,7 @@ const TerminalHero = () => {
                 frederik@heda ~ % <span className="text-zinc-300">whoami</span> &&{' '}
                 <span className="text-zinc-300">echo</span>{' '}
                 <span className="text-zinc-100">
-                  "senior ai engineer — ask a question, or try: show me your ml projects"
+                  "staff data scientist — ask a question, or try: show me your ml projects"
                 </span>
               </div>
 

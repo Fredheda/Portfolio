@@ -14,7 +14,7 @@ WORKDIR /app
 # only runtime system dependencies it needs (Kerberos + dynamic loading),
 # per Microsoft's container guidance. No ODBC Driver Manager, no Microsoft
 # package repo, no msodbcsql18.
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends \
     libltdl7 \
     libkrb5-3 \
     libgssapi-krb5-2 \
