@@ -95,6 +95,13 @@ const MIN_DELAY_MS = 40;
 const MAX_DELAY_MS = 100;
 const DEFAULT_HOLD_MS = [MIN_DELAY_MS, MAX_DELAY_MS];
 
+// Odds that a stage with bar-type lines actually shows one in a given pass.
+// Previously guaranteed (100%) per stage per pass -- with RETRIEVAL the only
+// stage that has any, that meant a progress bar on every single pass, which
+// reads as too frequent over a long wait (the loop rebuilds a pass every few
+// seconds). Below 1 makes it an occasional beat instead of a fixture.
+const BAR_LINE_CHANCE = 0.1;
+
 // Styled identically to the pool lines (same text-zinc-500, no glow) --
 // no visual distinction at all from the rest of the fake log, so nothing
 // in this sequence is ever mistaken for the real assistant reply.
@@ -125,10 +132,9 @@ function buildSequence(withTail = true) {
     const count = MIN_PER_STAGE + Math.floor(Math.random() * (MAX_PER_STAGE - MIN_PER_STAGE + 1));
     const selected = shuffled.slice(0, Math.min(count, regularPool.length));
 
-    // Exactly one bar line always plays per stage that has any -- picked
-    // randomly from that stage's options, so a bar always appears but which
-    // one varies between runs.
-    if (barLines.length > 0) {
+    // A stage with bar lines only shows one sometimes (see BAR_LINE_CHANCE)
+    // -- picked randomly from that stage's options when it does.
+    if (barLines.length > 0 && Math.random() < BAR_LINE_CHANCE) {
       selected.push(barLines[Math.floor(Math.random() * barLines.length)]);
     }
     // Re-shuffle so the bar line lands at a random position within the
