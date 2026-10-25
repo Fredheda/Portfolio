@@ -32,6 +32,8 @@ npm install          # Install dependencies
 npm run dev          # Start dev server (Vite)
 npm run build        # Production build
 npm start            # Serve production build (Express)
+npm test             # vitest (jsdom + Testing Library); pretest syncs content
+npm run lint         # eslint
 ```
 
 ### Backend (`cd backend`)
@@ -46,6 +48,23 @@ poetry run python main.py          # Run production server
 poetry install                     # Install dependencies (Python 3.13, pinned by .python-version)
 poetry run python populate_index.py    # Process documents and upload to Azure AI Search index
 ```
+
+### Checks
+
+Backend, from `backend/`:
+
+```bash
+poetry run pytest -v
+poetry run ruff check ../backend ../data ../mcp-tools
+poetry run ruff format --check ../backend ../data ../mcp-tools
+poetry run pyright                     # backend/ only
+```
+
+`mcp-tools/` tests run in their own venv, from `mcp-tools/`: copy `content/site-content.json` to `mcp-tools/content/`, `pip install -r requirements.txt pytest==9.1.1`, then `python -m pytest tests -v`.
+
+Frontend, from `frontend/`: `npm test`, `npm run lint`, `npm run build` (see Commands above).
+
+`.github/workflows/ci.yml` runs all of these on every pull request and every push to `main`, as five checks: `backend-test`, `backend-lint`, `mcp-tools-test`, `frontend-test`, and `frontend-checks`.
 
 Dependencies for `backend/` and `data/` are managed by separate Poetry projects (`pyproject.toml` + `poetry.lock` in each), not a shared venv — `backend` and `data` pin conflicting `tiktoken` versions, so they can't share one.
 
@@ -69,7 +88,7 @@ Three independent deploy targets, each with its own script — run only the one 
 Full workflow (prerequisites, rollback, first-deploy Function-key setup): `Deployment.md`.
 
 ### PR review
-`.github/workflows/claude-review.yml` posts an AI security-first review when a PR is opened and on every push to it; the repo owner can also request one by commenting `@claude`. It is comment-only and authenticates with the `CLAUDE_CODE_OAUTH_TOKEN` repo secret, which expires about 2027-10-24: renew with `claude setup-token`, then `gh secret set CLAUDE_CODE_OAUTH_TOKEN`. If subscription auth is refused, switch the action input to `anthropic_api_key`. There is no other CI in this repo.
+`.github/workflows/claude-review.yml` posts an AI security-first review when a PR is opened and on every push to it; the repo owner can also request one by commenting `@claude`. It is comment-only and authenticates with the `CLAUDE_CODE_OAUTH_TOKEN` repo secret, which expires about 2027-10-24: renew with `claude setup-token`, then `gh secret set CLAUDE_CODE_OAUTH_TOKEN`. If subscription auth is refused, switch the action input to `anthropic_api_key`. The test and lint workflow is separate: `.github/workflows/ci.yml` (see Checks above).
 
 ## Architecture
 
