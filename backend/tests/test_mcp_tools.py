@@ -8,7 +8,10 @@ def test_build_mcp_client_uses_function_app_url(monkeypatch):
     client = build_mcp_client()
     connections = client.connections
     assert "portfolio_tools" in connections
-    assert connections["portfolio_tools"]["url"] == "https://example-func.azurewebsites.net/runtime/webhooks/mcp"
+    assert (
+        connections["portfolio_tools"]["url"]
+        == "https://example-func.azurewebsites.net/runtime/webhooks/mcp"
+    )
     assert connections["portfolio_tools"]["headers"] == {"x-functions-key": "test-key"}
 
 

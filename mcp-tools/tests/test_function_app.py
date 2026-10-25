@@ -38,7 +38,8 @@ def test_retrieve_information_formats_results(monkeypatch):
     ]
 
     monkeypatch.setattr(
-        function_app, "_retrieve_information",
+        function_app,
+        "_retrieve_information",
         lambda q: function_app_search_client.retrieve_information(
             q, search_client=fake_search, openai_client=fake_openai
         ),

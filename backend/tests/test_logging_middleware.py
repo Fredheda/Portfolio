@@ -19,7 +19,9 @@ def test_after_agent_logs_last_human_and_ai_message():
     fake_db.log_chatbot_interaction.assert_any_call(
         "What projects have you built?", "user_input", 0
     )
-    fake_db.log_chatbot_interaction.assert_any_call("Here are a few...", "chatbot_response", 0)
+    fake_db.log_chatbot_interaction.assert_any_call(
+        "Here are a few...", "chatbot_response", 0
+    )
 
 
 def test_after_agent_handles_empty_messages():

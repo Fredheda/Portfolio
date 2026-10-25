@@ -14,9 +14,12 @@ class ContentSafetyMiddleware(AgentMiddleware):
         self._client = client or OpenAI()
 
     @hook_config(can_jump_to=["end"])
-    def before_model(self, state: AgentState, runtime: Runtime) -> dict[str, Any] | None:
+    def before_model(
+        self, state: AgentState, runtime: Runtime
+    ) -> dict[str, Any] | None:
         last_human = next(
-            (m for m in reversed(state["messages"]) if isinstance(m, HumanMessage)), None
+            (m for m in reversed(state["messages"]) if isinstance(m, HumanMessage)),
+            None,
         )
         if last_human is None:
             return None
