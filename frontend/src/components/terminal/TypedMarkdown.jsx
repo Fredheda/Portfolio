@@ -51,7 +51,6 @@ export default function TypedMarkdown({ text, className, isFinal, onSettled, scr
       cancelled = true;
       clearTimeout(timer);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Keep the growing reply in view, but only while the log was already
