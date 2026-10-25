@@ -1,0 +1,8 @@
+# One config for backend/, data/ and mcp-tools/ (ruff finds the nearest
+# ruff.toml; the pyproject.toml files in those folders have no [tool.ruff]).
+target-version = "py313"
+extend-exclude = ["**/.venv", "**/.python_packages", "**/backup", "frontend"]
+
+[lint]
+# ruff's default rules (E4, E7, E9, F) plus import sorting (I)
+select = ["E4", "E7", "E9", "F", "I"]

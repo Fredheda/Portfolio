@@ -1,7 +1,6 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
-
 from agent.agent import SYSTEM_PROMPT, build_graph
 
 

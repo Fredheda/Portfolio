@@ -29,4 +29,12 @@ build-backend = "poetry.core.masonry.api"
 dev = [
     "pytest (>=9.1.1,<10.0.0)",
     "pytest-asyncio (>=1.4.0,<2.0.0)",
+    "ruff (==0.17.2)",
+    "pyright (==1.1.414)",
 ]
+
+[tool.pyright]
+include = ["agent", "services", "scripts", "tests", "main.py"]
+exclude = ["**/.venv", "backup"]
+pythonVersion = "3.13"
+typeCheckingMode = "basic"

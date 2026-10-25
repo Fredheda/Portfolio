@@ -1,8 +1,10 @@
-import mssql_python
 import os
 import threading
-from dotenv import load_dotenv
 from datetime import datetime
+
+import mssql_python
+from dotenv import load_dotenv
+
 _ = load_dotenv()
 
 class database_client:

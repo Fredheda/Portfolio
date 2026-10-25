@@ -3,7 +3,6 @@ from typing import Any
 from langchain.agents.middleware import AgentMiddleware, AgentState
 from langchain.messages import AIMessage, HumanMessage
 from langgraph.runtime import Runtime
-
 from services.database_client import database_client
 
 

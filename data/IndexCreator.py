@@ -1,10 +1,8 @@
-from dotenv import load_dotenv
 import os
+
 from azure.core.credentials import AzureKeyCredential
 from azure.search.documents import SearchClient
 from azure.search.documents.indexes import SearchIndexClient
-from openai import OpenAI
-from langchain_text_splitters import MarkdownHeaderTextSplitter
 from azure.search.documents.indexes.models import (
     HnswAlgorithmConfiguration,
     HnswParameters,
@@ -16,6 +14,8 @@ from azure.search.documents.indexes.models import (
     VectorSearchAlgorithmKind,
     VectorSearchProfile,
 )
+from dotenv import load_dotenv
+from openai import OpenAI
 
 _= load_dotenv()
 
@@ -95,7 +95,7 @@ class IndexCreator:
         try:
             self.index_client.get_index(index_name)
             return True
-        except Exception as e:
+        except Exception:
             return False
     
     def delete_all_documents(self):

@@ -1,8 +1,7 @@
 from unittest.mock import MagicMock
 
-from langchain.messages import AIMessage, HumanMessage
-
 from agent.content_safety_middleware import ContentSafetyMiddleware
+from langchain.messages import AIMessage, HumanMessage
 
 
 def _fake_openai_client(flagged: bool):

@@ -1,8 +1,7 @@
 from unittest.mock import MagicMock
 
-from langchain.messages import AIMessage, HumanMessage
-
 from agent.logging_middleware import LoggingMiddleware
+from langchain.messages import AIMessage, HumanMessage
 
 
 def test_after_agent_logs_last_human_and_ai_message():

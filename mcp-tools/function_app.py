@@ -2,7 +2,6 @@ import json
 import logging
 
 import azure.functions as func
-
 from content_loader import load_content
 from search_client import retrieve_information as _retrieve_information
 

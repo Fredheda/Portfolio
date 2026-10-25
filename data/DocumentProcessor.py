@@ -1,8 +1,13 @@
-from langchain_text_splitters import MarkdownHeaderTextSplitter, RecursiveCharacterTextSplitter
-from markitdown import MarkItDown
-import re
 import os
+import re
+
 import tiktoken
+from langchain_text_splitters import (
+    MarkdownHeaderTextSplitter,
+    RecursiveCharacterTextSplitter,
+)
+from markitdown import MarkItDown
+
 
 class DocumentProcessor:
     def __init__(self):
