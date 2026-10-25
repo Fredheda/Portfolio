@@ -9,9 +9,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 > pointers, etc.) in sync whenever they drift from what's true here.
 
 **Git:** you may run git freely up to a commit, and push a feature branch and
-open a PR. Ask first for `pull`, `fetch`, `rebase`, `reset`, force-push, or
-anything on `main`. Reviewing and merging PRs is the user's alone — hand over
-the PR URL. Full rule in the root `CLAUDE.md` linked above.
+open a PR. `fetch` and `pull` are fine too (default to `pull --ff-only`). Ask
+first for `rebase`, `reset`, force-push, deleting branches, or anything on
+`main`. Reviewing and merging PRs is the user's alone — hand over the PR URL.
+Other Claude sessions share this workspace: work in your own git worktree,
+never the main checkout ("Parallel sessions" section of the root `CLAUDE.md`). Full rule in the root `CLAUDE.md` linked above.
 
 **Response style:** use the `caveman` skill for responses in this repo —
 invoke it before replying, not just when asked.
