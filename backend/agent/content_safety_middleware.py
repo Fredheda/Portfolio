@@ -14,15 +14,18 @@ class ContentSafetyMiddleware(AgentMiddleware):
         self._client = client or OpenAI()
 
     @hook_config(can_jump_to=["end"])
-    def before_model(self, state: AgentState, runtime: Runtime) -> dict[str, Any] | None:
+    def before_model(
+        self, state: AgentState, runtime: Runtime
+    ) -> dict[str, Any] | None:
         last_human = next(
-            (m for m in reversed(state["messages"]) if isinstance(m, HumanMessage)), None
+            (m for m in reversed(state["messages"]) if isinstance(m, HumanMessage)),
+            None,
         )
         if last_human is None:
             return None
 
         response = self._client.moderations.create(
-            model="omni-moderation-latest", input=last_human.content
+            model="omni-moderation-latest", input=last_human.text
         )
         if response.results[0].flagged:
             return {"messages": [AIMessage(REFUSAL_MESSAGE)], "jump_to": "end"}

@@ -60,3 +60,22 @@ pipx install honcho   # one-time
 honcho start
 ```
 See `CLAUDE.md` for per-service commands and required `.env` values.
+
+## ✅ Checks
+
+Backend, from `backend/`:
+```bash
+poetry run pytest -v
+poetry run ruff check ../backend ../data ../mcp-tools
+poetry run ruff format --check ../backend ../data ../mcp-tools
+poetry run pyright
+```
+
+Frontend, from `frontend/`:
+```bash
+npm test        # vitest (jsdom + Testing Library)
+npm run lint    # eslint
+npm run build
+```
+
+The `mcp-tools/` tests run in their own virtualenv (see `CLAUDE.md`). GitHub Actions (`.github/workflows/ci.yml`) runs everything on every pull request and every push to `main`, as five checks: `backend-test`, `backend-lint`, `mcp-tools-test`, `frontend-test`, and `frontend-checks`.

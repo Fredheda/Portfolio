@@ -1,10 +1,8 @@
-from dotenv import load_dotenv
 import os
+
 from azure.core.credentials import AzureKeyCredential
 from azure.search.documents import SearchClient
 from azure.search.documents.indexes import SearchIndexClient
-from openai import OpenAI
-from langchain_text_splitters import MarkdownHeaderTextSplitter
 from azure.search.documents.indexes.models import (
     HnswAlgorithmConfiguration,
     HnswParameters,
@@ -16,8 +14,10 @@ from azure.search.documents.indexes.models import (
     VectorSearchAlgorithmKind,
     VectorSearchProfile,
 )
+from dotenv import load_dotenv
+from openai import OpenAI
 
-_= load_dotenv()
+_ = load_dotenv()
 
 
 class IndexCreator:
@@ -30,48 +30,70 @@ class IndexCreator:
         self.model_name = os.getenv("EMBEDDING_MODEL_NAME")
 
         # Initialize clients
-        self.index_client = SearchIndexClient(endpoint=self.search_endpoint, credential=AzureKeyCredential(self.search_api_key))
-        self.search_client = SearchClient(endpoint=self.search_endpoint, index_name=self.index_name, credential=self.search_credential)
+        self.index_client = SearchIndexClient(
+            endpoint=self.search_endpoint,
+            credential=AzureKeyCredential(self.search_api_key),
+        )
+        self.search_client = SearchClient(
+            endpoint=self.search_endpoint,
+            index_name=self.index_name,
+            credential=self.search_credential,
+        )
 
         self.OAI_Client = OpenAI(api_key=self.openai_api_key)
 
     def create_embedding(self, content):
         response = self.OAI_Client.embeddings.create(
-            model = self.model_name,
-            input = content
+            model=self.model_name, input=content
         )
         return response.data[0].embedding
-    
+
     def create_index(self):
         index = SearchIndex(
-            name=self.index_name, 
+            name=self.index_name,
             fields=[
-                SimpleField(name="document_name", type=SearchFieldDataType.String, key=True),
-                SearchField(name="content", type=SearchFieldDataType.String, searchable=True),
-                SearchField(name="embedding", 
-                            type=SearchFieldDataType.Collection(SearchFieldDataType.Single), 
-                            searchable=True, 
-                            vector_search_dimensions=3072,
-                            vector_search_profile_name="embedding_profile")
+                SimpleField(
+                    name="document_name", type=SearchFieldDataType.String, key=True
+                ),
+                SearchField(
+                    name="content", type=SearchFieldDataType.String, searchable=True
+                ),
+                SearchField(
+                    name="embedding",
+                    type=SearchFieldDataType.Collection(SearchFieldDataType.Single),
+                    searchable=True,
+                    vector_search_dimensions=3072,
+                    vector_search_profile_name="embedding_profile",
+                ),
             ],
             vector_search=VectorSearch(
-                algorithms=[HnswAlgorithmConfiguration( # Hierachical Navigable Small World, IVF
-                                    name="hnsw_config",
-                                    kind=VectorSearchAlgorithmKind.HNSW,
-                                    parameters=HnswParameters(metric="cosine"),
-                                )],
-                profiles=[VectorSearchProfile(name="embedding_profile", algorithm_configuration_name="hnsw_config")]
-            )
+                algorithms=[
+                    HnswAlgorithmConfiguration(  # Hierachical Navigable Small World, IVF
+                        name="hnsw_config",
+                        kind=VectorSearchAlgorithmKind.HNSW,
+                        parameters=HnswParameters(metric="cosine"),
+                    )
+                ],
+                profiles=[
+                    VectorSearchProfile(
+                        name="embedding_profile",
+                        algorithm_configuration_name="hnsw_config",
+                    )
+                ],
+            ),
         )
         result = self.index_client.create_or_update_index(index)
-        print(f'{result.name} created')
-    
+        print(f"{result.name} created")
+
     def upload_documents(self, document_list):
-        documents=[
-            {"document_name": document_list[i]['header'],
-             "content": document_list[i]['content'],
-             "embedding": self.create_embedding(document_list[i]['content'])} for i in range(len(document_list))
-             ]
+        documents = [
+            {
+                "document_name": document_list[i]["header"],
+                "content": document_list[i]["content"],
+                "embedding": self.create_embedding(document_list[i]["content"]),
+            }
+            for i in range(len(document_list))
+        ]
 
         # Catch same-key collisions client-side, before even calling the API --
         # cheaper and more informative than waiting on a response that may not
@@ -79,7 +101,9 @@ class IndexCreator:
         keys = [d["document_name"] for d in documents]
         duplicate_keys = sorted({k for k in keys if keys.count(k) > 1})
         if duplicate_keys:
-            print(f"WARNING: {len(duplicate_keys)} duplicate document_name key(s) in this batch (later entries silently overwrite earlier ones with the same key): {duplicate_keys}")
+            print(
+                f"WARNING: {len(duplicate_keys)} duplicate document_name key(s) in this batch (later entries silently overwrite earlier ones with the same key): {duplicate_keys}"
+            )
 
         response = self.search_client.upload_documents(documents=documents)
         # upload_documents doesn't raise on a partial batch failure -- each
@@ -89,27 +113,33 @@ class IndexCreator:
             print(f"WARNING: {len(failed)} of {len(documents)} upload actions failed:")
             for r in failed:
                 print(f"  key={r.key!r} status={r.status_code} error={r.error_message}")
-        print(f"Uploaded {len(documents) - len(failed)} of {len(documents)} documents to the index.")
-    
+        print(
+            f"Uploaded {len(documents) - len(failed)} of {len(documents)} documents to the index."
+        )
+
     def index_exists(self, index_name):
         try:
             self.index_client.get_index(index_name)
             return True
-        except Exception as e:
+        except Exception:
             return False
-    
+
     def delete_all_documents(self):
         try:
             # Retrieve all documents in the index
-            documents = self.search_client.search(search_text="*", include_total_count=True)
-            document_keys = [doc['document_name'] for doc in documents]
+            documents = self.search_client.search(
+                search_text="*", include_total_count=True
+            )
+            document_keys = [doc["document_name"] for doc in documents]
 
             if not document_keys:
                 print("No documents to delete.")
                 return
 
             # Delete documents by their keys
-            self.search_client.delete_documents(documents=[{"document_name": key} for key in document_keys])
+            self.search_client.delete_documents(
+                documents=[{"document_name": key} for key in document_keys]
+            )
             print(f"Deleted {len(document_keys)} documents from the index.")
         except Exception as e:
             print(f"An error occurred while deleting documents: {e}")

@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 
 // @copilotkit/react-core/v2's own entry module does `import "./index.css"`
@@ -72,5 +72,10 @@ export default defineConfig({
   },
   server: {
     open: true,
+  },
+  test: {
+    environment: 'jsdom',
+    include: ['src/**/*.test.{js,jsx}'],
+    setupFiles: ['./vitest.setup.js'],
   },
 });

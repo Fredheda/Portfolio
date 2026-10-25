@@ -26,9 +26,11 @@ async def build_graph():
         model=_MODEL,
         tools=tools,
         system_prompt=SYSTEM_PROMPT,
+        # CopilotKitMiddleware declares its state type as StateSchema, which
+        # create_agent's invariant AgentState parameter rejects; works at runtime.
         middleware=[
             ContentSafetyMiddleware(),
-            CopilotKitMiddleware(),
+            CopilotKitMiddleware(),  # pyright: ignore[reportArgumentType]
             LoggingMiddleware(),
         ],
         checkpointer=MemorySaver(),

@@ -1,5 +1,6 @@
-import pytest
+from typing import Any
 
+import pytest
 from agent.mcp_tools import build_mcp_client, load_mcp_tools
 
 
@@ -7,9 +8,13 @@ def test_build_mcp_client_uses_function_app_url(monkeypatch):
     monkeypatch.setenv("FUNCTION_APP_URL", "https://example-func.azurewebsites.net")
     monkeypatch.setenv("FUNCTION_MCP_KEY", "test-key")
     client = build_mcp_client()
-    connections = client.connections
+    # The connection type is a union of transports; this one is streamable-http.
+    connections: Any = client.connections
     assert "portfolio_tools" in connections
-    assert connections["portfolio_tools"]["url"] == "https://example-func.azurewebsites.net/runtime/webhooks/mcp"
+    assert (
+        connections["portfolio_tools"]["url"]
+        == "https://example-func.azurewebsites.net/runtime/webhooks/mcp"
+    )
     assert connections["portfolio_tools"]["headers"] == {"x-functions-key": "test-key"}
 
 

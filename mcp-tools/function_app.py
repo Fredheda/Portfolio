@@ -2,7 +2,6 @@ import json
 import logging
 
 import azure.functions as func
-
 from content_loader import load_content
 from search_client import retrieve_information as _retrieve_information
 
@@ -64,7 +63,9 @@ def get_project_details(context) -> str:
     match = next((p for p in projects if p["id"] == project_id), None)
     if match is None:
         known_ids = ", ".join(p["id"] for p in projects)
-        return json.dumps({"error": f"No project with id '{project_id}'. Known ids: {known_ids}"})
+        return json.dumps(
+            {"error": f"No project with id '{project_id}'. Known ids: {known_ids}"}
+        )
 
     logging.info("get_project_details: returning %s", project_id)
     return json.dumps(match)

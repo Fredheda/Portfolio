@@ -1,9 +1,12 @@
-import mssql_python
 import os
 import threading
-from dotenv import load_dotenv
 from datetime import datetime
+
+import mssql_python
+from dotenv import load_dotenv
+
 _ = load_dotenv()
+
 
 class database_client:
     def __init__(self):
@@ -29,15 +32,10 @@ class database_client:
             auth = f"Authentication=ActiveDirectoryMSI;Uid={self.managed_identity_client_id};"
         else:
             auth = "Authentication=ActiveDirectoryDefault;"
-        return (
-            f"Server={self.server};"
-            f"Database={self.database};"
-            f"{auth}"
-            "Encrypt=yes;"
-        )
+        return f"Server={self.server};Database={self.database};{auth}Encrypt=yes;"
 
     def _write_log(self, message: str, message_type: str, duration: int):
-        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         conn = None
         cursor = None
         try:
@@ -45,7 +43,7 @@ class database_client:
             cursor = conn.cursor()
             cursor.execute(
                 "INSERT INTO chatbot_logs (timestamp, message_type, message, duration) VALUES (?, ?, ?, ?)",
-                (timestamp, message_type, message, duration)
+                (timestamp, message_type, message, duration),
             )
             conn.commit()
         except Exception as e:

@@ -1,11 +1,16 @@
 import os
+
 import mssql_python
 from dotenv import load_dotenv
 
 load_dotenv()
 
 _client_id = os.getenv("AZURE_CLIENT_ID")
-_auth = f"Authentication=ActiveDirectoryMSI;Uid={_client_id};" if _client_id else "Authentication=ActiveDirectoryDefault;"
+_auth = (
+    f"Authentication=ActiveDirectoryMSI;Uid={_client_id};"
+    if _client_id
+    else "Authentication=ActiveDirectoryDefault;"
+)
 
 _schema_path = os.path.join(os.path.dirname(__file__), "..", "sql", "schema.sql")
 with open(_schema_path) as f:
