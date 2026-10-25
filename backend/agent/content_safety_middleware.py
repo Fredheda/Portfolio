@@ -25,7 +25,7 @@ class ContentSafetyMiddleware(AgentMiddleware):
             return None
 
         response = self._client.moderations.create(
-            model="omni-moderation-latest", input=last_human.content
+            model="omni-moderation-latest", input=last_human.text
         )
         if response.results[0].flagged:
             return {"messages": [AIMessage(REFUSAL_MESSAGE)], "jump_to": "end"}
