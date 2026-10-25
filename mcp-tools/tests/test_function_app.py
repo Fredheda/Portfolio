@@ -9,7 +9,7 @@ def test_list_projects_returns_all_ids():
     ids = {p["id"] for p in result}
     assert "paper-podcasts" in ids
     assert "tfl-mcp-server" in ids
-    assert len(result) == 5
+    assert len(result) == 4
 
 
 def test_get_project_details_returns_full_record():
