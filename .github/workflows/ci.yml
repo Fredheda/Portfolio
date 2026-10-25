@@ -1,0 +1,114 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# A new push to the same PR cancels the run that is still going. Pushes to
+# main are never cancelled, so every commit on main gets a result.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  backend-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install Poetry
+        run: pipx install "poetry>=2.0,<3.0"
+      - uses: actions/setup-python@v7
+        with:
+          python-version-file: backend/.python-version
+          cache: poetry
+          cache-dependency-path: backend/poetry.lock
+      - run: poetry install --no-interaction
+      - run: poetry run pytest -v
+
+  backend-lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install Poetry
+        run: pipx install "poetry>=2.0,<3.0"
+      - uses: actions/setup-python@v7
+        with:
+          python-version-file: backend/.python-version
+          cache: poetry
+          cache-dependency-path: backend/poetry.lock
+      - run: poetry install --no-interaction
+      # ruff covers backend/, data/ and mcp-tools/ (config: ruff.toml at the
+      # repo root); pyright covers backend/ only.
+      - run: poetry run ruff check ../backend ../data ../mcp-tools
+      - run: poetry run ruff format --check ../backend ../data ../mcp-tools
+      - run: poetry run pyright
+
+  # mcp-tools is an Azure Function with its own requirements.txt; test it in
+  # an isolated venv, never in the backend's Poetry environment.
+  mcp-tools-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version-file: backend/.python-version
+          cache: pip
+          cache-dependency-path: mcp-tools/requirements.txt
+      # mcp-tools/content/ is gitignored; deploy-mcp-tools.sh copies the file
+      # in at deploy time, and the tests need it.
+      - run: mkdir -p mcp-tools/content && cp content/site-content.json mcp-tools/content/site-content.json
+      - run: python -m venv mcp-tools/.venv
+      - run: mcp-tools/.venv/bin/pip install -r mcp-tools/requirements.txt pytest==9.1.1
+      - name: Run mcp-tools tests
+        working-directory: mcp-tools
+        run: .venv/bin/python -m pytest tests -v
+
+  frontend-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      # Same flags as frontend/Dockerfile: plain `npm ci` would run postinstall,
+      # which runs a build.
+      - run: npm ci --ignore-scripts
+      # `pretest` syncs content/site-content.json into frontend/content/.
+      - run: npm test
+
+  frontend-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci --ignore-scripts
+      - run: npm run lint
+      # `prebuild` syncs content, then vite builds.
+      - run: npm run build
