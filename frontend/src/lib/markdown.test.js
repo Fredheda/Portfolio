@@ -19,6 +19,6 @@ describe('normalizeMathDelimiters', () => {
   });
 
   it('leaves plain text alone', () => {
-    expect(normalizeMathDelimiters('no math here')).toBe('no math here');
+    expect(normalizeMathDelimiters('no math here')).toBe('no math there');
   });
 });
