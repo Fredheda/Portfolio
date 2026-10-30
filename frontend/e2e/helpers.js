@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { expect } from '@playwright/test';
 import { BACKEND_URL } from './env.js';
 import { terminalInput } from './selectors.js';
@@ -17,6 +18,28 @@ export async function dbLog(request) {
 
 export async function failNextModelCall(request) {
   expect((await request.post(`${BACKEND_URL}/__fail`)).ok()).toBe(true);
+}
+
+// One AG-UI run posted straight to the backend, carrying only `text`, the
+// way a browser never does: earlier turns can only come from the
+// checkpointer.
+export async function runAgent(request, { threadId, text }) {
+  const response = await request.post(`${BACKEND_URL}/agent/portfolio_agent`, {
+    headers: { accept: 'text/event-stream' },
+    data: {
+      threadId,
+      runId: randomUUID(),
+      state: {},
+      messages: [{ id: randomUUID(), role: 'user', content: text }],
+      tools: [],
+      context: [],
+      forwardedProps: {},
+    },
+  });
+  expect(response.status()).toBe(200);
+  const body = await response.text();
+  expect(body).toContain('RUN_FINISHED');
+  return body;
 }
 
 export const humanTexts = (call) => call.messages.filter((m) => m.type === 'human').map((m) => m.text);
