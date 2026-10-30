@@ -655,3 +655,83 @@ def test_setup_never_touches_the_function_app_variable(fake_az: FakeAz) -> None:
     result = fake_az.run("setup-github-apps-deploy.sh")
     assert result.returncode == 0, result.stderr
     assert not any("AZURE_DEPLOY_CLIENT_ID" in c for c in fake_az.gh_calls)
+
+
+# --- setup-acr-purge.sh ------------------------------------------------------
+
+TASK = "purge-portfolio-images"
+
+
+def test_purge_dry_run_locks_running_images_and_creates_no_task(
+    fake_az: FakeAz,
+) -> None:
+    result = fake_az.run("setup-acr-purge.sh", env=image_env(SHA, OLD_SHA))
+    assert result.returncode == 0, result.stderr
+    assert lock_call(BACKEND, SHA, True) in fake_az.calls
+    assert lock_call(WEB, OLD_SHA, True) in fake_az.calls
+    runs = [c for c in fake_az.calls if c.startswith("acr run")]
+    assert len(runs) == 1 and "--dry-run" in runs[0]
+    assert not any(c.startswith("acr task create") for c in fake_az.calls)
+    assert "--create" in result.stdout
+
+
+def test_purge_filters_name_only_the_two_portfolio_sha_patterns(
+    fake_az: FakeAz,
+) -> None:
+    result = fake_az.run("setup-acr-purge.sh", env=image_env(SHA, SHA))
+    assert result.returncode == 0, result.stderr
+    run_call = next(c for c in fake_az.calls if c.startswith("acr run"))
+    # The registry's own name contains "chatbot"; look at the purge command only.
+    command = run_call.split("--cmd ", 1)[1]
+    assert f"--filter '{BACKEND}:^[0-9a-f]{{40}}$'" in command
+    assert f"--filter '{WEB}:^[0-9a-f]{{40}}$'" in command
+    assert command.count("--filter") == 2
+    for other in ("chatbot", "podcasts", "tfl", "restaurant"):
+        assert other not in command
+    assert "--include-locked" not in command
+    assert "--ago 30d --keep 10 --untagged" in command
+
+
+def test_purge_skips_locking_a_non_sha_tag(fake_az: FakeAz) -> None:
+    result = fake_az.run("setup-acr-purge.sh", env=image_env("latest", SHA))
+    assert result.returncode == 0, result.stderr
+    assert "not locking portfolio-backend" in result.stdout
+    assert not any(
+        f"--image {BACKEND}:" in c and "repository update" in c for c in fake_az.calls
+    )
+    assert lock_call(WEB, SHA, True) in fake_az.calls
+
+
+def test_purge_create_makes_a_weekly_task_without_dry_run(fake_az: FakeAz) -> None:
+    result = fake_az.run(
+        "setup-acr-purge.sh",
+        "--create",
+        env={"FAKE_NO_TASK": "1", **image_env(SHA, SHA)},
+    )
+    assert result.returncode == 0, result.stderr
+    creates = [c for c in fake_az.calls if c.startswith("acr task create")]
+    assert len(creates) == 1
+    create = creates[0]
+    assert f"-n {TASK} -r {ACR}" in create
+    assert "--schedule 0 3 * * Sun" in create
+    assert "--context /dev/null" in create
+    assert "--dry-run" not in create and "--include-locked" not in create
+    assert not any(c.startswith("acr task delete") for c in fake_az.calls)
+
+
+def test_purge_create_replaces_an_existing_task(fake_az: FakeAz) -> None:
+    result = fake_az.run("setup-acr-purge.sh", "--create", env=image_env(SHA, SHA))
+    assert result.returncode == 0, result.stderr
+    kinds = [
+        c.split(" ")[2]
+        for c in fake_az.calls
+        if c.startswith(("acr task show", "acr task delete", "acr task create"))
+    ]
+    assert kinds == ["show", "delete", "create"]
+    assert f"acr task delete -n {TASK} -r {ACR} --yes" in fake_az.calls
+
+
+def test_purge_rejects_unknown_arguments(fake_az: FakeAz) -> None:
+    result = fake_az.run("setup-acr-purge.sh", "--delete-everything")
+    assert result.returncode == 2
+    assert fake_az.calls == []
