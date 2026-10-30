@@ -61,9 +61,11 @@ const runtime = new CopilotRuntime({
 // chat message; mounting the limiter broadly meant a handful of page
 // reloads could exhaust the budget before a single real message was sent
 // (confirmed live).
+// RUN_RATE_LIMIT and WARMUP_RATE_LIMIT exist only so the browser tests can
+// send more than five messages a minute; production sets neither.
 const copilotKitLimiter = rateLimit({
   windowMs: 60 * 1000,
-  limit: 5,
+  limit: Number(process.env.RUN_RATE_LIMIT) || 5,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
   message: { error: 'Rate limit exceeded' },
@@ -80,7 +82,7 @@ app.use('/api/copilotkit/agent/:agentId/run', copilotKitLimiter);
 // permanently warm and defeat scale-to-zero.
 const warmupLimiter = rateLimit({
   windowMs: 60 * 1000,
-  limit: 10,
+  limit: Number(process.env.WARMUP_RATE_LIMIT) || 10,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
 });
