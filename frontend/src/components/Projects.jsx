@@ -8,7 +8,7 @@ const Projects = () => {
 
   return (
     <section id="projects" className="max-w-[1200px] mx-auto mb-12 px-2 scroll-mt-20">
-      <div className="font-mono text-xs text-zinc-500 mb-4 tracking-wide">$ ls projects/</div>
+      <div className="font-mono text-xs text-zinc-400 mb-4 tracking-wide">$ ls projects/</div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {projects.map((project) => (
