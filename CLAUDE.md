@@ -73,7 +73,7 @@ poetry run pyright                     # backend/ only
 
 Frontend, from `frontend/`: `npm test`, `npm run lint`, `npm run build` (see Commands above).
 
-`.github/workflows/ci.yml` runs all of these on every pull request and every push to `main`, as five checks: `backend-test`, `backend-lint`, `mcp-tools-test`, `frontend-test`, and `frontend-checks`.
+`.github/workflows/ci.yml` runs all of these on every pull request and every push to `main`, as six checks: `backend-test`, `backend-lint`, `mcp-tools-test`, `deploy-scripts-test`, `frontend-test`, and `frontend-checks`. `deploy-scripts-test` runs the tests of the deploy scripts in `scripts/tests/` (`python -m pytest scripts/tests -v`, needs only pytest).
 
 Dependencies for `backend/` and `data/` are managed by separate Poetry projects (`pyproject.toml` + `poetry.lock` in each), not a shared venv — `backend` and `data` pin conflicting `tiktoken` versions, so they can't share one.
 
@@ -94,6 +94,7 @@ Three independent deploy targets, each with its own script — run only the one 
 ./scripts/deploy-mcp-tools.sh  # mcp-tools/ code, or content/site-content.json -> the Function App
 ./infra/deploy.sh              # infra/main.bicep or a .env secret -> re-run Bicep
 ```
+The Function App can also be deployed from GitHub with the manual **Deploy functions** workflow (`main` only; rollback = an older SHA); `deploy-mcp-tools.sh` stays as the laptop fallback.
 Full workflow (prerequisites, rollback, first-deploy Function-key setup): `Deployment.md`.
 
 ### PR review
