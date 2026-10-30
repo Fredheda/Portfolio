@@ -64,8 +64,8 @@ Backend, from `backend/`:
 
 ```bash
 poetry run pytest -v
-poetry run ruff check ../backend ../data ../mcp-tools
-poetry run ruff format --check ../backend ../data ../mcp-tools
+poetry run ruff check ../backend ../data ../mcp-tools ../e2e_backend
+poetry run ruff format --check ../backend ../data ../mcp-tools ../e2e_backend
 poetry run pyright                     # backend/ only
 ```
 
