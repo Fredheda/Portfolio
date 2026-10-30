@@ -12,9 +12,15 @@ vi.mock('@copilotkit/react-core/v2', () => ({
   useAgent: () => ({ agent: copilot.agent }),
   useCopilotKit: () => ({ copilotkit: { runAgent: copilot.runAgent } }),
 }));
-// The animated fake log is covered by its own test; stub it here.
+// The animated fake log is covered by its own test; stub it here. The stub's
+// button stands in for the intro finishing (ThinkingSequence calls onDone).
 vi.mock('./terminal/ThinkingSequence', () => ({
-  default: () => <div>[thinking sequence]</div>,
+  default: ({ onDone }) => (
+    <div>
+      [thinking sequence]
+      {onDone && <button onClick={onDone}>finish intro</button>}
+    </div>
+  ),
 }));
 
 const resetThread = vi.fn();
@@ -103,6 +109,36 @@ describe('TerminalHero', () => {
 
     expect(screen.getByText('hello there')).toBeInTheDocument();
     expect(screen.getByText('fredbot ~ %')).toBeInTheDocument();
+  });
+
+  it('shows a first reply that arrives before the intro has finished, once the intro ends', async () => {
+    const { rerender } = renderHero();
+    bootTerminal();
+    const input = screen.getByPlaceholderText('ask me anything...');
+    fireEvent.change(input, { target: { value: 'hello there' } });
+    await act(async () => {
+      fireEvent.keyDown(input, { key: 'Enter' });
+    });
+
+    // The reply streams in while the intro is still playing.
+    copilot.agent.messages = [
+      { id: '1', role: 'user', content: 'hello there' },
+      { id: '2', role: 'assistant', content: 'hi back' },
+    ];
+    rerender(
+      <ChatThreadProvider resetThread={resetThread}>
+        <TerminalHero />
+      </ChatThreadProvider>,
+    );
+    // The intro keeps playing: unmounting it now would skip its onDone.
+    fireEvent.click(screen.getByRole('button', { name: 'finish intro' }));
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+
+    expect(screen.queryByRole('button', { name: 'finish intro' })).not.toBeInTheDocument();
+    expect(screen.getByText('hi back')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('ask me anything...')).toBeInTheDocument();
   });
 
   it('clears the conversation and resets the thread', () => {
