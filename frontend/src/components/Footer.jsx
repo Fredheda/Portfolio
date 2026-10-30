@@ -50,9 +50,9 @@ function Footer() {
         </a>
       </div>
 
-      <p className="inline-block m-0 text-sm text-zinc-500">
+      <p className="inline-block m-0 text-sm text-zinc-400">
         &copy; {new Date().getFullYear()} Frederik Heda |{' '}
-        <Link to="/privacy-policy" className="text-zinc-500 hover:text-zinc-300 no-underline link-underline transition-colors duration-300">
+        <Link to="/privacy-policy" className="text-zinc-400 hover:text-zinc-200 no-underline link-underline transition-colors duration-300">
           Privacy Policy
         </Link>
       </p>

@@ -2,16 +2,21 @@ import AxeBuilder from '@axe-core/playwright';
 import { test, expect } from '@playwright/test';
 import { terminalInput } from '../selectors.js';
 
-// Violations the site had when this gate was added. They are switched off
-// by rule id so the gate starts green and catches anything new; each one is
-// listed in the PR that added it, for the owner to fix or accept:
-// - color-contrast: zinc-500/600 text on the dark background (both pages).
-// - link-in-text-block: privacy-page links told apart by colour only.
-// - link-name: the email, LinkedIn and GitHub icon links have no text.
-const KNOWN_RULES = ['color-contrast', 'link-in-text-block', 'link-name'];
-
 async function seriousViolations(page) {
-  const { violations } = await new AxeBuilder({ page }).disableRules(KNOWN_RULES).analyze();
+  // Entrance animations fade content in; mid-fade text measures as low
+  // contrast. Scan once every finite animation has finished (looping ones,
+  // like the cursor blink, never do).
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          document
+            .getAnimations()
+            .filter((a) => a.playState === 'running' && a.effect?.getTiming().iterations !== Infinity).length,
+      ),
+    )
+    .toBe(0);
+  const { violations } = await new AxeBuilder({ page }).analyze();
   return violations
     .filter((v) => v.impact === 'serious' || v.impact === 'critical')
     .map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`);

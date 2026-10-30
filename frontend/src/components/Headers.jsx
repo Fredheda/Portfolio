@@ -51,6 +51,7 @@ const Header = () => {
         <div className="flex items-center gap-4">
           <a
             href="mailto:frederik.heda@gmx.net"
+            aria-label="Email"
             className="hidden sm:flex text-zinc-300 hover:text-accent-gold no-underline text-xl bg-zinc-800/50 p-2.5 rounded-lg border border-zinc-700/50 hover:border-accent-gold/50 transition-all duration-300 hover:scale-110"
           >
             <i className="fas fa-envelope" />
@@ -59,6 +60,7 @@ const Header = () => {
             href="https://www.linkedin.com/in/frederik-heda/"
             target="_blank"
             rel="noopener noreferrer"
+            aria-label="LinkedIn"
             className="hidden sm:flex text-zinc-300 hover:text-[#0A66C2] no-underline text-xl bg-zinc-800/50 p-2.5 rounded-lg border border-zinc-700/50 hover:border-[#0A66C2]/50 transition-all duration-300 hover:scale-110"
           >
             <i className="fab fa-linkedin" />
@@ -67,6 +69,7 @@ const Header = () => {
             href="https://github.com/Fredheda?tab=repositories"
             target="_blank"
             rel="noopener noreferrer"
+            aria-label="GitHub"
             className="hidden sm:flex text-zinc-300 hover:text-white no-underline text-xl bg-zinc-800/50 p-2.5 rounded-lg border border-zinc-700/50 hover:border-zinc-400/50 transition-all duration-300 hover:scale-110"
           >
             <i className="fab fa-github" />
@@ -129,13 +132,13 @@ const Header = () => {
               transition={{ delay: 0.4 }}
               className="flex gap-6 mt-4"
             >
-              <a href="mailto:frederik.heda@gmx.net" className="text-zinc-400 hover:text-accent-gold text-2xl transition-colors">
+              <a href="mailto:frederik.heda@gmx.net" aria-label="Email" className="text-zinc-400 hover:text-accent-gold text-2xl transition-colors">
                 <i className="fas fa-envelope" />
               </a>
-              <a href="https://www.linkedin.com/in/frederik-heda/" target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-[#0A66C2] text-2xl transition-colors">
+              <a href="https://www.linkedin.com/in/frederik-heda/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="text-zinc-400 hover:text-[#0A66C2] text-2xl transition-colors">
                 <i className="fab fa-linkedin" />
               </a>
-              <a href="https://github.com/Fredheda?tab=repositories" target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-white text-2xl transition-colors">
+              <a href="https://github.com/Fredheda?tab=repositories" target="_blank" rel="noopener noreferrer" aria-label="GitHub" className="text-zinc-400 hover:text-white text-2xl transition-colors">
                 <i className="fab fa-github" />
               </a>
             </motion.div>
