@@ -256,3 +256,154 @@ def test_build_push_does_not_copy_the_content_file_when_web_exists(
     result = fake_az.run("build-push.sh", env={"FAKE_MISSING": f"{BACKEND}:{sha}"})
     assert result.returncode == 0, result.stderr
     assert not CONTENT_FILE.exists()
+
+
+# --- redeploy.sh -------------------------------------------------------------
+
+
+def image_env(backend_tag: str, web_tag: str) -> dict[str, str]:
+    """What the two apps run right now, as `az containerapp show` reports it."""
+    return {
+        "FAKE_IMAGE_CA_PORTFOLIO_BACKEND": f"{ACR}.azurecr.io/{BACKEND}:{backend_tag}",
+        "FAKE_IMAGE_CA_PORTFOLIO_WEB": f"{ACR}.azurecr.io/{WEB}:{web_tag}",
+    }
+
+
+def update_call(app: str, repo: str, sha: str) -> str:
+    return (
+        f"containerapp update -n {app} -g rg-chatbot "
+        f"--image {ACR}.azurecr.io/{repo}:{sha} --output none"
+    )
+
+
+def lock_call(repo: str, tag: str, locked: bool) -> str:
+    return (
+        f"acr repository update -n {ACR} --image {repo}:{tag} "
+        f"--delete-enabled {'false' if locked else 'true'} "
+        "--write-enabled true --output none"
+    )
+
+
+def test_redeploy_rejects_non_sha_before_any_az_call(fake_az: FakeAz) -> None:
+    for bad in ("abc123", SHA.upper(), "latest"):
+        result = fake_az.run("redeploy.sh", bad)
+        assert result.returncode == 2, bad
+        assert "not a full 40-character" in result.stderr
+    assert fake_az.calls == []
+
+
+def test_redeploy_refuses_when_one_image_is_missing(fake_az: FakeAz) -> None:
+    result = fake_az.run(
+        "redeploy.sh", SHA, env={"FAKE_MISSING": f"{WEB}:{SHA}", **image_env("x", "y")}
+    )
+    assert result.returncode == 1
+    assert WEB in result.stderr
+    assert BACKEND not in result.stderr
+    assert not any(c.startswith("containerapp update") for c in fake_az.calls)
+
+
+def test_redeploy_names_every_missing_image(fake_az: FakeAz) -> None:
+    result = fake_az.run(
+        "redeploy.sh", SHA, env={"FAKE_MISSING": f"{BACKEND}:{SHA},{WEB}:{SHA}"}
+    )
+    assert result.returncode == 1
+    assert BACKEND in result.stderr and WEB in result.stderr
+    assert not any(c.startswith("containerapp update") for c in fake_az.calls)
+
+
+def test_redeploy_rolls_both_apps_in_order(fake_az: FakeAz) -> None:
+    result = fake_az.run("redeploy.sh", SHA, env=image_env(OLD_SHA, OLD_SHA))
+    assert result.returncode == 0, result.stderr
+    updates = [c for c in fake_az.calls if c.startswith("containerapp update")]
+    assert updates == [
+        update_call(BACKEND_APP, BACKEND, SHA),
+        update_call(WEB_APP, WEB, SHA),
+    ]
+    assert "Deployed. https://web.example.test" in result.stdout
+
+
+def test_redeploy_locks_new_and_unlocks_old_sha_tags(fake_az: FakeAz) -> None:
+    result = fake_az.run("redeploy.sh", SHA, env=image_env(OLD_SHA, OLD_SHA))
+    assert result.returncode == 0, result.stderr
+    calls = fake_az.calls
+    for repo in (BACKEND, WEB):
+        assert lock_call(repo, SHA, True) in calls
+        assert lock_call(repo, OLD_SHA, False) in calls
+    # The lock calls happen after both apps have been rolled.
+    last_update = max(
+        i for i, c in enumerate(calls) if c.startswith("containerapp update")
+    )
+    first_lock = min(
+        i for i, c in enumerate(calls) if c.startswith("acr repository update")
+    )
+    assert first_lock > last_update
+
+
+def test_redeploy_never_unlocks_latest_or_the_same_sha(fake_az: FakeAz) -> None:
+    result = fake_az.run("redeploy.sh", SHA, env=image_env("latest", SHA))
+    assert result.returncode == 0, result.stderr
+    unlocks = [c for c in fake_az.calls if "--delete-enabled true" in c]
+    assert unlocks == []
+
+
+def test_redeploy_failed_update_changes_no_locks(fake_az: FakeAz) -> None:
+    result = fake_az.run(
+        "redeploy.sh",
+        SHA,
+        env={"FAKE_FAIL_UPDATE": WEB_APP, **image_env(OLD_SHA, OLD_SHA)},
+    )
+    assert result.returncode != 0
+    assert not any(c.startswith("acr repository update") for c in fake_az.calls)
+
+
+def test_redeploy_reports_a_lock_failure_but_says_the_apps_are_rolled(
+    fake_az: FakeAz,
+) -> None:
+    result = fake_az.run(
+        "redeploy.sh", SHA, env={"FAKE_FAIL_LOCK": "1", **image_env(OLD_SHA, OLD_SHA)}
+    )
+    assert result.returncode != 0
+    assert "The apps ARE rolled" in result.stderr
+
+
+def test_redeploy_uses_the_given_sha_and_never_asks_git(fake_az: FakeAz) -> None:
+    # A rollback to a commit older than these scripts passes a SHA only.
+    env = {"GIT_DIR": "/nonexistent", **image_env(OLD_SHA, OLD_SHA)}
+    result = fake_az.run("redeploy.sh", SHA, env=env)
+    assert result.returncode == 0, result.stderr
+
+
+# --- wait-healthy.sh ---------------------------------------------------------
+
+
+def test_wait_healthy_passes_when_all_provisioned(fake_az: FakeAz) -> None:
+    result = fake_az.run("wait-healthy.sh", "5", "0")
+    assert result.returncode == 0, result.stderr
+    assert f"{BACKEND_APP}: {BACKEND_APP}--rev1 is Provisioned" in result.stdout
+    assert f"{WEB_APP}: {WEB_APP}--rev1 is Provisioned" in result.stdout
+
+
+def test_wait_healthy_fails_fast_on_a_failed_revision(fake_az: FakeAz) -> None:
+    result = fake_az.run(
+        "wait-healthy.sh", "5", "0", env={"FAKE_PROVISIONING": "Failed"}
+    )
+    assert result.returncode == 1
+    assert "failed to provision" in result.stderr
+
+
+def test_wait_healthy_waits_through_provisioning(fake_az: FakeAz) -> None:
+    result = fake_az.run(
+        "wait-healthy.sh",
+        "30",
+        "0",
+        env={"FAKE_PROVISIONING": "Provisioning,Provisioning,Provisioned"},
+    )
+    assert result.returncode == 0, result.stderr
+
+
+def test_wait_healthy_times_out(fake_az: FakeAz) -> None:
+    result = fake_az.run(
+        "wait-healthy.sh", "1", "0.2", env={"FAKE_PROVISIONING": "Provisioning"}
+    )
+    assert result.returncode == 1
+    assert "timed out" in result.stderr
