@@ -22,9 +22,10 @@
 #        deploy: only the job that runs in the `production` environment
 #   4. Ensures the `production` GitHub environment only admits jobs running on
 #      the main branch (a branch author cannot edit their way around it), and
-#      sets the repo VARIABLES (not secrets — none of them is secret) the
-#      workflows read: AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID,
-#      AZURE_BUILD_CLIENT_ID, AZURE_APPS_DEPLOY_CLIENT_ID.
+#      stores the Azure IDs the workflows read as repo SECRETS: AZURE_TENANT_ID,
+#      AZURE_SUBSCRIPTION_ID, AZURE_BUILD_CLIENT_ID, AZURE_APPS_DEPLOY_CLIENT_ID.
+#      They are identifiers, not credentials, but the run logs of a public
+#      repo are public and GitHub masks a secret's value there.
 #
 # Needs the signed-in user to be able to create identities, assign roles, and
 # administer the GitHub repo. Auth is the live `az login` and `gh auth`
@@ -129,9 +130,9 @@ while IFS= read -r other; do
   echo "WARNING: environment production also admits branch '$other'; remove it in Settings > Environments unless intended." >&2
 done <<<"$policies"
 
-gh variable set AZURE_TENANT_ID --body "$TENANT_ID" -R "$GH_REPO"
-gh variable set AZURE_SUBSCRIPTION_ID --body "$SUBSCRIPTION_ID" -R "$GH_REPO"
-gh variable set AZURE_BUILD_CLIENT_ID --body "$BUILD_CLIENT" -R "$GH_REPO"
-gh variable set AZURE_APPS_DEPLOY_CLIENT_ID --body "$DEPLOY_CLIENT" -R "$GH_REPO"
-echo "repo variables: set"
+gh secret set AZURE_TENANT_ID --body "$TENANT_ID" -R "$GH_REPO"
+gh secret set AZURE_SUBSCRIPTION_ID --body "$SUBSCRIPTION_ID" -R "$GH_REPO"
+gh secret set AZURE_BUILD_CLIENT_ID --body "$BUILD_CLIENT" -R "$GH_REPO"
+gh secret set AZURE_APPS_DEPLOY_CLIENT_ID --body "$DEPLOY_CLIENT" -R "$GH_REPO"
+echo "repo secrets: set"
 echo "Done. Re-running changes nothing."
