@@ -80,7 +80,7 @@ Browser tests, from `frontend/`: `npm run e2e` (first time: `npx playwright inst
 
 Projects: `server` (each test spawns its own `server.js` at production settings: redirect, headers, both rate limits), `full-stack` (browser and AG-UI protocol tests) and `a11y` (axe on `/` and `/privacy-policy` with every rule on, once entrance animations have finished; fails on serious or critical issues). Tests run one at a time because they share the backend's call log. CSS locators live in `e2e/selectors.js`; ESLint rejects `.locator(` in spec files. `e2e_backend/` sits outside `backend/` because the backend image copies all of `backend/`. A new test must catch a bug no other test (vitest, pytest, or e2e) catches.
 
-`.github/workflows/ci.yml` runs all of these on every pull request and every push to `main`, as seven checks: `backend-test`, `backend-lint`, `mcp-tools-test`, `deploy-scripts-test`, `frontend-test`, `frontend-checks` and `e2e`. `deploy-scripts-test` runs the tests of the deploy scripts in `scripts/tests/` (`python -m pytest scripts/tests -v`, needs only pytest).
+`.github/workflows/ci.yml` runs all of these on every pull request and every push to `main`, as seven checks: `backend-test`, `backend-lint`, `mcp-tools-test`, `deploy-scripts-test`, `frontend-test`, `frontend-checks` and `e2e`. On pushes to `main` an eighth job, `build`, runs after them (see Deployment). `deploy-scripts-test` runs the tests of the deploy scripts in `scripts/tests/` (`python -m pytest scripts/tests -v`, needs only pytest).
 
 Dependencies for `backend/` and `data/` are managed by separate Poetry projects (`pyproject.toml` + `poetry.lock` in each), not a shared venv — `backend` and `data` pin conflicting `tiktoken` versions, so they can't share one.
 
@@ -97,11 +97,11 @@ Each service can still be run individually with its own command above if you don
 ### Deployment
 Three independent deploy targets, each with its own script — run only the one matching what you changed:
 ```bash
-./scripts/ship.sh              # frontend/ or backend/ code -> both Container Apps
+./scripts/ship.sh              # frontend/ or backend/ code -> both Container Apps (laptop fallback; see below)
 ./scripts/deploy-mcp-tools.sh  # mcp-tools/ code, or content/site-content.json -> the Function App
 ./infra/deploy.sh              # infra/main.bicep or a .env secret -> re-run Bicep
 ```
-The Function App can also be deployed from GitHub with the manual **Deploy functions** workflow (`main` only; rollback = an older SHA); `deploy-mcp-tools.sh` stays as the laptop fallback.
+Every merge to `main` builds and stores both images under the full commit SHA (the `build` job in `ci.yml`, after the seven checks). The manual **Deploy apps** workflow rolls the two container apps to a stored SHA (`main` only; rollback = an older SHA; it never builds), with `ship.sh` as the laptop fallback. The Function App has its own manual **Deploy functions** workflow (same rules), with `deploy-mcp-tools.sh` as the laptop fallback. Set-up scripts: `setup-github-apps-deploy.sh` (identities), `setup-github-deploy.sh` (Function App identity), `setup-acr-purge.sh` (weekly image purge). `infra/deploy.sh` defaults its image tag to local `HEAD`; pass the deployed SHA.
 Full workflow (prerequisites, rollback, first-deploy Function-key setup): `Deployment.md`.
 
 ### PR review
