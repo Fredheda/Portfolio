@@ -72,6 +72,31 @@ case "$*" in
     echo "${states[$idx]}"
     echo $(( n + 1 )) > "$counter"
     exit 0 ;;
+  "account show"*tenantId*) echo "tenant-1"; exit 0 ;;
+  "account show"*) echo "sub-1"; exit 0 ;;
+  "acr show"*)
+    echo "/subscriptions/sub-1/resourceGroups/rg-chatbot/providers/Microsoft.ContainerRegistry/registries/acrchatbotfredheda"
+    exit 0 ;;
+  "containerapp show"*"--query id"*)
+    app=$(echo "$*" | sed -E 's/.*-n ([^ ]+).*/\1/')
+    echo "/subscriptions/sub-1/resourceGroups/rg-chatbot/providers/Microsoft.App/containerApps/$app"
+    exit 0 ;;
+  "identity show"*principalId*)
+    name=$(echo "$*" | sed -E 's/.*-n ([^ ]+).*/\1/')
+    echo "principal-$name"; exit 0 ;;
+  "identity show"*clientId*)
+    name=$(echo "$*" | sed -E 's/.*-n ([^ ]+).*/\1/')
+    echo "client-$name"; exit 0 ;;
+  "identity show"*"--query id"*)
+    name=$(echo "$*" | sed -E 's/.*-n ([^ ]+).*/\1/')
+    echo "/subscriptions/sub-1/resourceGroups/rg-chatbot/providers/Microsoft.ManagedIdentity/userAssignedIdentities/$name"
+    exit 0 ;;
+  "identity show"*)
+    [ -n "${FAKE_IDENTITY_EXISTS:-}" ] && exit 0
+    exit 1 ;;
+  "identity federated-credential show"*)
+    [ -n "${FAKE_CREDENTIAL_EXISTS:-}" ] && exit 0
+    exit 1 ;;
 esac
 exit 0
 """
@@ -500,3 +525,133 @@ def test_resolve_image_sha_rejects_sha_not_on_main(git_repo: GitRepo) -> None:
     result = resolve(git_repo, git_repo.c)
     assert result.returncode == 1
     assert "is not on main" in result.stderr
+
+
+# --- setup-github-apps-deploy.sh ---------------------------------------------
+
+REGISTRY_ID = (
+    "/subscriptions/sub-1/resourceGroups/rg-chatbot/providers/"
+    "Microsoft.ContainerRegistry/registries/acrchatbotfredheda"
+)
+BUILD_ID = "id-portfolio-gh-build"
+DEPLOY_ID = "id-portfolio-gh-deploy"
+GH_REPO = "Fredheda/Portfolio"
+
+
+def role_assignments(fake_az: FakeAz, identity: str) -> set[tuple[str, str]]:
+    """(role, last segment of scope) for every role granted to `identity`."""
+    granted = set()
+    for call in fake_az.calls:
+        if not call.startswith("role assignment create"):
+            continue
+        if f"--assignee-object-id principal-{identity} " not in call:
+            continue
+        role = call.split("--role ", 1)[1].split(" --scope ", 1)[0]
+        scope = call.split("--scope ", 1)[1].split(" -o none", 1)[0]
+        granted.add((role, scope.rsplit("/", 1)[1]))
+    return granted
+
+
+def test_setup_gives_the_build_identity_only_registry_push_and_tasks_rights(
+    fake_az: FakeAz,
+) -> None:
+    result = fake_az.run("setup-github-apps-deploy.sh")
+    assert result.returncode == 0, result.stderr
+    assert role_assignments(fake_az, BUILD_ID) == {
+        ("AcrPush", "acrchatbotfredheda"),
+        ("Container Registry Tasks Contributor", "acrchatbotfredheda"),
+    }
+
+
+def test_setup_gives_the_deploy_identity_app_rights_and_nothing_on_other_apps(
+    fake_az: FakeAz,
+) -> None:
+    result = fake_az.run("setup-github-apps-deploy.sh")
+    assert result.returncode == 0, result.stderr
+    assert role_assignments(fake_az, DEPLOY_ID) == {
+        ("AcrPush", "acrchatbotfredheda"),
+        ("Managed Identity Operator", "id-portfolio-acrpull"),
+        ("Container Apps Contributor", BACKEND_APP),
+        ("Container Apps Contributor", WEB_APP),
+    }
+
+
+def test_setup_trusts_main_for_build_and_production_for_deploy(
+    fake_az: FakeAz,
+) -> None:
+    result = fake_az.run("setup-github-apps-deploy.sh")
+    assert result.returncode == 0, result.stderr
+    creds = [
+        c for c in fake_az.calls if c.startswith("identity federated-credential create")
+    ]
+    assert len(creds) == 2
+    build = next(c for c in creds if f"--identity-name {BUILD_ID} " in c)
+    deploy = next(c for c in creds if f"--identity-name {DEPLOY_ID} " in c)
+    assert "--name github-main" in build
+    assert f"--subject repo:{GH_REPO}:ref:refs/heads/main" in build
+    assert "--name github-production" in deploy
+    assert f"--subject repo:{GH_REPO}:environment:production" in deploy
+    for call in creds:
+        assert "--audiences api://AzureADTokenExchange" in call
+
+
+def test_setup_restricts_the_environment_to_main(fake_az: FakeAz) -> None:
+    result = fake_az.run("setup-github-apps-deploy.sh")
+    assert result.returncode == 0, result.stderr
+    put = [
+        c
+        for c in fake_az.gh_calls
+        if f"api -X PUT repos/{GH_REPO}/environments/production" in c
+    ]
+    assert len(put) == 1
+    assert "deployment_branch_policy[custom_branch_policies]=true" in put[0]
+    assert any(
+        "-X POST" in c and "deployment-branch-policies" in c and "name=main" in c
+        for c in fake_az.gh_calls
+    )
+
+
+def test_setup_does_not_add_the_main_policy_twice(fake_az: FakeAz) -> None:
+    result = fake_az.run(
+        "setup-github-apps-deploy.sh", env={"FAKE_POLICY_NAMES": "main"}
+    )
+    assert result.returncode == 0, result.stderr
+    assert not any("-X POST" in c for c in fake_az.gh_calls)
+
+
+def test_setup_warns_about_other_branch_policies(fake_az: FakeAz) -> None:
+    result = fake_az.run(
+        "setup-github-apps-deploy.sh", env={"FAKE_POLICY_NAMES": "main\\nfeature"}
+    )
+    assert result.returncode == 0, result.stderr
+    assert "feature" in result.stderr
+
+
+def test_setup_twice_creates_nothing_new(fake_az: FakeAz) -> None:
+    result = fake_az.run(
+        "setup-github-apps-deploy.sh",
+        env={"FAKE_IDENTITY_EXISTS": "1", "FAKE_CREDENTIAL_EXISTS": "1"},
+    )
+    assert result.returncode == 0, result.stderr
+    assert not any(c.startswith("identity create") for c in fake_az.calls)
+    assert not any(
+        c.startswith("identity federated-credential create") for c in fake_az.calls
+    )
+
+
+def test_setup_sets_the_four_repo_variables(fake_az: FakeAz) -> None:
+    result = fake_az.run("setup-github-apps-deploy.sh")
+    assert result.returncode == 0, result.stderr
+    for name, value in (
+        ("AZURE_TENANT_ID", "tenant-1"),
+        ("AZURE_SUBSCRIPTION_ID", "sub-1"),
+        ("AZURE_BUILD_CLIENT_ID", f"client-{BUILD_ID}"),
+        ("AZURE_APPS_DEPLOY_CLIENT_ID", f"client-{DEPLOY_ID}"),
+    ):
+        assert f"variable set {name} --body {value} -R {GH_REPO}" in fake_az.gh_calls
+
+
+def test_setup_never_touches_the_function_app_variable(fake_az: FakeAz) -> None:
+    result = fake_az.run("setup-github-apps-deploy.sh")
+    assert result.returncode == 0, result.stderr
+    assert not any("AZURE_DEPLOY_CLIENT_ID" in c for c in fake_az.gh_calls)
