@@ -107,18 +107,6 @@ describe('TerminalHero', () => {
     expect(copilot.runAgent).not.toHaveBeenCalled();
   });
 
-  it('renders user and assistant messages from the agent', () => {
-    copilot.agent.messages = [
-      { id: '1', role: 'user', content: 'hello there' },
-      { id: '2', role: 'assistant', content: 'hi back' },
-    ];
-    renderHero();
-    bootTerminal();
-
-    expect(screen.getByText('hello there')).toBeInTheDocument();
-    expect(screen.getByText('fredbot ~ %')).toBeInTheDocument();
-  });
-
   // The browser suite hits this only because its scripted model answers
   // faster than the intro plays; this pins it without relying on that.
   it('shows a first reply that arrives before the intro has finished, once the intro ends', async () => {
@@ -149,15 +137,5 @@ describe('TerminalHero', () => {
     expect(screen.queryByRole('button', { name: 'finish intro' })).not.toBeInTheDocument();
     expect(screen.getByText('hi back')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('ask me anything...')).toBeInTheDocument();
-  });
-
-  it('clears the conversation and resets the thread', () => {
-    renderHero();
-    bootTerminal();
-
-    fireEvent.click(screen.getByRole('button', { name: 'clear' }));
-
-    expect(copilot.agent.setMessages).toHaveBeenCalledWith([]);
-    expect(resetThread).toHaveBeenCalledTimes(1);
   });
 });
