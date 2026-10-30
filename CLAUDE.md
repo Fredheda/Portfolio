@@ -64,8 +64,8 @@ Backend, from `backend/`:
 
 ```bash
 poetry run pytest -v
-poetry run ruff check ../backend ../data ../mcp-tools ../e2e_backend
-poetry run ruff format --check ../backend ../data ../mcp-tools ../e2e_backend
+poetry run ruff check ../backend ../data ../mcp-tools ../scripts ../e2e_backend
+poetry run ruff format --check ../backend ../data ../mcp-tools ../scripts ../e2e_backend
 poetry run pyright                     # backend/ only
 ```
 
@@ -80,7 +80,7 @@ Browser tests, from `frontend/`: `npm run e2e` (first time: `npx playwright inst
 
 Projects: `server` (each test spawns its own `server.js` at production settings: redirect, headers, both rate limits), `full-stack` (browser and AG-UI protocol tests) and `a11y` (axe on `/` and `/privacy-policy`; the rules switched off there are known debt, listed in `e2e/a11y/a11y.spec.js`). Tests run one at a time because they share the backend's call log. CSS locators live in `e2e/selectors.js`; ESLint rejects `.locator(` in spec files. `e2e_backend/` sits outside `backend/` because the backend image copies all of `backend/`. A new test must catch a bug no other test (vitest, pytest, or e2e) catches.
 
-`.github/workflows/ci.yml` runs all of these on every pull request and every push to `main`, as six checks: `backend-test`, `backend-lint`, `mcp-tools-test`, `frontend-test`, `frontend-checks` and `e2e`.
+`.github/workflows/ci.yml` runs all of these on every pull request and every push to `main`, as seven checks: `backend-test`, `backend-lint`, `mcp-tools-test`, `deploy-scripts-test`, `frontend-test`, `frontend-checks` and `e2e`. `deploy-scripts-test` runs the tests of the deploy scripts in `scripts/tests/` (`python -m pytest scripts/tests -v`, needs only pytest).
 
 Dependencies for `backend/` and `data/` are managed by separate Poetry projects (`pyproject.toml` + `poetry.lock` in each), not a shared venv — `backend` and `data` pin conflicting `tiktoken` versions, so they can't share one.
 
@@ -101,6 +101,7 @@ Three independent deploy targets, each with its own script — run only the one 
 ./scripts/deploy-mcp-tools.sh  # mcp-tools/ code, or content/site-content.json -> the Function App
 ./infra/deploy.sh              # infra/main.bicep or a .env secret -> re-run Bicep
 ```
+The Function App can also be deployed from GitHub with the manual **Deploy functions** workflow (`main` only; rollback = an older SHA); `deploy-mcp-tools.sh` stays as the laptop fallback.
 Full workflow (prerequisites, rollback, first-deploy Function-key setup): `Deployment.md`.
 
 ### PR review

@@ -66,8 +66,8 @@ See `CLAUDE.md` for per-service commands and required `.env` values.
 Backend, from `backend/`:
 ```bash
 poetry run pytest -v
-poetry run ruff check ../backend ../data ../mcp-tools ../e2e_backend
-poetry run ruff format --check ../backend ../data ../mcp-tools ../e2e_backend
+poetry run ruff check ../backend ../data ../mcp-tools ../scripts ../e2e_backend
+poetry run ruff format --check ../backend ../data ../mcp-tools ../scripts ../e2e_backend
 poetry run pyright
 ```
 
@@ -79,4 +79,4 @@ npm run build
 npm run e2e     # Playwright: browser and full-stack tests, offline (see CLAUDE.md)
 ```
 
-The `mcp-tools/` tests run in their own virtualenv (see `CLAUDE.md`). GitHub Actions (`.github/workflows/ci.yml`) runs everything on every pull request and every push to `main`, as six checks: `backend-test`, `backend-lint`, `mcp-tools-test`, `frontend-test`, `frontend-checks` and `e2e`.
+The `mcp-tools/` tests run in their own virtualenv (see `CLAUDE.md`). GitHub Actions (`.github/workflows/ci.yml`) runs everything on every pull request and every push to `main`, as seven checks: `backend-test`, `backend-lint`, `mcp-tools-test`, `deploy-scripts-test`, `frontend-test`, `frontend-checks` and `e2e`.
