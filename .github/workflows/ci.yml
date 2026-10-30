@@ -161,3 +161,37 @@ jobs:
           path: |
             frontend/playwright-report
             frontend/test-results
+
+  # Build once, deploy many: every commit that lands on main gets its two
+  # images built and stored under the full commit SHA. Nothing is deployed
+  # here; the manual `Deploy apps` workflow rolls the apps to a stored SHA.
+  build:
+    needs:
+      - backend-test
+      - backend-lint
+      - mcp-tools-test
+      - deploy-scripts-test
+      - frontend-test
+      - frontend-checks
+      - e2e
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # Nothing after checkout needs git access, so keep the job's git
+          # token off disk while the Azure session is open.
+          persist-credentials: false
+      # OIDC login with the Azure CLI (the repo only allows a short list of
+      # third-party actions, so azure/login is not used).
+      - name: Log in to Azure
+        env:
+          AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          CLIENT_ID: ${{ vars.AZURE_BUILD_CLIENT_ID }}
+        run: ./scripts/ci-azure-login.sh "$CLIENT_ID"
+      - run: ./scripts/build-push.sh

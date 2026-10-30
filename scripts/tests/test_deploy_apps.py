@@ -407,3 +407,96 @@ def test_wait_healthy_times_out(fake_az: FakeAz) -> None:
     )
     assert result.returncode == 1
     assert "timed out" in result.stderr
+
+
+# --- resolve-image-sha.sh ----------------------------------------------------
+
+
+def git(repo: Path, *args: str) -> str:
+    result = subprocess.run(
+        [
+            "git",
+            "-c",
+            "user.name=test",
+            "-c",
+            "user.email=test@example.test",
+            "-c",
+            "commit.gpgsign=false",
+            *args,
+        ],
+        cwd=repo,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return result.stdout.strip()
+
+
+@dataclass
+class GitRepo:
+    path: Path
+    b: str  # head of origin/main
+    c: str  # on a side branch, not on main
+
+
+@pytest.fixture
+def git_repo(tmp_path: Path) -> GitRepo:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    git(repo, "init", "-q", "-b", "main")
+    (repo / "README.md").write_text("readme\n")
+    git(repo, "add", ".")
+    git(repo, "commit", "-q", "-m", "b")
+    b = git(repo, "rev-parse", "HEAD")
+    git(repo, "update-ref", "refs/remotes/origin/main", b)
+    git(repo, "switch", "-q", "-c", "side")
+    (repo / "side.txt").write_text("side\n")
+    git(repo, "add", ".")
+    git(repo, "commit", "-q", "-m", "c")
+    return GitRepo(path=repo, b=b, c=git(repo, "rev-parse", "HEAD"))
+
+
+def resolve(repo: GitRepo, *args: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        ["bash", str(REPO_ROOT / "scripts" / "resolve-image-sha.sh"), *args],
+        cwd=repo.path,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+
+
+def test_resolve_image_sha_defaults_to_head_of_main(git_repo: GitRepo) -> None:
+    result = resolve(git_repo)
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == git_repo.b
+
+
+def test_resolve_image_sha_trims_whitespace_and_newline(git_repo: GitRepo) -> None:
+    result = resolve(git_repo, f" {git_repo.b}\n")
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == git_repo.b
+
+
+@pytest.mark.parametrize("bad", ["abc1234", "UPPER", "main", "HEAD~1", "g" * 40])
+def test_resolve_image_sha_rejects_short_uppercase_and_garbage(
+    git_repo: GitRepo, bad: str
+) -> None:
+    value = git_repo.b.upper() if bad == "UPPER" else bad
+    result = resolve(git_repo, value)
+    assert result.returncode == 1
+    assert "is not a full 40-character" in result.stderr
+
+
+def test_resolve_image_sha_rejects_a_sha_the_repo_does_not_know(
+    git_repo: GitRepo,
+) -> None:
+    result = resolve(git_repo, "0" * 40)
+    assert result.returncode == 1
+    assert "is not a commit" in result.stderr
+
+
+def test_resolve_image_sha_rejects_sha_not_on_main(git_repo: GitRepo) -> None:
+    result = resolve(git_repo, git_repo.c)
+    assert result.returncode == 1
+    assert "is not on main" in result.stderr
