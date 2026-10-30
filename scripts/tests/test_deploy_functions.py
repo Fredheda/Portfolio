@@ -538,7 +538,9 @@ def test_setup_twice_creates_nothing_new(fake_az: FakeAz) -> None:
     assert not any(c.startswith("identity federated-credential create") for c in calls)
 
 
-def test_setup_sets_the_three_repo_variables(fake_az: FakeAz) -> None:
+def test_setup_stores_the_three_ids_as_secrets_so_logs_mask_them(
+    fake_az: FakeAz,
+) -> None:
     result = fake_az.run("setup-github-deploy.sh")
     assert result.returncode == 0, result.stderr
     gh = fake_az.calls(".gh")
@@ -547,4 +549,5 @@ def test_setup_sets_the_three_repo_variables(fake_az: FakeAz) -> None:
         ("AZURE_SUBSCRIPTION_ID", "sub-1"),
         ("AZURE_DEPLOY_CLIENT_ID", "client-1"),
     ):
-        assert f"variable set {name} --body {value} -R {REPO}" in gh
+        assert f"secret set {name} --body {value} -R {REPO}" in gh
+    assert not any("variable set" in c for c in gh)

@@ -639,7 +639,9 @@ def test_setup_twice_creates_nothing_new(fake_az: FakeAz) -> None:
     )
 
 
-def test_setup_sets_the_four_repo_variables(fake_az: FakeAz) -> None:
+def test_setup_stores_the_four_ids_as_secrets_so_logs_mask_them(
+    fake_az: FakeAz,
+) -> None:
     result = fake_az.run("setup-github-apps-deploy.sh")
     assert result.returncode == 0, result.stderr
     for name, value in (
@@ -648,7 +650,21 @@ def test_setup_sets_the_four_repo_variables(fake_az: FakeAz) -> None:
         ("AZURE_BUILD_CLIENT_ID", f"client-{BUILD_ID}"),
         ("AZURE_APPS_DEPLOY_CLIENT_ID", f"client-{DEPLOY_ID}"),
     ):
-        assert f"variable set {name} --body {value} -R {GH_REPO}" in fake_az.gh_calls
+        assert f"secret set {name} --body {value} -R {GH_REPO}" in fake_az.gh_calls
+    assert not any("variable set" in c for c in fake_az.gh_calls)
+
+
+def test_workflows_read_the_azure_ids_from_secrets_not_variables() -> None:
+    # Variables are printed in clear text in the (public) run logs; secrets
+    # are masked.
+    workflows = sorted((REPO_ROOT / ".github" / "workflows").glob("*.yml"))
+    assert workflows
+    for workflow in workflows:
+        assert "vars.AZURE_" not in workflow.read_text(), workflow.name
+    for name in ("ci.yml", "deploy-apps.yml", "deploy-functions.yml"):
+        text = (REPO_ROOT / ".github" / "workflows" / name).read_text()
+        assert "secrets.AZURE_TENANT_ID" in text, name
+        assert "secrets.AZURE_SUBSCRIPTION_ID" in text, name
 
 
 def test_setup_never_touches_the_function_app_variable(fake_az: FakeAz) -> None:

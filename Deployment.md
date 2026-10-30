@@ -71,8 +71,10 @@ job is merged, or the first build on `main` fails at the Azure login:
 It creates two managed identities: `id-portfolio-gh-build` (pushes images,
 trusted only for workflows on `main`) and `id-portfolio-gh-deploy` (rolls the
 two apps, trusted only for the `production` environment), makes sure
-`production` only admits `main`, and sets the repo variables the workflows
-read. No secret is stored in GitHub. Re-running it changes nothing.
+`production` only admits `main`, and stores the Azure IDs the workflows read
+as repo secrets (identifiers, not credentials, but the logs of this public repo
+are public and a secret's value is masked there). No credential is stored in
+GitHub. Re-running it changes nothing.
 
 Old images are removed by a weekly registry task that only touches
 `portfolio-backend` and `portfolio-web`: full-SHA tags older than 30 days,
@@ -150,8 +152,9 @@ on the GitHub repo):
 It creates the managed identity `id-portfolio-mcp-gh-deploy` with Website
 Contributor on `func-portfolio-mcp-tools` only, a federated credential that
 trusts only the `production` environment of this repo, restricts that
-environment to `main`, and sets the repo variables the workflow reads. No
-secret is stored in GitHub. Re-running it changes nothing.
+environment to `main`, and stores the Azure IDs the workflow reads as repo
+secrets (masked in the public run logs). No credential is stored in GitHub.
+Re-running it changes nothing.
 
 Limits:
 - Rollback rebuilds the dependencies from the old commit's
