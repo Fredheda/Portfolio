@@ -2,8 +2,9 @@
 
 Portfolio is deployed to Azure Container Apps (`rg-chatbot` / `cae-portfolio`),
 sharing its resource group and container registry with `copilot-kit-exp` but
-running in its own Container Apps environment. No CI/CD — deploys are run
-manually from your machine.
+running in its own Container Apps environment. Nothing deploys by itself:
+GitHub builds the images on every merge to `main`, and you press a button on
+GitHub (or run a script on your machine) to deploy.
 
 ## Prerequisites
 
@@ -14,8 +15,8 @@ manually from your machine.
 
 | Changed | Run |
 |---|---|
-| `frontend/` or `backend/` code | `./scripts/ship.sh` |
-| `mcp-tools/` code, or `content/site-content.json` | `./scripts/deploy-mcp-tools.sh` |
+| `frontend/` or `backend/` code | the **Deploy apps** button on GitHub (or `./scripts/ship.sh`) |
+| `mcp-tools/` code, or `content/site-content.json` | the **Deploy functions** button on GitHub (or `./scripts/deploy-mcp-tools.sh`) |
 | `infra/main.bicep`, or a secret in `.env` | `./infra/deploy.sh` |
 
 These are three independent deploy targets with their own tooling and their
@@ -36,6 +37,64 @@ both container apps to them. Refuses to run on a dirty working tree, so the
 image tag always honestly matches what's deployed. Does **not** touch
 `mcp-tools/` — that's a separate Azure Function App, not a Container App;
 see below.
+
+## Deploy the apps from GitHub (frontend and backend)
+
+Every merge to `main` runs the `build` job in `ci.yml`, after all other CI
+jobs pass. It builds `portfolio-backend` and `portfolio-web` in ACR and stores
+them under the full commit SHA (and `:latest`); an image that already exists
+for that commit is skipped. Nothing is deployed by a merge.
+
+To deploy, press the **Deploy apps** button: Actions → **Deploy apps** → Run
+workflow on `main`, or
+
+```bash
+gh workflow run deploy-apps.yml --ref main                  # head of main
+gh workflow run deploy-apps.yml --ref main -f sha=<full sha>  # rollback
+```
+
+The optional `sha` input takes a full 40-character commit SHA; empty means the
+head of `main`. Before it logs in to Azure it checks that the SHA is a full
+lowercase SHA and on `main`. Before it changes anything it checks that **both**
+images exist for that SHA. Then it rolls `ca-portfolio-backend` and
+`ca-portfolio-web`, locks the two new tags against the registry purge, unlocks
+the tags the apps ran before, waits until both new revisions are `Provisioned`,
+and writes the deployed images to the run summary. Rollback is the same button
+with an older SHA whose images still exist.
+
+One-time setup (needs rights to create identities and assign roles, and admin
+on the GitHub repo). Run it **before** the pull request that adds the `build`
+job is merged, or the first build on `main` fails at the Azure login:
+```bash
+./scripts/setup-github-apps-deploy.sh
+```
+It creates two managed identities: `id-portfolio-gh-build` (pushes images,
+trusted only for workflows on `main`) and `id-portfolio-gh-deploy` (rolls the
+two apps, trusted only for the `production` environment), makes sure
+`production` only admits `main`, and sets the repo variables the workflows
+read. No secret is stored in GitHub. Re-running it changes nothing.
+
+Old images are removed by a weekly registry task that only touches
+`portfolio-backend` and `portfolio-web`: full-SHA tags older than 30 days,
+always keeping the newest 10 older ones, never a locked tag or `:latest`. Set
+it up once:
+```bash
+./scripts/setup-acr-purge.sh            # locks what is running, dry run only
+./scripts/setup-acr-purge.sh --create   # after reading the dry run: weekly task
+```
+
+Limits:
+- The registry is in legacy permission mode, which cannot scope pushes by
+  repository: the deploy identity's `AcrPush` also lets it push, and the build
+  identity can push registry-wide.
+- The apps are updated one at a time. If the second update fails, the apps run
+  different versions until you press the button again with the right SHA.
+- `infra/deploy.sh` defaults its image tag to your local `HEAD`. After a deploy
+  from GitHub, run it as `./infra/deploy.sh <deployed-sha>` so a Bicep run
+  does not roll the apps to another commit's images.
+- Every merge to `main` runs two ACR builds. ACR Tasks build time is billed;
+  check it in Cost Management against the monthly budget.
+- `scripts/ship.sh` still works as the laptop fallback.
 
 ## MCP tools (Azure Function App)
 
@@ -126,9 +185,14 @@ az containerapp logs show --name ca-portfolio-backend --resource-group rg-chatbo
 
 ## Rollback
 
+On GitHub: press **Deploy apps** with an older full SHA (see above). From your
+machine:
+
 ```bash
 ./scripts/redeploy.sh <previous-git-sha>
 ```
+
+Both need the images for that SHA to still exist in the registry.
 
 Full architecture and design rationale: `docs/Portfolio/specs/2026-08-09-azure-migration-design.md`
 and `docs/Portfolio/plans/2026-08-09-azure-migration.md` (workspace root).
