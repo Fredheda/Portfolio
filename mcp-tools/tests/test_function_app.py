@@ -12,12 +12,8 @@ def test_list_projects_returns_all_ids():
     assert len(result) == 4
 
 
-def test_get_project_details_returns_full_record():
-    context = json.dumps({"arguments": {"project_id": "paper-podcasts"}})
-    result = json.loads(function_app.get_project_details(context=context))
-    assert result["id"] == "paper-podcasts"
-    assert result["link"] == "https://github.com/Fredheda/paper-podcasts"
-    assert "categories" in result
+# A known id's full record is checked end to end, over MCP, by the browser
+# suite (frontend/e2e/full-stack/tools.spec.js).
 
 
 def test_get_project_details_unknown_id_returns_error():

@@ -11,6 +11,8 @@ export default defineConfig(
     ignores: [
       'dist',
       'node_modules',
+      'playwright-report',
+      'test-results',
       'content',
       'server.js',
       'tailwind.config.js',
@@ -37,6 +39,25 @@ export default defineConfig(
       'react/prop-types': 'off',
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'error',
+    },
+  },
+  // Playwright runs in Node; its fixtures' `use` callback is not a React hook.
+  {
+    files: ['playwright.config.js', 'e2e/**/*.js'],
+    languageOptions: { globals: globals.node },
+    rules: { 'react-hooks/rules-of-hooks': 'off' },
+  },
+  // CSS locators live in one file, so a class rename is a one-file change.
+  {
+    files: ['e2e/**/*.spec.js'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "CallExpression[callee.property.name='locator']",
+          message: 'Put CSS locators in e2e/selectors.js.',
+        },
+      ],
     },
   },
 );

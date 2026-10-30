@@ -59,19 +59,45 @@ const TerminalHero = () => {
 
   // The moment real content starts arriving for the in-flight reply, the
   // escalating indicator above has done its job -- stop it immediately
-  // rather than waiting for its own timers to unwind. Also drops
-  // `introWaitActive`, which unmounts the intro/wait ThinkingSequence (see
-  // its own declaration above) now that the real reply has something to show.
+  // rather than waiting for its own timers to unwind.
   useEffect(() => {
-    if (pendingAssistantContentStarted) {
-      if (waitStage !== 'none') {
-        clearWaitTimers();
-        setWaitStage('none');
-      }
-      setIntroWaitActive(false);
+    if (pendingAssistantContentStarted && waitStage !== 'none') {
+      clearWaitTimers();
+      setWaitStage('none');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingAssistantContentStarted]);
+
+  // Once the reply has something to show, drop `introWaitActive`, which
+  // unmounts the intro/wait ThinkingSequence (see its own declaration
+  // above) -- but only after the intro has played out. Unmounting it
+  // mid-intro skips its onDone, so `sequenceActive` would never clear and
+  // the reply would stay hidden with no prompt (a fast first reply, or an
+  // instant moderation refusal, did exactly that).
+  useEffect(() => {
+    if (pendingAssistantContentStarted && !sequenceActive) {
+      setIntroWaitActive(false);
+    }
+  }, [pendingAssistantContentStarted, sequenceActive]);
+
+  // A run that fails (the agent sends RUN_ERROR; runAgent itself resolves)
+  // sends no reply, so nothing above would ever settle it and the prompt
+  // would stay hidden for good. Stop the intro and the wait indicator and
+  // give the prompt back.
+  useEffect(() => {
+    if (!agent) return undefined;
+    const { unsubscribe } = agent.subscribe({
+      onRunErrorEvent: () => {
+        waitTimersRef.current.forEach(clearTimeout);
+        waitTimersRef.current = [];
+        setWaitStage('none');
+        setSequenceActive(false);
+        setIntroWaitActive(false);
+        setReplySettled(true);
+      },
+    });
+    return unsubscribe;
+  }, [agent]);
 
   // Idle cursor-blink boot beat before the terminal "wakes up".
   useEffect(() => {

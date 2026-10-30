@@ -49,10 +49,10 @@ jobs:
           cache: poetry
           cache-dependency-path: backend/poetry.lock
       - run: poetry install --no-interaction
-      # ruff covers backend/, data/, mcp-tools/ and scripts/ (config: ruff.toml
-      # at the repo root); pyright covers backend/ only.
-      - run: poetry run ruff check ../backend ../data ../mcp-tools ../scripts
-      - run: poetry run ruff format --check ../backend ../data ../mcp-tools ../scripts
+      # ruff covers backend/, data/, mcp-tools/, scripts/ and e2e_backend/
+      # (config: ruff.toml at the repo root); pyright covers backend/ only.
+      - run: poetry run ruff check ../backend ../data ../mcp-tools ../scripts ../e2e_backend
+      - run: poetry run ruff format --check ../backend ../data ../mcp-tools ../scripts ../e2e_backend
       - run: poetry run pyright
 
   # mcp-tools is an Azure Function with its own requirements.txt; test it in
@@ -125,3 +125,39 @@ jobs:
       - run: npm run lint
       # `prebuild` syncs content, then vite builds.
       - run: npm run build
+
+  # Playwright against the production build, the real backend (scripted
+  # model, fake moderation and logging) and the real mcp-tools handlers.
+  # Offline; see frontend/playwright.config.js.
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install Poetry
+        run: pipx install "poetry>=2.0,<3.0"
+      - uses: actions/setup-python@v7
+        with:
+          python-version-file: backend/.python-version
+          cache: poetry
+          cache-dependency-path: backend/poetry.lock
+      - run: poetry install --no-interaction
+        working-directory: backend
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci --ignore-scripts
+        working-directory: frontend
+      - run: npx playwright install --with-deps chromium
+        working-directory: frontend
+      - run: npm run e2e
+        working-directory: frontend
+      - if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: |
+            frontend/playwright-report
+            frontend/test-results

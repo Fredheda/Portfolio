@@ -64,8 +64,8 @@ Backend, from `backend/`:
 
 ```bash
 poetry run pytest -v
-poetry run ruff check ../backend ../data ../mcp-tools
-poetry run ruff format --check ../backend ../data ../mcp-tools
+poetry run ruff check ../backend ../data ../mcp-tools ../scripts ../e2e_backend
+poetry run ruff format --check ../backend ../data ../mcp-tools ../scripts ../e2e_backend
 poetry run pyright                     # backend/ only
 ```
 
@@ -73,7 +73,14 @@ poetry run pyright                     # backend/ only
 
 Frontend, from `frontend/`: `npm test`, `npm run lint`, `npm run build` (see Commands above).
 
-`.github/workflows/ci.yml` runs all of these on every pull request and every push to `main`, as six checks: `backend-test`, `backend-lint`, `mcp-tools-test`, `deploy-scripts-test`, `frontend-test`, and `frontend-checks`. `deploy-scripts-test` runs the tests of the deploy scripts in `scripts/tests/` (`python -m pytest scripts/tests -v`, needs only pytest).
+Browser tests, from `frontend/`: `npm run e2e` (first time: `npx playwright install chromium`, and `poetry install` in `backend/`). It builds the frontend, then Playwright starts three servers and runs every test offline:
+- `e2e_backend.mcp_server` on 8211: the real `mcp-tools/function_app.py` handlers behind a small `azure.functions` shim, over MCP streamable HTTP at `/runtime/webhooks/mcp`, requiring `x-functions-key`. Only Azure AI Search is stubbed.
+- `e2e_backend.backend_server` on 8210: the real `main.create_app` and `agent.build_graph` with a scripted model (`e2e_backend/model.py`, keyword script in `script.py`), a fake moderation client (flags `forbidden-topic`) and a recording SQL logger. Test-only routes: `GET /__model_calls`, `GET /__db_log`, `POST /__reset`, `POST /__fail` (next model call raises).
+- `server.js` on 3210 with `BACKEND_URL` only (so its production `AGENT_URL` default is used) and raised rate limits.
+
+Projects: `server` (each test spawns its own `server.js` at production settings: redirect, headers, both rate limits), `full-stack` (browser and AG-UI protocol tests) and `a11y` (axe on `/` and `/privacy-policy`; the rules switched off there are known debt, listed in `e2e/a11y/a11y.spec.js`). Tests run one at a time because they share the backend's call log. CSS locators live in `e2e/selectors.js`; ESLint rejects `.locator(` in spec files. `e2e_backend/` sits outside `backend/` because the backend image copies all of `backend/`. A new test must catch a bug no other test (vitest, pytest, or e2e) catches.
+
+`.github/workflows/ci.yml` runs all of these on every pull request and every push to `main`, as seven checks: `backend-test`, `backend-lint`, `mcp-tools-test`, `deploy-scripts-test`, `frontend-test`, `frontend-checks` and `e2e`. `deploy-scripts-test` runs the tests of the deploy scripts in `scripts/tests/` (`python -m pytest scripts/tests -v`, needs only pytest).
 
 Dependencies for `backend/` and `data/` are managed by separate Poetry projects (`pyproject.toml` + `poetry.lock` in each), not a shared venv — `backend` and `data` pin conflicting `tiktoken` versions, so they can't share one.
 
@@ -148,5 +155,7 @@ The rule of thumb: if you are about to write code that calls an external library
 - `AZURE_SQL_SERVER`, `AZURE_SQL_DATABASE` — no password, Microsoft Entra ID auth (see `docs/Portfolio/specs/2026-08-09-azure-migration-design.md`)
 
 `azure_search_endpoint`/`azure_index_name`/`azure_search_api_key` are **not** backend env vars — that's `mcp-tools/`'s configuration (it's what actually performs the Azure AI Search vector query, behind the `retrieve_information` MCP tool).
+
+**Test seams** (production passes or sets none of these): `build_graph(model, moderation_client, db)` and `create_app(build)` in the backend; `RUN_RATE_LIMIT` and `WARMUP_RATE_LIMIT` in `server.js` (defaults 5 and 10 per minute).
 
 **Frontend**: `BACKEND_URL` — read by `server.js` (Node), not the browser bundle. Defaults to `http://ca-portfolio-backend` (the in-environment Container Apps address, set by Bicep); for local `npm start` testing against a local backend, set it to `http://localhost:8000`.

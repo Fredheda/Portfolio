@@ -10,6 +10,14 @@ import { rateLimit } from 'express-rate-limit';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// When a chat run fails mid-stream (the backend closes the connection),
+// CopilotKit's AG-UI client rejects a promise nothing awaits. Node's default
+// for that is to exit, which would take the whole site down until the
+// container restarts. Log it and keep serving.
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled rejection; server kept running:', reason);
+});
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 const BACKEND_URL = process.env.BACKEND_URL || 'http://ca-portfolio-backend';
@@ -61,9 +69,11 @@ const runtime = new CopilotRuntime({
 // chat message; mounting the limiter broadly meant a handful of page
 // reloads could exhaust the budget before a single real message was sent
 // (confirmed live).
+// RUN_RATE_LIMIT and WARMUP_RATE_LIMIT exist only so the browser tests can
+// send more than five messages a minute; production sets neither.
 const copilotKitLimiter = rateLimit({
   windowMs: 60 * 1000,
-  limit: 5,
+  limit: Number(process.env.RUN_RATE_LIMIT) || 5,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
   message: { error: 'Rate limit exceeded' },
@@ -80,7 +90,7 @@ app.use('/api/copilotkit/agent/:agentId/run', copilotKitLimiter);
 // permanently warm and defeat scale-to-zero.
 const warmupLimiter = rateLimit({
   windowMs: 60 * 1000,
-  limit: 10,
+  limit: Number(process.env.WARMUP_RATE_LIMIT) || 10,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
 });

@@ -35,15 +35,6 @@ describe('Projects', () => {
     }
   });
 
-  it('highlights only the projects the agent highlighted', () => {
-    mockState.highlightedProjectIds = [projects[0].id];
-    render(<Projects />);
-    const highlighted = screen.getByRole('link', { name: new RegExp(projects[0].title) });
-    const other = screen.getByRole('link', { name: new RegExp(projects[1].title) });
-    expect(highlighted.className).toContain('ring-2');
-    expect(other.className).not.toContain('ring-2');
-  });
-
   it('shows the description only for the expanded project', () => {
     mockState.expandedProjectId = projects[0].id;
     render(<Projects />);

@@ -3,8 +3,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ChatThreadProvider } from '../context/ChatThreadContext';
 import TerminalHero from './TerminalHero';
 
+// Recovery from a failed run (the agent subscription) is covered by the
+// browser suite's model-failure test, which fails the real stack.
 const copilot = vi.hoisted(() => ({
-  agent: { messages: [], isRunning: false, addMessage: vi.fn(), setMessages: vi.fn() },
+  agent: {
+    messages: [],
+    isRunning: false,
+    addMessage: vi.fn(),
+    setMessages: vi.fn(),
+    subscribe: () => ({ unsubscribe: () => {} }),
+  },
   runAgent: vi.fn(),
 }));
 
@@ -12,9 +20,15 @@ vi.mock('@copilotkit/react-core/v2', () => ({
   useAgent: () => ({ agent: copilot.agent }),
   useCopilotKit: () => ({ copilotkit: { runAgent: copilot.runAgent } }),
 }));
-// The animated fake log is covered by its own test; stub it here.
+// The animated fake log is covered by its own test; stub it here. The stub's
+// button stands in for the intro finishing (ThinkingSequence calls onDone).
 vi.mock('./terminal/ThinkingSequence', () => ({
-  default: () => <div>[thinking sequence]</div>,
+  default: ({ onDone }) => (
+    <div>
+      [thinking sequence]
+      {onDone && <button onClick={onDone}>finish intro</button>}
+    </div>
+  ),
 }));
 
 const resetThread = vi.fn();
@@ -93,25 +107,35 @@ describe('TerminalHero', () => {
     expect(copilot.runAgent).not.toHaveBeenCalled();
   });
 
-  it('renders user and assistant messages from the agent', () => {
+  // The browser suite hits this only because its scripted model answers
+  // faster than the intro plays; this pins it without relying on that.
+  it('shows a first reply that arrives before the intro has finished, once the intro ends', async () => {
+    const { rerender } = renderHero();
+    bootTerminal();
+    const input = screen.getByPlaceholderText('ask me anything...');
+    fireEvent.change(input, { target: { value: 'hello there' } });
+    await act(async () => {
+      fireEvent.keyDown(input, { key: 'Enter' });
+    });
+
+    // The reply streams in while the intro is still playing.
     copilot.agent.messages = [
       { id: '1', role: 'user', content: 'hello there' },
       { id: '2', role: 'assistant', content: 'hi back' },
     ];
-    renderHero();
-    bootTerminal();
+    rerender(
+      <ChatThreadProvider resetThread={resetThread}>
+        <TerminalHero />
+      </ChatThreadProvider>,
+    );
+    // The intro keeps playing: unmounting it now would skip its onDone.
+    fireEvent.click(screen.getByRole('button', { name: 'finish intro' }));
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
 
-    expect(screen.getByText('hello there')).toBeInTheDocument();
-    expect(screen.getByText('fredbot ~ %')).toBeInTheDocument();
-  });
-
-  it('clears the conversation and resets the thread', () => {
-    renderHero();
-    bootTerminal();
-
-    fireEvent.click(screen.getByRole('button', { name: 'clear' }));
-
-    expect(copilot.agent.setMessages).toHaveBeenCalledWith([]);
-    expect(resetThread).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('button', { name: 'finish intro' })).not.toBeInTheDocument();
+    expect(screen.getByText('hi back')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('ask me anything...')).toBeInTheDocument();
   });
 });

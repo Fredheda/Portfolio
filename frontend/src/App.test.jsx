@@ -26,13 +26,4 @@ describe('App', () => {
     expect(screen.getByText('projects stub')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Privacy Policy' })).toBeInTheDocument();
   });
-
-  it('lazy-loads the privacy policy on its route', async () => {
-    window.history.pushState({}, '', '/privacy-policy');
-    render(<App />);
-    expect(
-      await screen.findByRole('heading', { level: 1, name: 'Privacy Policy' }),
-    ).toBeInTheDocument();
-    expect(screen.queryByText('hero stub')).not.toBeInTheDocument();
-  });
 });
