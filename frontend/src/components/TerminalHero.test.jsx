@@ -3,21 +3,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ChatThreadProvider } from '../context/ChatThreadContext';
 import TerminalHero from './TerminalHero';
 
-const copilot = vi.hoisted(() => {
-  const state = { subscriber: null, runAgent: null };
-  state.agent = {
+// Recovery from a failed run (the agent subscription) is covered by the
+// browser suite's model-failure test, which fails the real stack.
+const copilot = vi.hoisted(() => ({
+  agent: {
     messages: [],
     isRunning: false,
     addMessage: vi.fn(),
     setMessages: vi.fn(),
-    subscribe: (subscriber) => {
-      state.subscriber = subscriber;
-      return { unsubscribe: () => {} };
-    },
-  };
-  state.runAgent = vi.fn();
-  return state;
-});
+    subscribe: () => ({ unsubscribe: () => {} }),
+  },
+  runAgent: vi.fn(),
+}));
 
 vi.mock('@copilotkit/react-core/v2', () => ({
   useAgent: () => ({ agent: copilot.agent }),
@@ -122,6 +119,8 @@ describe('TerminalHero', () => {
     expect(screen.getByText('fredbot ~ %')).toBeInTheDocument();
   });
 
+  // The browser suite hits this only because its scripted model answers
+  // faster than the intro plays; this pins it without relying on that.
   it('shows a first reply that arrives before the intro has finished, once the intro ends', async () => {
     const { rerender } = renderHero();
     bootTerminal();
@@ -149,23 +148,6 @@ describe('TerminalHero', () => {
 
     expect(screen.queryByRole('button', { name: 'finish intro' })).not.toBeInTheDocument();
     expect(screen.getByText('hi back')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('ask me anything...')).toBeInTheDocument();
-  });
-
-  it('brings the prompt back when the run fails', async () => {
-    renderHero();
-    bootTerminal();
-    const input = screen.getByPlaceholderText('ask me anything...');
-    fireEvent.change(input, { target: { value: 'hello there' } });
-    await act(async () => {
-      fireEvent.keyDown(input, { key: 'Enter' });
-    });
-
-    act(() => {
-      copilot.subscriber.onRunErrorEvent({ event: { message: 'terminated' } });
-    });
-
-    expect(screen.queryByRole('button', { name: 'finish intro' })).not.toBeInTheDocument();
     expect(screen.getByPlaceholderText('ask me anything...')).toBeInTheDocument();
   });
 

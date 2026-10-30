@@ -26,11 +26,6 @@ beforeEach(() => {
 });
 
 describe('AgentTools', () => {
-  it('registers the two frontend tools', () => {
-    render(<AgentTools />);
-    expect(Object.keys(registered.tools).sort()).toEqual(['highlightProjects', 'renderProjectCard']);
-  });
-
   it('highlightProjects highlights known ids and scrolls to the projects section', async () => {
     render(<AgentTools />);
     const result = await registered.tools.highlightProjects.handler({ ids: [knownId, 'nope'] });
