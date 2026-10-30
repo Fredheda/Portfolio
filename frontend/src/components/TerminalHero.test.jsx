@@ -3,10 +3,21 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ChatThreadProvider } from '../context/ChatThreadContext';
 import TerminalHero from './TerminalHero';
 
-const copilot = vi.hoisted(() => ({
-  agent: { messages: [], isRunning: false, addMessage: vi.fn(), setMessages: vi.fn() },
-  runAgent: vi.fn(),
-}));
+const copilot = vi.hoisted(() => {
+  const state = { subscriber: null, runAgent: null };
+  state.agent = {
+    messages: [],
+    isRunning: false,
+    addMessage: vi.fn(),
+    setMessages: vi.fn(),
+    subscribe: (subscriber) => {
+      state.subscriber = subscriber;
+      return { unsubscribe: () => {} };
+    },
+  };
+  state.runAgent = vi.fn();
+  return state;
+});
 
 vi.mock('@copilotkit/react-core/v2', () => ({
   useAgent: () => ({ agent: copilot.agent }),
@@ -138,6 +149,23 @@ describe('TerminalHero', () => {
 
     expect(screen.queryByRole('button', { name: 'finish intro' })).not.toBeInTheDocument();
     expect(screen.getByText('hi back')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('ask me anything...')).toBeInTheDocument();
+  });
+
+  it('brings the prompt back when the run fails', async () => {
+    renderHero();
+    bootTerminal();
+    const input = screen.getByPlaceholderText('ask me anything...');
+    fireEvent.change(input, { target: { value: 'hello there' } });
+    await act(async () => {
+      fireEvent.keyDown(input, { key: 'Enter' });
+    });
+
+    act(() => {
+      copilot.subscriber.onRunErrorEvent({ event: { message: 'terminated' } });
+    });
+
+    expect(screen.queryByRole('button', { name: 'finish intro' })).not.toBeInTheDocument();
     expect(screen.getByPlaceholderText('ask me anything...')).toBeInTheDocument();
   });
 

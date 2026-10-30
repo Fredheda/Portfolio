@@ -80,6 +80,25 @@ const TerminalHero = () => {
     }
   }, [pendingAssistantContentStarted, sequenceActive]);
 
+  // A run that fails (the agent sends RUN_ERROR; runAgent itself resolves)
+  // sends no reply, so nothing above would ever settle it and the prompt
+  // would stay hidden for good. Stop the intro and the wait indicator and
+  // give the prompt back.
+  useEffect(() => {
+    if (!agent) return undefined;
+    const { unsubscribe } = agent.subscribe({
+      onRunErrorEvent: () => {
+        waitTimersRef.current.forEach(clearTimeout);
+        waitTimersRef.current = [];
+        setWaitStage('none');
+        setSequenceActive(false);
+        setIntroWaitActive(false);
+        setReplySettled(true);
+      },
+    });
+    return unsubscribe;
+  }, [agent]);
+
   // Idle cursor-blink boot beat before the terminal "wakes up".
   useEffect(() => {
     const t = setTimeout(() => setBooted(true), BOOT_DELAY_MS);

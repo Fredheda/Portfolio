@@ -10,6 +10,14 @@ import { rateLimit } from 'express-rate-limit';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// When a chat run fails mid-stream (the backend closes the connection),
+// CopilotKit's AG-UI client rejects a promise nothing awaits. Node's default
+// for that is to exit, which would take the whole site down until the
+// container restarts. Log it and keep serving.
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled rejection; server kept running:', reason);
+});
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 const BACKEND_URL = process.env.BACKEND_URL || 'http://ca-portfolio-backend';
