@@ -49,10 +49,10 @@ jobs:
           cache: poetry
           cache-dependency-path: backend/poetry.lock
       - run: poetry install --no-interaction
-      # ruff covers backend/, data/ and mcp-tools/ (config: ruff.toml at the
-      # repo root); pyright covers backend/ only.
-      - run: poetry run ruff check ../backend ../data ../mcp-tools
-      - run: poetry run ruff format --check ../backend ../data ../mcp-tools
+      # ruff covers backend/, data/, mcp-tools/ and scripts/ (config: ruff.toml
+      # at the repo root); pyright covers backend/ only.
+      - run: poetry run ruff check ../backend ../data ../mcp-tools ../scripts
+      - run: poetry run ruff format --check ../backend ../data ../mcp-tools ../scripts
       - run: poetry run pyright
 
   # mcp-tools is an Azure Function with its own requirements.txt; test it in
@@ -75,6 +75,19 @@ jobs:
       - name: Run mcp-tools tests
         working-directory: mcp-tools
         run: .venv/bin/python -m pytest tests -v
+
+  # The deploy scripts are plain bash, tested against a fake `az`; they need
+  # only pytest, so no project environment is installed.
+  deploy-scripts-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version-file: backend/.python-version
+      - run: pip install pytest==9.1.1
+      - run: python -m pytest scripts/tests -v
 
   frontend-test:
     runs-on: ubuntu-latest
