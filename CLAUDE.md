@@ -18,7 +18,11 @@ or the `EnterWorktree` tool; remove it after the PR merges). Full rule in the ro
 PR titles and descriptions must not mention Claude Code or link the Claude
 session (no "Generated with Claude Code" footer).
 After opening a PR, wait for CI to pass (`gh pr checks --watch`), then read the
-LLM review comments and address them, before handing the PR URL over for review.
+LLM review comments (`gh pr view <n> --comments` and
+`gh api repos/Fredheda/Portfolio/pulls/<n>/comments`) and address every one of
+them, always, before handing the PR URL over for review. Fix the finding, or
+reply on the PR with the reason it does not apply. Never leave one unanswered,
+and re-check after each push, because the review runs again.
 
 **Response style:** use the `caveman` skill for responses in this repo —
 invoke it before replying, not just when asked.
