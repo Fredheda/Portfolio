@@ -32,6 +32,7 @@ echo "$*" >> "$FAKE_LOG"
 case "$*" in
   "acr build"*)
     echo "BUILD_DIR $PWD" >> "$FAKE_LOG"
+    echo "BUILD_TREE $(head -c 5 backend/Dockerfile | tr -d '\n')" >> "$FAKE_LOG"
     case "$*" in
       *"--image portfolio-web:latest"*)
         if [ -f frontend/content/site-content.json ]; then
@@ -152,6 +153,7 @@ class FakeAz:
         *args: str,
         env: dict[str, str] | None = None,
         cwd: Path = REPO_ROOT,
+        root: Path = REPO_ROOT,
     ) -> subprocess.CompletedProcess[str]:
         full_env = {
             **os.environ,
@@ -160,7 +162,7 @@ class FakeAz:
             **(env or {}),
         }
         return subprocess.run(
-            ["bash", str(REPO_ROOT / "scripts" / script), *args],
+            ["bash", str(root / "scripts" / script), *args],
             cwd=cwd,
             env=full_env,
             capture_output=True,
@@ -284,23 +286,62 @@ def test_build_push_does_not_copy_the_content_file_when_web_exists(
     assert not CONTENT_FILE.exists()
 
 
-def parent_sha() -> str:
-    return subprocess.run(
-        ["git", "rev-parse", "HEAD~1"],
-        cwd=REPO_ROOT,
-        capture_output=True,
-        text=True,
-        check=True,
-    ).stdout.strip()
+@dataclass
+class MiniRepo:
+    root: Path
+    first: str  # the commit to build
+    second: str  # HEAD, which differs from `first`
+
+
+@pytest.fixture
+def mini_repo(tmp_path: Path) -> MiniRepo:
+    """A throwaway git repo holding just what build-push.sh needs, so the
+    tests do not depend on this checkout's history (CI clones one commit)."""
+    root = tmp_path / "repo"
+    (root / "scripts" / "lib").mkdir(parents=True)
+    for name in ("scripts/build-push.sh", "scripts/lib/images.sh"):
+        (root / name).write_text((REPO_ROOT / name).read_text())
+    for name in (
+        "content/site-content.json",
+        "backend/Dockerfile",
+        "frontend/Dockerfile",
+    ):
+        (root / name).parent.mkdir(parents=True, exist_ok=True)
+        (root / name).write_text("first\n")
+
+    def commit(message: str) -> str:
+        for args in (["add", "-A"], ["commit", "-q", "-m", message]):
+            subprocess.run(
+                ["git", "-c", "user.name=t", "-c", "user.email=t@example.test", *args],
+                cwd=root,
+                check=True,
+                capture_output=True,
+            )
+        return subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=root,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+
+    subprocess.run(["git", "init", "-q", "-b", "main"], cwd=root, check=True)
+    first = commit("first")
+    (root / "backend" / "Dockerfile").write_text("second\n")
+    return MiniRepo(root=root, first=first, second=commit("second"))
 
 
 def test_build_push_with_a_sha_builds_that_commit_not_the_working_tree(
-    fake_az: FakeAz,
+    fake_az: FakeAz, mini_repo: MiniRepo
 ) -> None:
-    sha = parent_sha()
-    CONTENT_FILE.unlink(missing_ok=True)
+    sha = mini_repo.first
+    assert sha != mini_repo.second
     result = fake_az.run(
-        "build-push.sh", sha, env={"FAKE_MISSING": f"{BACKEND}:{sha},{WEB}:{sha}"}
+        "build-push.sh",
+        sha,
+        env={"FAKE_MISSING": f"{BACKEND}:{sha},{WEB}:{sha}"},
+        cwd=mini_repo.root,
+        root=mini_repo.root,
     )
     assert result.returncode == 0, result.stderr
     builds = [c for c in fake_az.calls if c.startswith("acr build")]
@@ -312,15 +353,22 @@ def test_build_push_with_a_sha_builds_that_commit_not_the_working_tree(
         c.split(" ", 1)[1] for c in fake_az.calls if c.startswith("BUILD_DIR")
     ]
     assert len(build_dirs) == 2
-    assert all(Path(d).resolve() != REPO_ROOT for d in build_dirs)
+    assert all(Path(d).resolve() != mini_repo.root.resolve() for d in build_dirs)
+    # The exported tree holds the first commit's files, though the working
+    # tree already has the second commit's.
+    assert fake_az.calls.count("BUILD_TREE first") == 2
+    assert (mini_repo.root / "backend" / "Dockerfile").read_text() == "second\n"
     # The content file is copied into the exported tree, not the caller's.
     assert "WEB_BUILD content=present" in fake_az.calls
-    assert not CONTENT_FILE.exists()
+    assert not (mini_repo.root / "frontend" / "content").exists()
 
 
-def test_build_push_with_a_sha_skips_existing_images(fake_az: FakeAz) -> None:
-    sha = parent_sha()
-    result = fake_az.run("build-push.sh", sha)
+def test_build_push_with_a_sha_skips_existing_images(
+    fake_az: FakeAz, mini_repo: MiniRepo
+) -> None:
+    result = fake_az.run(
+        "build-push.sh", mini_repo.first, cwd=mini_repo.root, root=mini_repo.root
+    )
     assert result.returncode == 0, result.stderr
     assert not any(c.startswith("acr build") for c in fake_az.calls)
     assert "Nothing to build" in result.stdout
