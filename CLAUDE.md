@@ -92,7 +92,7 @@ Test seams (production sets none): `build_graph(model, moderation_client, db)` a
 
 ## PR review
 
-`.github/workflows/claude-review.yml` posts an AI security-first review on every PR push; the owner can request one with a `@claude` comment. Token expiry and renewal: `deployment/expirations.md`.
+`.github/workflows/claude-review.yml` posts an AI security-first review on every PR push. It also runs a documentation check: it flags docs that contradict the change or were not updated, or says "Docs: current". The owner can request one with a `@claude` comment. Token expiry and renewal: `deployment/expirations.md`.
 
 ## MCP servers and skills
 
