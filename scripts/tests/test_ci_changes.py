@@ -53,6 +53,15 @@ def test_only_markdown_and_docs_is_not_code(repo: Path) -> None:
     assert classify(repo) == "code=false"
 
 
+def test_markdown_outside_the_docs_folders_is_code(repo: Path) -> None:
+    # backend/agent/system_prompt.md is read at runtime, so a prompt-only PR
+    # must run the backend tests and e2e.
+    prompt = repo / "backend" / "agent" / "system_prompt.md"
+    prompt.parent.mkdir(parents=True)
+    prompt.write_text("changed\n")
+    assert classify(repo) == "code=true"
+
+
 def test_a_code_file_next_to_docs_is_code(repo: Path) -> None:
     (repo / "README.md").write_text("changed\n")
     (repo / "backend" / "x.py").write_text("changed\n")

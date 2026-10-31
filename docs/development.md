@@ -113,7 +113,7 @@ Tests run one at a time because they share the backend's call log. CSS locators 
 
 ### CI
 
-`.github/workflows/ci.yml` runs all of the above on every pull request, and on nothing else (a push to `main` runs no CI). A first job, `changes`, runs `scripts/changed-areas.sh`; a PR that touches only Markdown files, `docs/` or `deployment/` skips the rest. Otherwise it runs five checks: `backend` (pytest, ruff, pyright), `mcp-tools-test`, `deploy-scripts-test`, `frontend` (vitest, eslint, build) and `e2e`. A skipped job counts as passing for the required `e2e` check. Images are built by the **Deploy apps** workflow, not by CI (see [deployment/github.md](../deployment/github.md)).
+`.github/workflows/ci.yml` runs all of the above on every pull request, and on nothing else (a push to `main` runs no CI). A first job, `changes`, runs `scripts/changed-areas.sh`; a PR that touches only Markdown files in the repository root, `docs/` or `deployment/` skips the rest (Markdown elsewhere, such as `backend/agent/system_prompt.md`, is runtime input and counts as code). Otherwise it runs five checks: `backend` (pytest, ruff, pyright), `mcp-tools-test`, `deploy-scripts-test`, `frontend` (vitest, eslint, build) and `e2e`. A skipped job counts as passing for the required `e2e` check. Images are built by the **Deploy apps** workflow, not by CI (see [deployment/github.md](../deployment/github.md)).
 
 ## Making a change
 
