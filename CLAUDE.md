@@ -59,7 +59,7 @@ Three independent targets; run only the one matching what changed: `./scripts/sh
 ### Frontend
 - Two routes: `/` and `/privacy-policy`. `TerminalHero` is the chat-first hero and owns the CopilotKit wiring. `AgentTools` renders nothing; it registers the two frontend tools (`highlightProjects`, `renderProjectCard`).
 - On mount, `TerminalHero` fires a fire-and-forget `GET /api/warmup` to start the backend's cold-start chain (container wake + MCP tool loading) before the first real message.
-- `server.js` (production, not Vite) also: 301-redirects `www.frederikheda.com` to the apex; hosts the CopilotKit runtime at `/api/copilotkit` (forwards runs to `AGENT_URL`, default `${BACKEND_URL}/agent/portfolio_agent`, and rate-limits `POST /api/copilotkit/agent/:agentId/run`); serves the rate-limited `/api/warmup`; sets security headers. Both domains are bound on `ca-portfolio-web` with free managed certificates (redo steps: Task 7 of `docs/Portfolio/plans/2026-08-09-azure-migration.md`).
+- `server.js` (production, not Vite) also: 301-redirects `www.frederikheda.com` to the apex; hosts the CopilotKit runtime at `/api/copilotkit` (forwards runs to `AGENT_URL`, default `${BACKEND_URL}/agent/portfolio_agent`, and rate-limits `POST /api/copilotkit/agent/:agentId/run`); serves the rate-limited `/api/warmup`; sets security headers. `ca-portfolio-backend` has internal ingress only (no public endpoint), so the browser can only reach it through this server's proxy. Both domains are bound on `ca-portfolio-web` with free managed certificates (redo steps: Task 7 of `docs/Portfolio/plans/2026-08-09-azure-migration.md`).
 - Replies and user messages render through `react-markdown` with `remark-math`/`rehype-katex`, so LaTeX renders as equations.
 
 ### Backend (request flow)

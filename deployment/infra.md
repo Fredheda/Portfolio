@@ -8,6 +8,7 @@ Re-runs `infra/main.bicep` against `rg-chatbot`, sourcing all secrets from the r
 
 Things to remember:
 
+- `ca-portfolio-backend` has internal ingress only, so it is not reachable from the public internet. The frontend (`ca-portfolio-web`) proxies to it inside the Container Apps environment.
 - `infra/deploy.sh` defaults its image tag to your local `HEAD`. After a deploy from GitHub, pass the deployed SHA: `./infra/deploy.sh <deployed-sha>`. Otherwise a Bicep run could roll the apps to another commit's images.
 - If it recreates the Function App from scratch, its output prints the steps to wire a fresh `FUNCTION_MCP_KEY` into the backend container app. See [local.md](local.md).
 - The one-time GitHub identities and the registry purge task are set up by scripts described in [github.md](github.md).
