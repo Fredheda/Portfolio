@@ -17,7 +17,8 @@ never the main checkout (`git worktree add ../.worktrees/<repo>-<slug> -b <branc
 or the `EnterWorktree` tool; remove it after the PR merges). Full rule in the root `CLAUDE.md`.
 PR titles and descriptions must not mention Claude Code or link the Claude
 session (no "Generated with Claude Code" footer).
-After opening a PR, wait for CI to pass (`gh pr checks --watch`), then read the
+Open PRs as drafts, get `./scripts/ci-local.sh` green, then `gh pr ready`.
+After that, wait for CI to pass (`gh pr checks --watch`), then read the
 LLM review comments (`gh pr view <n> --comments` and
 `gh api repos/Fredheda/Portfolio/pulls/<n>/comments`) and address every one of
 them, always, before handing the PR URL over for review. Fix the finding, or
@@ -51,7 +52,7 @@ cd data && poetry run python populate_index.py
 
 - `backend/` and `data/` are separate Poetry projects (Python 3.13, `.python-version`); they pin conflicting `tiktoken` versions and must not share an environment. `data/`'s heavy ML dependencies are deliberately kept out of `backend/pyproject.toml` so they never reach the production image.
 - `mcp-tools/` tests run in their own venv (see `docs/development.md`).
-- CI (`.github/workflows/ci.yml`) runs on pull requests only, never on a push to `main`. A docs-only PR (root Markdown files, `docs/`, `deployment/`; not `backend/agent/system_prompt.md`, which is runtime input) skips the heavy jobs; otherwise it runs `backend`, `mcp-tools-test`, `deploy-scripts-test`, `frontend` and `e2e`. The `e2e` check is required on `main`. Images are built by the **Deploy apps** workflow, not by CI.
+- CI (`.github/workflows/ci.yml`) runs on pull requests only, never on a push to `main`, and is draft-first: a draft PR runs only the light jobs (`changes`, `backend`, `mcp-tools-test`, `deploy-scripts-test`, `frontend` without its build); `e2e`, the frontend build and the AI review run once the PR is ready. A docs-only PR (root Markdown files, `docs/`, `deployment/`; not `backend/agent/system_prompt.md`, which is runtime input) skips the heavy jobs. The `e2e` check is required on `main`. **`./scripts/ci-local.sh` runs every CI check in order; it must be green before `gh pr ready`.** Images are built by the **Deploy apps** workflow, not by CI.
 - A new test must catch a bug that no other test (vitest, pytest or e2e) catches. `e2e_backend/` sits outside `backend/` because the backend image copies all of `backend/`. In Playwright specs, CSS locators live in `e2e/selectors.js`; ESLint rejects `.locator(` in spec files.
 
 ## Deployment
@@ -96,7 +97,7 @@ Test seams (production sets none): `build_graph(model, moderation_client, db)` a
 
 ## PR review
 
-`.github/workflows/claude-review.yml` posts an AI security-first review on every PR push. It also runs a documentation check: it flags docs that contradict the change or were not updated, or says "Docs: current". The owner can request one with a `@claude` comment. Token expiry and renewal: `deployment/expirations.md`.
+`.github/workflows/claude-review.yml` posts an AI security-first review on every push to a ready (non-draft) PR. It also runs a documentation check: it flags docs that contradict the change or were not updated, or says "Docs: current". The owner can request one with a `@claude` comment. Token expiry and renewal: `deployment/expirations.md`.
 
 ## MCP servers and skills
 
