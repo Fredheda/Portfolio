@@ -103,12 +103,42 @@ def test_every_heavy_job_skips_on_docs_only_and_runs_if_changes_fails() -> None:
     # `changes` job, still runs everything; `!cancelled()` stops the implicit
     # success() that would otherwise skip the job when `changes` failed.
     text = CI_YML.read_text()
-    condition = "if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}"
+    condition = "if: ${{ !cancelled() && needs.changes.outputs.code != 'false'"
     for job in HEAVY_JOBS:
         block = text.split(f"\n  {job}:\n", 1)[1].split("\n  # ", 1)[0]
         assert "needs: changes" in block, job
         assert condition in block, job
     assert text.count(condition) == len(HEAVY_JOBS)
+
+
+NOT_DRAFT = "github.event.pull_request.draft == false"
+
+
+def test_ci_starts_on_ready_for_review_so_gh_pr_ready_runs_the_heavy_jobs() -> None:
+    assert (
+        "types: [opened, reopened, synchronize, ready_for_review]" in CI_YML.read_text()
+    )
+
+
+def test_only_e2e_and_the_frontend_build_wait_for_a_ready_pr() -> None:
+    text = CI_YML.read_text()
+    e2e = text.split("\n  e2e:\n", 1)[1]
+    assert NOT_DRAFT in e2e.split("\n    runs-on:", 1)[0]
+    frontend = text.split("\n  frontend:\n", 1)[1].split("\n  # ", 1)[0]
+    build = frontend.split("- name: Production build", 1)[1]
+    assert NOT_DRAFT in build.split("run:", 1)[0]
+    # Everything else runs on drafts too.
+    assert text.count(NOT_DRAFT) == 2
+
+
+def test_the_review_runs_on_ready_prs_only() -> None:
+    text = (CI_YML.parent / "claude-review.yml").read_text()
+    assert "types: [opened, synchronize, ready_for_review]" in text
+    review = text.split("\n  review:\n", 1)[1].split("\n  claude:\n", 1)[0]
+    assert NOT_DRAFT in review.split("\n    permissions:", 1)[0]
+    # The owner's @claude comment still works on a draft.
+    claude = text.split("\n  claude:\n", 1)[1]
+    assert NOT_DRAFT not in claude
 
 
 def test_an_unknown_base_fails_loudly(repo: Path) -> None:
