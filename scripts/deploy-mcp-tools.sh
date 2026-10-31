@@ -3,7 +3,7 @@
 # Function App resource itself — this script only ships code to it). The
 # companion to ./scripts/ship.sh, which covers frontend/backend Container
 # Apps but never touches this Function App. Requires the `func` CLI (Azure
-# Functions Core Tools) installed locally. See Deployment.md for the full
+# Functions Core Tools) installed locally. See deployment/README.md for the full
 # picture of all three deploy targets.
 # Usage: ./scripts/deploy-mcp-tools.sh
 set -euo pipefail

@@ -1,82 +1,56 @@
-# 🚀 Frederik Heda's Portfolio
+# Portfolio
 
-![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white&style=plastic)
-![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white&style=plastic)
-![ChatGPT](https://img.shields.io/badge/chatGPT-74aa9c?style=for-the-badge&logo=openai&logoColor=white&style=plastic)
-![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB&style=plastic)
-![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white&style=plastic)
-![Azure](https://img.shields.io/badge/Azure-0078D4?style=for-the-badge&logo=microsoftazure&logoColor=white&style=plastic)
+My personal portfolio site, built around Fredbot: a chat-first hero where an AI agent answers questions about my projects and experience.
 
-Welcome to my portfolio website repository! This site showcases my work as a Senior Machine Learning Engineer, featuring my projects, skills, and experience in AI and software development.
+**Live:** [frederikheda.com](https://frederikheda.com)
 
-## ✨ Features
+<!-- screenshot -->
 
-- 🤖 Interactive AI chatbot (Fredbot) powered by OpenAI
-- 🧠 ML/AI project showcases with live demos
-- 🎨 Modern, responsive design using Tailwind CSS
-- 📱 Mobile-friendly interface
-- 🎭 Dynamic project showcase with carousel
+## What it does
 
-## 🛠️ Tech Stack
-### Frontend
-- **Frontend:** React.js, Tailwind CSS
-- **Deployment:** Azure Container Apps
-- **Additional Libraries:** 
-  - React Slick for carousels
-  - FontAwesome for icons
-  - Google Fonts for typography
+- Greets visitors with a terminal-style hero where they can chat with Fredbot instead of scrolling through a static page.
+- Fredbot answers questions about my background, skills and projects, grounded in a knowledge base of my own documents (retrieval-augmented generation).
+- The agent can drive the page: it can highlight projects and render project cards inline in the conversation.
+- Replies render as Markdown, including typeset LaTeX math.
+- Messages are moderated before they reach the model, and conversations are logged for review.
+- Shows a condensed projects section and a privacy policy page, and works on mobile.
 
-### Backend
-- **API Framework:** FastAPI
-- **Language:** Python 3.13
-- **Key Features:**
-  - REST API endpoints for chatbot integration
-  - Async request handling
-  - OpenAI integration for Fredbot
-  - Request validation and error handling
+## How it works
 
-## 🤖 Fredbot - AI Assistant
-
-Fredbot is an AI-powered chatbot that helps visitors learn more about my work and experience.
-
-### Features
-- 💬 Natural language conversations about my background and projects
-- 🔍 Quick access to project details and technical specifications
-- 📚 Information about my skills and experience
-
-### Technical Implementation
-- Built using OpenAI's GPT models
-- Content Safety Filtering
-- Context-aware responses using RAG (Azure AI Search vector retrieval)
-- Custom knowledge base of my projects and experience
-- Real-time response streaming (Not yet implemented)
-- Conversation history management (Not yet implemented)
-
-## 🧑‍💻 Local Development
-
-The full stack (Azurite, MCP tools, backend agent, frontend) runs together with one command via [honcho](https://github.com/nickstenning/honcho) and the repo-root `Procfile`:
-```bash
-pipx install honcho   # one-time
-honcho start
-```
-See `CLAUDE.md` for per-service commands and required `.env` values.
-
-## ✅ Checks
-
-Backend, from `backend/`:
-```bash
-poetry run pytest -v
-poetry run ruff check ../backend ../data ../mcp-tools ../scripts ../e2e_backend
-poetry run ruff format --check ../backend ../data ../mcp-tools ../scripts ../e2e_backend
-poetry run pyright
+```mermaid
+flowchart LR
+    Visitor([Visitor]) --> Web["Frontend<br/>React + Express<br/>Container App"]
+    Web -- "AG-UI over CopilotKit" --> Backend["Backend<br/>FastAPI + LangGraph agent<br/>Container App"]
+    Backend -- "moderation + LLM" --> OpenAI[(OpenAI)]
+    Backend -- "MCP tools" --> Tools["mcp-tools<br/>Azure Function App"]
+    Tools --> Search[(Azure AI Search)]
+    Backend -- "chat logs" --> SQL[(Azure SQL)]
 ```
 
-Frontend, from `frontend/`:
-```bash
-npm test        # vitest (jsdom + Testing Library)
-npm run lint    # eslint
-npm run build
-npm run e2e     # Playwright: browser and full-stack tests, offline (see CLAUDE.md)
-```
+The browser talks to a small Express server that serves the React app and proxies chat runs to the backend through the CopilotKit runtime. The backend exposes a LangGraph agent over the AG-UI protocol. Each message passes through a content-safety middleware (OpenAI's moderation API), then the model, and a logging middleware writes the exchange to Azure SQL afterwards.
 
-The `mcp-tools/` tests run in their own virtualenv (see `CLAUDE.md`). GitHub Actions (`.github/workflows/ci.yml`) runs everything on every pull request and every push to `main`, as seven checks: `backend-test`, `backend-lint`, `mcp-tools-test`, `deploy-scripts-test`, `frontend-test`, `frontend-checks` and `e2e`.
+The agent's backend tools (`list_projects`, `get_project_details`, `retrieve_information`) are not defined in the backend. They are served by a separate Azure Function App over MCP, which is also where the vector search against Azure AI Search happens. The frontend registers two more tools that the agent can call to control the page. The whole stack is covered by an offline Playwright suite that runs the production build against the real backend, MCP handlers and agent graph, with only the model, moderation, SQL logging and Azure Search faked. It is a required check on `main`.
+
+## Tech stack
+
+- **Frontend:** React, Vite and Tailwind CSS for the UI; CopilotKit for the chat and frontend tools; Express to serve the build, proxy to the backend and set security headers.
+- **Backend:** Python with FastAPI; LangGraph for the agent; OpenAI models for chat and moderation.
+- **Tools and retrieval:** an Azure Function App exposing MCP tools; Azure AI Search for vector retrieval; a separate `data/` project that builds the search index.
+- **Storage:** Azure SQL (passwordless, Microsoft Entra ID) for chat logs.
+- **Hosting and delivery:** Azure Container Apps and Azure Functions, Bicep for infrastructure, GitHub Actions for CI and deploys.
+- **Testing:** pytest, vitest, ESLint, ruff, pyright, and Playwright (end-to-end and accessibility checks).
+
+## Repository layout
+
+- `frontend/` - React app and the production Express server
+- `backend/` - FastAPI app and the LangGraph agent
+- `mcp-tools/` - Azure Function App with the MCP tools
+- `data/` - scripts that build the Azure AI Search index
+- `content/` - site content shared by the frontend and the MCP tools
+- `e2e_backend/` - offline test servers for the Playwright suite
+- `infra/`, `scripts/` - Bicep and deploy scripts
+
+## More
+
+- Run it locally and run the checks: [docs/development.md](docs/development.md)
+- Deploy and operate it: [deployment/](deployment/)

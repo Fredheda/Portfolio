@@ -6,7 +6,7 @@
 # Use this for CODE changes to backend/ or frontend/ ONLY -- it does not
 # touch mcp-tools/ (a separate Azure Function App, not a Container App; use
 # ./scripts/deploy-mcp-tools.sh for that) or INFRA changes (infra/main.bicep,
-# secrets; use ./infra/deploy.sh for those). See Deployment.md for the full
+# secrets; use ./infra/deploy.sh for those). See deployment/README.md for the full
 # picture of all three.
 #
 # Usage: ./scripts/ship.sh

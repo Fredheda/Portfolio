@@ -13,10 +13,8 @@ open a PR. `fetch` and `pull` are fine too (default to `pull --ff-only`). Ask
 first for `rebase`, `reset`, force-push, deleting branches, or anything on
 `main`. Reviewing and merging PRs is the user's alone — hand over the PR URL.
 Other Claude sessions share this workspace: work in your own git worktree,
-never the main checkout. Create one with `git worktree add
-../.worktrees/<repo>-<slug> -b <branch> origin/main` (or the `EnterWorktree`
-tool) and remove it after the PR merges; details in the "Parallel sessions"
-section of the root `CLAUDE.md`. Full rule in the root `CLAUDE.md` linked above.
+never the main checkout (`git worktree add ../.worktrees/<repo>-<slug> -b <branch> origin/main`,
+or the `EnterWorktree` tool; remove it after the PR merges). Full rule in the root `CLAUDE.md`.
 PR titles and descriptions must not mention Claude Code or link the Claude
 session (no "Generated with Claude Code" footer).
 After opening a PR, wait for CI to pass (`gh pr checks --watch`), then read the
@@ -25,137 +23,81 @@ LLM review comments and address them, before handing the PR URL over for review.
 **Response style:** use the `caveman` skill for responses in this repo —
 invoke it before replying, not just when asked.
 
-## Project Overview
+## Project overview
 
-A personal portfolio website for Frederik Heda (Staff Data Scientist), live at
-[frederikheda.com](https://frederikheda.com). It consists of:
-- **Frontend**: React + Vite + Tailwind CSS, deployed to Azure Container Apps (`ca-portfolio-web`), bound to the custom domain with a free managed TLS certificate
-- **Backend**: FastAPI (Python), deployed to Azure Container Apps (`ca-portfolio-backend`)
-- **Data pipeline**: Standalone scripts for building the Azure AI Search index used by RAG
+Personal portfolio site for Frederik Heda, live at [frederikheda.com](https://frederikheda.com):
+- `frontend/` — React + Vite + Tailwind, plus `server.js` (production Express server). Container App `ca-portfolio-web`.
+- `backend/` — FastAPI + LangGraph agent. Container App `ca-portfolio-backend`.
+- `mcp-tools/` — Azure Function App `func-portfolio-mcp-tools` serving the agent's MCP tools (including the Azure AI Search query).
+- `data/` — standalone scripts that build the Azure AI Search index.
+
+Docs: outward-facing overview in `README.md`; local setup, env vars, checks and the e2e suite in `docs/development.md`; deploy, rollback, logs and expiries in `deployment/` (start at `deployment/README.md`).
 
 ## Commands
 
-### Frontend (`cd frontend`)
-```bash
-npm install          # Install dependencies
-npm run dev          # Start dev server (Vite)
-npm run build        # Production build
-npm start            # Serve production build (Express)
-npm test             # vitest (jsdom + Testing Library); pretest syncs content
-npm run lint         # eslint
-```
-
-### Backend (`cd backend`)
-```bash
-poetry install                     # Install dependencies (Python 3.13, pinned by .python-version)
-poetry run uvicorn main:app --reload   # Run dev server (port 8000)
-poetry run python main.py          # Run production server
-```
-
-### Data Pipeline (`cd data`)
-```bash
-poetry install                     # Install dependencies (Python 3.13, pinned by .python-version)
-poetry run python populate_index.py    # Process documents and upload to Azure AI Search index
-```
-
-### Checks
-
-Backend, from `backend/`:
+Details and the full check list are in `docs/development.md`.
 
 ```bash
-poetry run pytest -v
-poetry run ruff check ../backend ../data ../mcp-tools ../scripts ../e2e_backend
-poetry run ruff format --check ../backend ../data ../mcp-tools ../scripts ../e2e_backend
-poetry run pyright                     # backend/ only
+honcho start                                   # repo root: Azurite, mcp-tools, backend, frontend
+cd frontend && npm run dev | npm test | npm run lint | npm run e2e
+cd backend && poetry run uvicorn main:app --reload
+cd backend && poetry run pytest -v && poetry run pyright
+cd data && poetry run python populate_index.py
 ```
 
-`mcp-tools/` tests run in their own venv, from `mcp-tools/`: copy `content/site-content.json` to `mcp-tools/content/`, `pip install -r requirements.txt pytest==9.1.1`, then `python -m pytest tests -v`.
+- `backend/` and `data/` are separate Poetry projects (Python 3.13, `.python-version`); they pin conflicting `tiktoken` versions and must not share an environment. `data/`'s heavy ML dependencies are deliberately kept out of `backend/pyproject.toml` so they never reach the production image.
+- `mcp-tools/` tests run in their own venv (see `docs/development.md`).
+- CI (`.github/workflows/ci.yml`) runs seven checks on every PR: `backend-test`, `backend-lint`, `mcp-tools-test`, `deploy-scripts-test`, `frontend-test`, `frontend-checks`, `e2e`. The `e2e` check is required on `main`. On pushes to `main`, a `build` job then stores SHA-tagged images.
+- A new test must catch a bug that no other test (vitest, pytest or e2e) catches. `e2e_backend/` sits outside `backend/` because the backend image copies all of `backend/`. In Playwright specs, CSS locators live in `e2e/selectors.js`; ESLint rejects `.locator(` in spec files.
 
-Frontend, from `frontend/`: `npm test`, `npm run lint`, `npm run build` (see Commands above).
+## Deployment
 
-Browser tests, from `frontend/`: `npm run e2e` (first time: `npx playwright install chromium`, and `poetry install` in `backend/`). It builds the frontend, then Playwright starts three servers and runs every test offline:
-- `e2e_backend.mcp_server` on 8211: the real `mcp-tools/function_app.py` handlers behind a small `azure.functions` shim, over MCP streamable HTTP at `/runtime/webhooks/mcp`, requiring `x-functions-key`. Only Azure AI Search is stubbed.
-- `e2e_backend.backend_server` on 8210: the real `main.create_app` and `agent.build_graph` with a scripted model (`e2e_backend/model.py`, keyword script in `script.py`), a fake moderation client (flags `forbidden-topic`) and a recording SQL logger. Test-only routes: `GET /__model_calls`, `GET /__db_log`, `POST /__reset`, `POST /__fail` (next model call raises).
-- `server.js` on 3210 with `BACKEND_URL` only (so its production `AGENT_URL` default is used) and raised rate limits.
+Three independent targets; run only the one matching what changed: `./scripts/ship.sh` (frontend/backend), `./scripts/deploy-mcp-tools.sh` (`mcp-tools/` or `content/site-content.json`), `./infra/deploy.sh` (Bicep or a `.env` secret). Each has a manual GitHub workflow (**Deploy apps**, **Deploy functions**; `main` only, rollback = an older SHA) and the script is the laptop fallback. Merges build images but never deploy. `infra/deploy.sh` defaults its image tag to local `HEAD`: pass the deployed SHA. See `deployment/`.
 
-Projects: `server` (each test spawns its own `server.js` at production settings: redirect, headers, both rate limits), `full-stack` (browser and AG-UI protocol tests) and `a11y` (axe on `/` and `/privacy-policy` with every rule on, once entrance animations have finished; fails on serious or critical issues). Tests run one at a time because they share the backend's call log. CSS locators live in `e2e/selectors.js`; ESLint rejects `.locator(` in spec files. `e2e_backend/` sits outside `backend/` because the backend image copies all of `backend/`. A new test must catch a bug no other test (vitest, pytest, or e2e) catches.
-
-`.github/workflows/ci.yml` runs all of these on every pull request and every push to `main`, as seven checks: `backend-test`, `backend-lint`, `mcp-tools-test`, `deploy-scripts-test`, `frontend-test`, `frontend-checks` and `e2e`. On pushes to `main` an eighth job, `build`, runs after them (see Deployment). `deploy-scripts-test` runs the tests of the deploy scripts in `scripts/tests/` (`python -m pytest scripts/tests -v`, needs only pytest).
-
-Dependencies for `backend/` and `data/` are managed by separate Poetry projects (`pyproject.toml` + `poetry.lock` in each), not a shared venv — `backend` and `data` pin conflicting `tiktoken` versions, so they can't share one.
-
-### Local development (all services)
-Running the chatbot end-to-end locally needs four processes: Azurite (storage emulator), `mcp-tools` (Azure Functions), `backend` (FastAPI agent), and `frontend`. A repo-root `Procfile` runs all four together via [honcho](https://github.com/nickstenning/honcho):
-```bash
-pipx install honcho   # one-time; global+isolated since there's no repo-root Python project to add it as a dependency to (backend/data are separate Poetry projects; mcp-tools uses a plain venv + requirements.txt, not Poetry, per Azure Functions Core Tools' own Python packaging expectations)
-honcho start           # from Portfolio/ — Ctrl-C stops all four
-```
-`Portfolio/.env` needs `FUNCTION_APP_URL=http://localhost:7071` and `frontend/.env` needs `BACKEND_URL=http://localhost:8000` (both gitignored, local-only). The `Procfile` pins `PORT` explicitly on the `backend`/`frontend` lines — `honcho` otherwise auto-assigns its own `PORT` per process (Foreman convention), which collides with `main.py`'s and `server.js`'s own `PORT` defaults. The `backend` line also waits for `mcp-tools`'s `func start` to actually finish binding `:7071` (not just print its startup banner) before running, via a `curl`/`sleep` poll loop.
-
-Each service can still be run individually with its own command above if you don't need the full stack — see `docs/Portfolio/plans/2026-08-22-agentic-chatbot-design.md` Task 14 for the manual three-terminal version this replaces.
-
-### Deployment
-Three independent deploy targets, each with its own script — run only the one matching what you changed:
-```bash
-./scripts/ship.sh              # frontend/ or backend/ code -> both Container Apps (laptop fallback; see below)
-./scripts/deploy-mcp-tools.sh  # mcp-tools/ code, or content/site-content.json -> the Function App
-./infra/deploy.sh              # infra/main.bicep or a .env secret -> re-run Bicep
-```
-Every merge to `main` builds and stores both images under the full commit SHA (the `build` job in `ci.yml`, after the seven checks). The manual **Deploy apps** workflow rolls the two container apps to a stored SHA (`main` only; rollback = an older SHA; it never builds), with `ship.sh` as the laptop fallback. The Function App has its own manual **Deploy functions** workflow (same rules), with `deploy-mcp-tools.sh` as the laptop fallback. Set-up scripts: `setup-github-apps-deploy.sh` (identities), `setup-github-deploy.sh` (Function App identity), `setup-acr-purge.sh` (weekly image purge). `infra/deploy.sh` defaults its image tag to local `HEAD`; pass the deployed SHA.
-Full workflow (prerequisites, rollback, first-deploy Function-key setup): `Deployment.md`.
-
-### PR review
-`.github/workflows/claude-review.yml` posts an AI security-first review when a PR is opened and on every push to it; the repo owner can also request one by commenting `@claude`. It is comment-only and authenticates with the `CLAUDE_CODE_OAUTH_TOKEN` repo secret, which expires about 2027-10-24: renew with `claude setup-token`, then `gh secret set CLAUDE_CODE_OAUTH_TOKEN`. If subscription auth is refused, switch the action input to `anthropic_api_key`. The test and lint workflow is separate: `.github/workflows/ci.yml` (see Checks above).
-
-## Architecture
+## Architecture contracts
 
 ### Frontend
-Single-page app with React Router. Two routes: `/` (main portfolio) and `/privacy-policy`. `TerminalHero` is the chat-first hero (absorbed the old floating `Chatbot` widget's CopilotKit wiring), followed by a condensed `Projects` section styled as a terminal echo. Components: `Header`, `TerminalHero`, `Projects`, `Footer`, `PrivacyPolicy`, and `AgentTools` (renders nothing; registers the two frontend tools). On mount, `TerminalHero` fires a fire-and-forget `GET /api/warmup` to start the backend's cold-start chain (container wake + MCP tool loading) as early as possible, before the visitor's first real message. Assistant replies (`TypedMarkdown`) and user messages both render through `react-markdown` with `remark-math`/`rehype-katex` (+ `katex` CSS), so LaTeX math (`$...$`/`$$...$$`) in a reply renders as typeset equations, not literal text.
+- Two routes: `/` and `/privacy-policy`. `TerminalHero` is the chat-first hero and owns the CopilotKit wiring. `AgentTools` renders nothing; it registers the two frontend tools (`highlightProjects`, `renderProjectCard`).
+- On mount, `TerminalHero` fires a fire-and-forget `GET /api/warmup` to start the backend's cold-start chain (container wake + MCP tool loading) before the first real message.
+- `server.js` (production, not Vite) also: 301-redirects `www.frederikheda.com` to the apex; hosts the CopilotKit runtime at `/api/copilotkit` (forwards runs to `AGENT_URL`, default `${BACKEND_URL}/agent/portfolio_agent`, and rate-limits `POST /api/copilotkit/agent/:agentId/run`); serves the rate-limited `/api/warmup`; sets security headers. Both domains are bound on `ca-portfolio-web` with free managed certificates (redo steps: Task 7 of `docs/Portfolio/plans/2026-08-09-azure-migration.md`).
+- Replies and user messages render through `react-markdown` with `remark-math`/`rehype-katex`, so LaTeX renders as equations.
 
-`server.js` (the production Express server, not Vite) also handles: an application-level 301 redirect from `www.frederikheda.com` to `https://frederikheda.com` (apex is canonical), the CopilotKit runtime under `/api/copilotkit` (it forwards chat runs to the backend's agent at `AGENT_URL`, default `${BACKEND_URL}/agent/portfolio_agent`, and rate-limits `POST /api/copilotkit/agent/:agentId/run`), the `/api/warmup` route (rate-limited; pings the backend's `/health` in the background and returns immediately), and security headers (HSTS, X-Frame-Options, etc). Both `frederikheda.com` and `www.frederikheda.com` are bound as custom domains on `ca-portfolio-web` with free Azure-managed certificates — see `docs/Portfolio/plans/2026-08-09-azure-migration.md` Task 7 for the DNS/binding setup if it ever needs redoing (e.g. cert renewal issues, DNS provider migration).
+### Backend (request flow)
+`main.py` exposes a LangGraph agent over CopilotKit's AG-UI protocol at `/agent/portfolio_agent` (`add_langgraph_fastapi_endpoint` + `LangGraphAGUIAgent`), not a custom REST endpoint. Also serves `/health`.
+1. `ContentSafetyMiddleware` screens the latest user message with OpenAI's moderation API (`omni-moderation-latest`, not Azure Content Safety) before the model runs; a flagged message gets a refusal and skips the model.
+2. `CopilotKitMiddleware` bridges AG-UI and merges the frontend's registered tools into the model's tool set.
+3. The agent (`create_agent` in `agent/agent.py`) uses `gpt-5.6-luna` via `ChatOpenAI` with `reasoning_effort="none"` — the model 400s on tool calls without it. Checkpointer is `MemorySaver`.
+4. `list_projects`, `get_project_details` and `retrieve_information` are loaded at startup from the Function App over MCP (`agent/mcp_tools.py`, streamable-http, `FUNCTION_APP_URL`/`FUNCTION_MCP_KEY`). The vector query lives in `mcp-tools/`, not here. If the Function App is unreachable or rejects the key, the backend logs a warning and starts without those three tools; they come back on the next restart.
+5. `LoggingMiddleware` logs the user message and reply to Azure SQL via `services/database_client.py` (fire-and-forget background thread) after the agent finishes.
 
-### Backend
-FastAPI app (`main.py`) that exposes a LangGraph agent over CopilotKit's AG-UI protocol at `/agent/portfolio_agent` (via `add_langgraph_fastapi_endpoint` + `LangGraphAGUIAgent`) — not a custom REST endpoint; the frontend's CopilotKit v2 client talks to this directly. Also serves `/health`. Request flow:
-1. `ContentSafetyMiddleware` screens the latest user message via OpenAI's moderation API (`omni-moderation-latest`) before the model runs; a flagged message short-circuits straight to a refusal, skipping the model call entirely.
-2. `CopilotKitMiddleware` (from the `copilotkit` package) bridges the AG-UI protocol — this is what merges the frontend's `useFrontendTool`-registered tools (`highlightProjects`, `renderProjectCard`) into the set of tools available to the model, alongside the MCP tools below.
-3. The LangGraph agent (`create_agent`, in `agent/agent.py`) runs with `gpt-5.6-luna` (`ChatOpenAI`, `reasoning_effort="none"` — the model 400s on tool calls without it); its behavior comes from `agent/system_prompt.md`.
-4. Backend-side tools (`list_projects`, `get_project_details`, `retrieve_information`) aren't defined locally — they're loaded at startup from the `mcp-tools` Azure Function App over MCP (`agent/mcp_tools.py`, streamable-http, using `FUNCTION_APP_URL`/`FUNCTION_MCP_KEY`). `retrieve_information` is what performs the Azure AI Search vector query — that logic lives in `mcp-tools/`, not here. If the Function App can't be reached at startup (or rejects the key), the backend logs a warning and starts without these three tools instead of failing; they come back on the next restart.
-5. `LoggingMiddleware` logs both the user's message and the model's reply to Azure SQL via `services/database_client.py` (fire-and-forget, background thread), after the agent finishes.
+`agent/system_prompt.md` is the model's real instruction source, including the description of every backend and frontend tool. Edit it whenever a tool is added, renamed or changes behavior; a frontend tool's own `description` field is not what the model reads its instructions from.
 
-### Agent (`backend/agent/`)
-- `agent.py` — builds the LangGraph graph: `create_agent(model=ChatOpenAI(...), tools=<MCP tools>, system_prompt=..., middleware=[...], checkpointer=MemorySaver())`
-- `system_prompt.md` — the agent's full behavioral prompt: tone/style plus a description of every backend and frontend tool it has access to. Edit this whenever a tool is added, renamed, or its behavior changes — the frontend tool's own `description` field is not what the model actually reads its instructions from.
-- `mcp_tools.py` — connects to the `mcp-tools` Function App via `MultiServerMCPClient` (streamable-http) and loads its tools at startup
-- `content_safety_middleware.py` — pre-model moderation gate (OpenAI's moderation API, not Azure Content Safety)
-- `logging_middleware.py` — post-agent Azure SQL logging via `services/database_client.py`
+There is no `backend/LLM/`, `PromptManager`, `OpenAIClient` or `ToolOrchestrator`; an earlier implementation shaped that way was replaced by the LangGraph agent.
 
-There is no local `backend/LLM/` directory, `PromptManager`, `OpenAIClient`, or `ToolOrchestrator` — an earlier implementation shaped that way was replaced by the LangGraph agent above (see `docs/Portfolio/plans/2026-08-22-agentic-chatbot-design.md` for the migration).
+### Data pipeline
+`data/DocumentProcessor` chunks `.txt`, `.docx` and `.pdf` (Markdown-header split first, recursive split at 5000 tokens / 500 overlap as fallback); `IndexCreator` builds the index; `populate_index.py` reads source documents from a `cw/` directory.
 
-### Data Pipeline (`data/`)
-- `DocumentProcessor` — converts `.txt`, `.docx`, `.pdf` files into chunks; uses `MarkdownHeaderTextSplitter` first, falls back to `RecursiveCharacterTextSplitter` (5000 tokens, 500 overlap) if headers produce oversized chunks
-- `IndexCreator` — creates/manages the Azure AI Search index and uploads embeddings
-- `populate_index.py` — entry point; reads source documents from a `cw/` directory
+## Environment variables
 
-## MCP Servers and Skills
+Backend (repo-root `.env` locally; Container Apps env vars when deployed, set by `infra/deploy.sh`):
+- `OPENAI_API_KEY` — moderation API and `ChatOpenAI`; required at startup.
+- `FUNCTION_APP_URL`, `FUNCTION_MCP_KEY` — the `mcp-tools` Function App. `FUNCTION_APP_URL` required at startup (locally `http://localhost:7071`); `FUNCTION_MCP_KEY` optional locally, required once Azure enforces the function key.
+- `AZURE_SQL_SERVER`, `AZURE_SQL_DATABASE` — no password; Microsoft Entra ID auth.
 
-Always prefer up-to-date external sources over training knowledge when working on this codebase. Apply the following by default:
+`azure_search_endpoint` / `azure_index_name` / `azure_search_api_key` are `mcp-tools/` and `data/` configuration, not backend env vars.
 
-- **context7** (`mcp__context7__resolve-library-id` + `mcp__context7__query-docs`): Use for any library or framework used in this project — React, Vite, Tailwind, FastAPI, OpenAI SDK, Azure SDK, LangChain, etc. Fetch current docs before writing or modifying code that touches these libraries.
-- **Microsoft Learn** (`microsoft_docs_search`, `microsoft_docs_fetch`, `microsoft_code_sample_search`): Use when working with Azure AI Search, Azure OpenAI, or any other Azure/Microsoft service — API shapes, SDK versions, configuration options, and billing/pricing/scaling questions (e.g. Container Apps consumption-plan idle vs. active billing, `minReplicas` cost tradeoffs, free grants) all belong here, always, not just as a first try. Its billing docs cover the billing model and rate structure even when they don't quote exact per-unit dollar figures (those live only on the separate, non-Learn `azure.microsoft.com/pricing` page) — if a specific number isn't in Microsoft Learn, say so and ask how to proceed rather than reaching for WebFetch/WebSearch.
-- **`claude-api` skill**: Use when touching an OpenAI SDK call site — the direct `openai` client in `backend/agent/content_safety_middleware.py` (moderation API) or `ChatOpenAI` in `backend/agent/agent.py` — or adding new LLM features. The skill provides current Anthropic/OpenAI SDK guidance and best practices.
-- **`frontend-design` skill**: Use when making UI changes to keep the frontend quality high.
+Frontend: `BACKEND_URL`, read by `server.js` at runtime (not the browser bundle). Defaults to `http://ca-portfolio-backend` (set by Bicep); use `http://localhost:8000` locally (`frontend/.env`).
 
-The rule of thumb: if you are about to write code that calls an external library or cloud API, fetch its current docs first.
+Test seams (production sets none): `build_graph(model, moderation_client, db)` and `create_app(build)` in the backend; `RUN_RATE_LIMIT` and `WARMUP_RATE_LIMIT` in `server.js` (defaults 5 and 10 per minute).
 
-## Environment Variables
+## PR review
 
-**Backend** (set via the repo-root `.env` (local) or Container Apps env vars (deployed, via `infra/deploy.sh`)):
-- `OPENAI_API_KEY` — used directly (moderation API, `ChatOpenAI`); required at startup
-- `FUNCTION_APP_URL`, `FUNCTION_MCP_KEY` — the `mcp-tools` Function App this backend loads its MCP tools from (`FUNCTION_APP_URL` required at startup; `FUNCTION_MCP_KEY` optional locally, required once the Function App enforces its function key in Azure)
-- `AZURE_SQL_SERVER`, `AZURE_SQL_DATABASE` — no password, Microsoft Entra ID auth (see `docs/Portfolio/specs/2026-08-09-azure-migration-design.md`)
+`.github/workflows/claude-review.yml` posts an AI security-first review on every PR push; the owner can request one with a `@claude` comment. Token expiry and renewal: `deployment/expirations.md`.
 
-`azure_search_endpoint`/`azure_index_name`/`azure_search_api_key` are **not** backend env vars — that's `mcp-tools/`'s configuration (it's what actually performs the Azure AI Search vector query, behind the `retrieve_information` MCP tool).
+## MCP servers and skills
 
-**Test seams** (production passes or sets none of these): `build_graph(model, moderation_client, db)` and `create_app(build)` in the backend; `RUN_RATE_LIMIT` and `WARMUP_RATE_LIMIT` in `server.js` (defaults 5 and 10 per minute).
-
-**Frontend**: `BACKEND_URL` — read by `server.js` (Node), not the browser bundle. Defaults to `http://ca-portfolio-backend` (the in-environment Container Apps address, set by Bicep); for local `npm start` testing against a local backend, set it to `http://localhost:8000`.
+Prefer up-to-date external sources over training knowledge:
+- **context7** for any library or framework here (React, Vite, Tailwind, FastAPI, OpenAI SDK, LangChain, CopilotKit, Azure SDK). Fetch current docs before writing code that touches them.
+- **Microsoft Learn** for Azure AI Search, Azure OpenAI and any Azure/Microsoft service, including billing and scaling questions (Container Apps idle vs. active billing, `minReplicas`). If a specific price isn't in Microsoft Learn, say so and ask how to proceed rather than using WebFetch/WebSearch.
+- **`claude-api` skill** when touching an OpenAI SDK call site (`backend/agent/content_safety_middleware.py`, `ChatOpenAI` in `backend/agent/agent.py`) or adding LLM features.
+- **`frontend-design` skill** for UI changes.
