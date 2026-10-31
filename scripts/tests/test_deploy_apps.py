@@ -31,6 +31,7 @@ FAKE_AZ = r"""#!/usr/bin/env bash
 echo "$*" >> "$FAKE_LOG"
 case "$*" in
   "acr build"*)
+    echo "BUILD_DIR $PWD" >> "$FAKE_LOG"
     case "$*" in
       *"--image portfolio-web:latest"*)
         if [ -f frontend/content/site-content.json ]; then
@@ -281,6 +282,56 @@ def test_build_push_does_not_copy_the_content_file_when_web_exists(
     result = fake_az.run("build-push.sh", env={"FAKE_MISSING": f"{BACKEND}:{sha}"})
     assert result.returncode == 0, result.stderr
     assert not CONTENT_FILE.exists()
+
+
+def parent_sha() -> str:
+    return subprocess.run(
+        ["git", "rev-parse", "HEAD~1"],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.strip()
+
+
+def test_build_push_with_a_sha_builds_that_commit_not_the_working_tree(
+    fake_az: FakeAz,
+) -> None:
+    sha = parent_sha()
+    CONTENT_FILE.unlink(missing_ok=True)
+    result = fake_az.run(
+        "build-push.sh", sha, env={"FAKE_MISSING": f"{BACKEND}:{sha},{WEB}:{sha}"}
+    )
+    assert result.returncode == 0, result.stderr
+    builds = [c for c in fake_az.calls if c.startswith("acr build")]
+    assert builds == [
+        build_call(BACKEND, "backend/Dockerfile", "backend", sha),
+        build_call(WEB, "frontend/Dockerfile", "frontend", sha),
+    ]
+    build_dirs = [c.split(" ", 1)[1] for c in fake_az.calls if c.startswith("BUILD_DIR")]
+    assert len(build_dirs) == 2
+    assert all(Path(d).resolve() != REPO_ROOT for d in build_dirs)
+    # The content file is copied into the exported tree, not the caller's.
+    assert "WEB_BUILD content=present" in fake_az.calls
+    assert not CONTENT_FILE.exists()
+
+
+def test_build_push_with_a_sha_skips_existing_images(fake_az: FakeAz) -> None:
+    sha = parent_sha()
+    result = fake_az.run("build-push.sh", sha)
+    assert result.returncode == 0, result.stderr
+    assert not any(c.startswith("acr build") for c in fake_az.calls)
+    assert "Nothing to build" in result.stdout
+
+
+@pytest.mark.parametrize("bad", ["abc1234", "A" * 40, "c" * 40, "latest"])
+def test_build_push_rejects_a_bad_sha_before_any_az_call(
+    fake_az: FakeAz, bad: str
+) -> None:
+    result = fake_az.run("build-push.sh", bad)
+    assert result.returncode != 0
+    assert "ERROR" in result.stderr
+    assert fake_az.calls == []
 
 
 # --- redeploy.sh -------------------------------------------------------------
