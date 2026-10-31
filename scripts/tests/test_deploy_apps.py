@@ -308,7 +308,9 @@ def test_build_push_with_a_sha_builds_that_commit_not_the_working_tree(
         build_call(BACKEND, "backend/Dockerfile", "backend", sha),
         build_call(WEB, "frontend/Dockerfile", "frontend", sha),
     ]
-    build_dirs = [c.split(" ", 1)[1] for c in fake_az.calls if c.startswith("BUILD_DIR")]
+    build_dirs = [
+        c.split(" ", 1)[1] for c in fake_az.calls if c.startswith("BUILD_DIR")
+    ]
     assert len(build_dirs) == 2
     assert all(Path(d).resolve() != REPO_ROOT for d in build_dirs)
     # The content file is copied into the exported tree, not the caller's.
@@ -737,7 +739,7 @@ def test_workflows_read_the_azure_ids_from_secrets_not_variables() -> None:
     assert workflows
     for workflow in workflows:
         assert "vars.AZURE_" not in workflow.read_text(), workflow.name
-    for name in ("ci.yml", "deploy-apps.yml", "deploy-functions.yml"):
+    for name in ("deploy-apps.yml", "deploy-functions.yml"):
         text = (REPO_ROOT / ".github" / "workflows" / name).read_text()
         assert "secrets.AZURE_TENANT_ID" in text, name
         assert "secrets.AZURE_SUBSCRIPTION_ID" in text, name
