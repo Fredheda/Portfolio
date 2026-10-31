@@ -121,3 +121,5 @@ Tests run one at a time because they share the backend's call log. CSS locators 
 2. Make the change and run the checks for what you touched. Run `npm run e2e` when behavior crosses the frontend, backend and tools.
 3. Open a pull request and wait for the checks and the AI review (`.github/workflows/claude-review.yml`) before asking for review.
 4. After merge, deploy by hand when needed. See [deployment/README.md](../deployment/README.md).
+
+Throwaway line to test the docs-only CI path.
