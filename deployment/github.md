@@ -78,4 +78,4 @@ It creates the managed identity `id-portfolio-mcp-gh-deploy` with Website Contri
 
 ## PR review
 
-`.github/workflows/claude-review.yml` posts an AI security-first review when a PR is opened and on every push to it. The repo owner can also request one by commenting `@claude`. It is comment-only and authenticates with the `CLAUDE_CODE_OAUTH_TOKEN` repo secret. For when that token expires and how to renew it, see [expirations.md](expirations.md).
+`.github/workflows/claude-review.yml` posts an AI security-first review when a PR is opened and on every push to it. The repo owner can also request one by commenting `@claude`. Each review also runs a documentation check: it flags docs that contradict the change, were not updated, or hold stale names, paths or counts, or it says "Docs: current". It is comment-only and authenticates with the `CLAUDE_CODE_OAUTH_TOKEN` repo secret. For when that token expires and how to renew it, see [expirations.md](expirations.md).
