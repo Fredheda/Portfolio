@@ -65,7 +65,7 @@ const runtime = new CopilotRuntime({
 // send more than five messages a minute; production sets neither.
 const copilotKitLimiter = rateLimit({
   windowMs: 60 * 1000,
-  limit: Number(process.env.RUN_RATE_LIMIT) || 5,
+  limit: Number(process.env.RUN_RATE_LIMIT) || 7,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
   message: { error: 'Rate limit exceeded' },
