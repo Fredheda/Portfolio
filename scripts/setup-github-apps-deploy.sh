@@ -6,9 +6,10 @@
 #
 # What it does:
 #   1. Creates two user-assigned managed identities in rg-chatbot:
-#        id-portfolio-gh-build   pushes images (the CI "build" job on main)
-#        id-portfolio-gh-deploy  rolls the two container apps (the manual
-#                                "Deploy apps" workflow)
+#        id-portfolio-gh-build   builds and pushes missing images (first part of
+#                                the manual "Deploy apps" workflow)
+#        id-portfolio-gh-deploy  rolls the two container apps (second part of
+#                                the same workflow)
 #   2. Grants each only what it needs:
 #        build:  AcrPush + Container Registry Tasks Contributor on the registry
 #        deploy: AcrPush on the registry (to lock/unlock deployed tags — note
@@ -17,9 +18,9 @@
 #                repository), Container Apps Contributor on each of the two
 #                apps, and Managed Identity Operator on the apps' AcrPull
 #                identity (updating an app that uses it needs assign/action)
-#   3. Adds one federated credential to each identity:
-#        build:  only workflows running on refs/heads/main of this repo
-#        deploy: only the job that runs in the `production` environment
+#   3. Adds one federated credential to each identity, for the job that runs
+#      in the `production` environment (and removes the build identity's old
+#      credential that trusted any workflow on refs/heads/main).
 #   4. Ensures the `production` GitHub environment only admits jobs running on
 #      the main branch (a branch author cannot edit their way around it), and
 #      stores the Azure IDs the workflows read as repo SECRETS: AZURE_TENANT_ID,
@@ -103,10 +104,19 @@ for entry in "${IMAGES[@]}"; do
   ensure_role "$DEPLOY_PRINCIPAL" "Container Apps Contributor" "$app_id"
 done
 
-ensure_federated_credential "$BUILD_ID" github-main \
-  "repo:$GH_REPO:ref:refs/heads/main"
+ensure_federated_credential "$BUILD_ID" github-production \
+  "repo:$GH_REPO:environment:production"
 ensure_federated_credential "$DEPLOY_ID" github-production \
   "repo:$GH_REPO:environment:production"
+
+# Older versions trusted the build identity for any workflow on main; the
+# Deploy apps job now builds inside `production`, so drop the broader trust.
+if az identity federated-credential show -g "$RG" --identity-name "$BUILD_ID" \
+  --name github-main -o none 2>/dev/null; then
+  az identity federated-credential delete -g "$RG" --identity-name "$BUILD_ID" \
+    --name github-main --yes -o none
+  echo "federated credential $BUILD_ID/github-main: deleted"
+fi
 
 # The deploy identity trusts any job that runs in the `production` environment,
 # whatever branch it runs on, and the `main`-only check inside deploy-apps.yml

@@ -627,23 +627,48 @@ def test_setup_gives_the_deploy_identity_app_rights_and_nothing_on_other_apps(
     }
 
 
-def test_setup_trusts_main_for_build_and_production_for_deploy(
+def test_setup_trusts_the_production_environment_for_both_identities(
     fake_az: FakeAz,
 ) -> None:
+    # The Deploy apps job builds and deploys inside the `production`
+    # environment, so both identities are trusted for that subject only.
     result = fake_az.run("setup-github-apps-deploy.sh")
     assert result.returncode == 0, result.stderr
     creds = [
         c for c in fake_az.calls if c.startswith("identity federated-credential create")
     ]
     assert len(creds) == 2
-    build = next(c for c in creds if f"--identity-name {BUILD_ID} " in c)
-    deploy = next(c for c in creds if f"--identity-name {DEPLOY_ID} " in c)
-    assert "--name github-main" in build
-    assert f"--subject repo:{GH_REPO}:ref:refs/heads/main" in build
-    assert "--name github-production" in deploy
-    assert f"--subject repo:{GH_REPO}:environment:production" in deploy
-    for call in creds:
+    for identity in (BUILD_ID, DEPLOY_ID):
+        call = next(c for c in creds if f"--identity-name {identity} " in c)
+        assert "--name github-production" in call
+        assert f"--subject repo:{GH_REPO}:environment:production" in call
         assert "--audiences api://AzureADTokenExchange" in call
+    assert not any("refs/heads/main" in c for c in creds)
+
+
+def test_setup_removes_the_old_main_credential_from_the_build_identity(
+    fake_az: FakeAz,
+) -> None:
+    result = fake_az.run(
+        "setup-github-apps-deploy.sh", env={"FAKE_CREDENTIAL_EXISTS": "1"}
+    )
+    assert result.returncode == 0, result.stderr
+    deletes = [
+        c for c in fake_az.calls if c.startswith("identity federated-credential delete")
+    ]
+    assert len(deletes) == 1
+    assert f"--identity-name {BUILD_ID} " in deletes[0]
+    assert "--name github-main" in deletes[0]
+
+
+def test_setup_deletes_nothing_when_the_old_credential_is_absent(
+    fake_az: FakeAz,
+) -> None:
+    result = fake_az.run("setup-github-apps-deploy.sh")
+    assert result.returncode == 0, result.stderr
+    assert not any(
+        c.startswith("identity federated-credential delete") for c in fake_az.calls
+    )
 
 
 def test_setup_restricts_the_environment_to_main(fake_az: FakeAz) -> None:
@@ -716,6 +741,24 @@ def test_workflows_read_the_azure_ids_from_secrets_not_variables() -> None:
         text = (REPO_ROOT / ".github" / "workflows" / name).read_text()
         assert "secrets.AZURE_TENANT_ID" in text, name
         assert "secrets.AZURE_SUBSCRIPTION_ID" in text, name
+
+
+def test_deploy_workflow_builds_with_the_build_identity_before_the_deploy_login() -> (
+    None
+):
+    text = (REPO_ROOT / ".github" / "workflows" / "deploy-apps.yml").read_text()
+    order = [
+        text.index("scripts/resolve-image-sha.sh"),
+        text.index("secrets.AZURE_BUILD_CLIENT_ID"),
+        text.index('scripts/build-push.sh "$SHA"'),
+        text.index("Log in to Azure to deploy"),
+        text.index("az logout"),
+        text.index('scripts/redeploy.sh "$SHA"'),
+    ]
+    assert order == sorted(order)
+    assert "secrets.AZURE_APPS_DEPLOY_CLIENT_ID" in text
+    # The build identity is trusted only inside the production environment.
+    assert "environment: production" in text
 
 
 def test_setup_never_touches_the_function_app_variable(fake_az: FakeAz) -> None:
