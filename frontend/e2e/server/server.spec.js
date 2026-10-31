@@ -63,9 +63,9 @@ test('warmup allows ten calls a minute', async ({ prodServer }) => {
   expect((await prodServer.get('/api/warmup')).status()).toBe(429);
 });
 
-test('chat runs allow five a minute', async ({ prodServer }) => {
+test('chat runs allow seven a minute', async ({ prodServer }) => {
   const run = () => prodServer.post('/api/copilotkit/agent/portfolio_agent/run', { data: {} });
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 7; i++) {
     expect((await run()).status()).not.toBe(429);
   }
   expect((await run()).status()).toBe(429);

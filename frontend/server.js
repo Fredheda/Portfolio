@@ -51,9 +51,9 @@ const runtime = new CopilotRuntime({
   },
 });
 
-// Same granularity as the retired backend's slowapi limit -- 5 requests per
+// Same granularity as the retired backend's slowapi limit -- 7 requests per
 // minute per IP; each chat turn is one request to this route, so this is
-// "5 messages per minute per visitor". Scoped to just the run endpoint
+// "7 messages per minute per visitor". Scoped to just the run endpoint
 // (POST /api/copilotkit/agent/:agentId/run), not the whole /api/copilotkit
 // prefix -- multi-route mode also serves GET /info (fetched once per
 // CopilotKit provider mount, i.e. every page load) and GET
@@ -62,7 +62,7 @@ const runtime = new CopilotRuntime({
 // reloads could exhaust the budget before a single real message was sent
 // (confirmed live).
 // RUN_RATE_LIMIT and WARMUP_RATE_LIMIT exist only so the browser tests can
-// send more than five messages a minute; production sets neither.
+// send more than seven messages a minute; production sets neither.
 const copilotKitLimiter = rateLimit({
   windowMs: 60 * 1000,
   limit: Number(process.env.RUN_RATE_LIMIT) || 7,

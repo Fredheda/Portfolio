@@ -92,7 +92,7 @@ Backend (repo-root `.env` locally; Container Apps env vars when deployed, set by
 
 Frontend: `BACKEND_URL`, read by `server.js` at runtime (not the browser bundle). Defaults to `http://ca-portfolio-backend` (set by Bicep); use `http://localhost:8000` locally (`frontend/.env`).
 
-Test seams (production sets none): `build_graph(model, moderation_client, db)` and `create_app(build)` in the backend; `RUN_RATE_LIMIT` and `WARMUP_RATE_LIMIT` in `server.js` (defaults 5 and 10 per minute).
+Test seams (production sets none): `build_graph(model, moderation_client, db)` and `create_app(build)` in the backend; `RUN_RATE_LIMIT` and `WARMUP_RATE_LIMIT` in `server.js` (defaults 7 and 10 per minute).
 
 ## PR review
 
