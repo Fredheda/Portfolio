@@ -2,7 +2,7 @@
 
 Portfolio is deployed to Azure Container Apps (`rg-chatbot` / `cae-portfolio`), sharing its resource group and container registry with `copilot-kit-exp` but running in its own Container Apps environment. There are two deployables: the two container apps (`ca-portfolio-web`, `ca-portfolio-backend`) and the `func-portfolio-mcp-tools` Function App.
 
-Nothing deploys by itself. GitHub builds the images on every merge to `main`, and you press a button on GitHub (or run a script on your machine) to deploy.
+Nothing runs on a merge to `main`. You press a button on GitHub (or run a script on your machine) to deploy, and the button builds the images for that commit first if they do not exist yet.
 
 ## What to run, by what changed
 
@@ -21,7 +21,7 @@ These are three independent deploy targets with their own tooling and their own 
 
 ## Files
 
-- [github.md](github.md): CI build on merge, the manual **Deploy apps** and **Deploy functions** workflows, one-time GitHub setup, and rollback by SHA.
+- [github.md](github.md): the manual **Deploy apps** and **Deploy functions** workflows, one-time GitHub setup, and rollback by SHA.
 - [local.md](local.md): the laptop fallbacks, `scripts/ship.sh` and `scripts/deploy-mcp-tools.sh`.
 - [infra.md](infra.md): Bicep and `infra/deploy.sh`.
 - [operations.md](operations.md): logs and rollback.

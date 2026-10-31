@@ -1,21 +1,44 @@
 name: CI
 
+# Pull requests only: a push to main runs no CI, because the PR that landed it
+# already did. Images are not built here either; the manual Deploy apps
+# workflow builds a commit the first time it is deployed.
 on:
   pull_request:
-  push:
-    branches: [main]
 
-# A new push to the same PR cancels the run that is still going. Pushes to
-# main are never cancelled, so every commit on main gets a result.
+# A new push to the same PR cancels the run that is still going.
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
-  backend-test:
+  # Decides whether the PR changes anything but documentation (scripts/
+  # changed-areas.sh). A docs-only PR skips the jobs below. They are skipped
+  # by their own `if`, not by a workflow-level path filter, because a required
+  # check (e2e) that never reports blocks the PR for good. If this job fails,
+  # `code` is empty, which is not 'false', so everything still runs.
+  changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      code: ${{ steps.areas.outputs.code }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - id: areas
+        run: ./scripts/changed-areas.sh "origin/${{ github.base_ref }}" >> "$GITHUB_OUTPUT"
+
+  # Tests, ruff (backend/, data/, mcp-tools/, scripts/ and e2e_backend/;
+  # config: ruff.toml at the repo root) and pyright (backend/ only) share one
+  # Poetry install.
+  backend:
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     defaults:
@@ -32,25 +55,6 @@ jobs:
           cache-dependency-path: backend/poetry.lock
       - run: poetry install --no-interaction
       - run: poetry run pytest -v
-
-  backend-lint:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    defaults:
-      run:
-        working-directory: backend
-    steps:
-      - uses: actions/checkout@v7
-      - name: Install Poetry
-        run: pipx install "poetry>=2.0,<3.0"
-      - uses: actions/setup-python@v7
-        with:
-          python-version-file: backend/.python-version
-          cache: poetry
-          cache-dependency-path: backend/poetry.lock
-      - run: poetry install --no-interaction
-      # ruff covers backend/, data/, mcp-tools/, scripts/ and e2e_backend/
-      # (config: ruff.toml at the repo root); pyright covers backend/ only.
       - run: poetry run ruff check ../backend ../data ../mcp-tools ../scripts ../e2e_backend
       - run: poetry run ruff format --check ../backend ../data ../mcp-tools ../scripts ../e2e_backend
       - run: poetry run pyright
@@ -58,6 +62,8 @@ jobs:
   # mcp-tools is an Azure Function with its own requirements.txt; test it in
   # an isolated venv, never in the backend's Poetry environment.
   mcp-tools-test:
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -76,9 +82,11 @@ jobs:
         working-directory: mcp-tools
         run: .venv/bin/python -m pytest tests -v
 
-  # The deploy scripts are plain bash, tested against a fake `az`; they need
-  # only pytest, so no project environment is installed.
+  # The deploy and CI scripts are plain bash, tested against a fake `az`; they
+  # need only pytest, so no project environment is installed.
   deploy-scripts-test:
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -89,7 +97,10 @@ jobs:
       - run: pip install pytest==9.1.1
       - run: python -m pytest scripts/tests -v
 
-  frontend-test:
+  # Vitest, eslint and the production build share one install.
+  frontend:
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     defaults:
@@ -107,29 +118,17 @@ jobs:
       - run: npm ci --ignore-scripts
       # `pretest` syncs content/site-content.json into frontend/content/.
       - run: npm test
-
-  frontend-checks:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    defaults:
-      run:
-        working-directory: frontend
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-      - run: npm ci --ignore-scripts
       - run: npm run lint
       # `prebuild` syncs content, then vite builds.
       - run: npm run build
 
   # Playwright against the production build, the real backend (scripted
   # model, fake moderation and logging) and the real mcp-tools handlers.
-  # Offline; see frontend/playwright.config.js.
+  # Offline; see frontend/playwright.config.js. The `main-protect` ruleset
+  # requires this job by name, so keep the id.
   e2e:
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -161,39 +160,3 @@ jobs:
           path: |
             frontend/playwright-report
             frontend/test-results
-
-  # Build once, deploy many: every commit that lands on main gets its two
-  # images built and stored under the full commit SHA. Nothing is deployed
-  # here; the manual `Deploy apps` workflow rolls the apps to a stored SHA.
-  build:
-    needs:
-      - backend-test
-      - backend-lint
-      - mcp-tools-test
-      - deploy-scripts-test
-      - frontend-test
-      - frontend-checks
-      - e2e
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    permissions:
-      id-token: write
-      contents: read
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          # Nothing after checkout needs git access, so keep the job's git
-          # token off disk while the Azure session is open.
-          persist-credentials: false
-      # OIDC login with the Azure CLI (the repo only allows a short list of
-      # third-party actions, so azure/login is not used).
-      - name: Log in to Azure
-        env:
-          # Secrets, not variables: the run logs of this public repo are
-          # public, and a secret's value is masked there.
-          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          CLIENT_ID: ${{ secrets.AZURE_BUILD_CLIENT_ID }}
-        run: ./scripts/ci-azure-login.sh "$CLIENT_ID"
-      - run: ./scripts/build-push.sh

@@ -31,6 +31,8 @@ FAKE_AZ = r"""#!/usr/bin/env bash
 echo "$*" >> "$FAKE_LOG"
 case "$*" in
   "acr build"*)
+    echo "BUILD_DIR $PWD" >> "$FAKE_LOG"
+    echo "BUILD_TREE $(head -c 5 backend/Dockerfile | tr -d '\n')" >> "$FAKE_LOG"
     case "$*" in
       *"--image portfolio-web:latest"*)
         if [ -f frontend/content/site-content.json ]; then
@@ -151,6 +153,7 @@ class FakeAz:
         *args: str,
         env: dict[str, str] | None = None,
         cwd: Path = REPO_ROOT,
+        root: Path = REPO_ROOT,
     ) -> subprocess.CompletedProcess[str]:
         full_env = {
             **os.environ,
@@ -159,7 +162,7 @@ class FakeAz:
             **(env or {}),
         }
         return subprocess.run(
-            ["bash", str(REPO_ROOT / "scripts" / script), *args],
+            ["bash", str(root / "scripts" / script), *args],
             cwd=cwd,
             env=full_env,
             capture_output=True,
@@ -281,6 +284,104 @@ def test_build_push_does_not_copy_the_content_file_when_web_exists(
     result = fake_az.run("build-push.sh", env={"FAKE_MISSING": f"{BACKEND}:{sha}"})
     assert result.returncode == 0, result.stderr
     assert not CONTENT_FILE.exists()
+
+
+@dataclass
+class MiniRepo:
+    root: Path
+    first: str  # the commit to build
+    second: str  # HEAD, which differs from `first`
+
+
+@pytest.fixture
+def mini_repo(tmp_path: Path) -> MiniRepo:
+    """A throwaway git repo holding just what build-push.sh needs, so the
+    tests do not depend on this checkout's history (CI clones one commit)."""
+    root = tmp_path / "repo"
+    (root / "scripts" / "lib").mkdir(parents=True)
+    for name in ("scripts/build-push.sh", "scripts/lib/images.sh"):
+        (root / name).write_text((REPO_ROOT / name).read_text())
+    for name in (
+        "content/site-content.json",
+        "backend/Dockerfile",
+        "frontend/Dockerfile",
+    ):
+        (root / name).parent.mkdir(parents=True, exist_ok=True)
+        (root / name).write_text("first\n")
+
+    def commit(message: str) -> str:
+        for args in (["add", "-A"], ["commit", "-q", "-m", message]):
+            subprocess.run(
+                ["git", "-c", "user.name=t", "-c", "user.email=t@example.test", *args],
+                cwd=root,
+                check=True,
+                capture_output=True,
+            )
+        return subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=root,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+
+    subprocess.run(["git", "init", "-q", "-b", "main"], cwd=root, check=True)
+    first = commit("first")
+    (root / "backend" / "Dockerfile").write_text("second\n")
+    return MiniRepo(root=root, first=first, second=commit("second"))
+
+
+def test_build_push_with_a_sha_builds_that_commit_not_the_working_tree(
+    fake_az: FakeAz, mini_repo: MiniRepo
+) -> None:
+    sha = mini_repo.first
+    assert sha != mini_repo.second
+    result = fake_az.run(
+        "build-push.sh",
+        sha,
+        env={"FAKE_MISSING": f"{BACKEND}:{sha},{WEB}:{sha}"},
+        cwd=mini_repo.root,
+        root=mini_repo.root,
+    )
+    assert result.returncode == 0, result.stderr
+    builds = [c for c in fake_az.calls if c.startswith("acr build")]
+    assert builds == [
+        build_call(BACKEND, "backend/Dockerfile", "backend", sha),
+        build_call(WEB, "frontend/Dockerfile", "frontend", sha),
+    ]
+    build_dirs = [
+        c.split(" ", 1)[1] for c in fake_az.calls if c.startswith("BUILD_DIR")
+    ]
+    assert len(build_dirs) == 2
+    assert all(Path(d).resolve() != mini_repo.root.resolve() for d in build_dirs)
+    # The exported tree holds the first commit's files, though the working
+    # tree already has the second commit's.
+    assert fake_az.calls.count("BUILD_TREE first") == 2
+    assert (mini_repo.root / "backend" / "Dockerfile").read_text() == "second\n"
+    # The content file is copied into the exported tree, not the caller's.
+    assert "WEB_BUILD content=present" in fake_az.calls
+    assert not (mini_repo.root / "frontend" / "content").exists()
+
+
+def test_build_push_with_a_sha_skips_existing_images(
+    fake_az: FakeAz, mini_repo: MiniRepo
+) -> None:
+    result = fake_az.run(
+        "build-push.sh", mini_repo.first, cwd=mini_repo.root, root=mini_repo.root
+    )
+    assert result.returncode == 0, result.stderr
+    assert not any(c.startswith("acr build") for c in fake_az.calls)
+    assert "Nothing to build" in result.stdout
+
+
+@pytest.mark.parametrize("bad", ["abc1234", "A" * 40, "c" * 40, "latest"])
+def test_build_push_rejects_a_bad_sha_before_any_az_call(
+    fake_az: FakeAz, bad: str
+) -> None:
+    result = fake_az.run("build-push.sh", bad)
+    assert result.returncode != 0
+    assert "ERROR" in result.stderr
+    assert fake_az.calls == []
 
 
 # --- redeploy.sh -------------------------------------------------------------
@@ -576,23 +677,48 @@ def test_setup_gives_the_deploy_identity_app_rights_and_nothing_on_other_apps(
     }
 
 
-def test_setup_trusts_main_for_build_and_production_for_deploy(
+def test_setup_trusts_the_production_environment_for_both_identities(
     fake_az: FakeAz,
 ) -> None:
+    # The Deploy apps job builds and deploys inside the `production`
+    # environment, so both identities are trusted for that subject only.
     result = fake_az.run("setup-github-apps-deploy.sh")
     assert result.returncode == 0, result.stderr
     creds = [
         c for c in fake_az.calls if c.startswith("identity federated-credential create")
     ]
     assert len(creds) == 2
-    build = next(c for c in creds if f"--identity-name {BUILD_ID} " in c)
-    deploy = next(c for c in creds if f"--identity-name {DEPLOY_ID} " in c)
-    assert "--name github-main" in build
-    assert f"--subject repo:{GH_REPO}:ref:refs/heads/main" in build
-    assert "--name github-production" in deploy
-    assert f"--subject repo:{GH_REPO}:environment:production" in deploy
-    for call in creds:
+    for identity in (BUILD_ID, DEPLOY_ID):
+        call = next(c for c in creds if f"--identity-name {identity} " in c)
+        assert "--name github-production" in call
+        assert f"--subject repo:{GH_REPO}:environment:production" in call
         assert "--audiences api://AzureADTokenExchange" in call
+    assert not any("refs/heads/main" in c for c in creds)
+
+
+def test_setup_removes_the_old_main_credential_from_the_build_identity(
+    fake_az: FakeAz,
+) -> None:
+    result = fake_az.run(
+        "setup-github-apps-deploy.sh", env={"FAKE_CREDENTIAL_EXISTS": "1"}
+    )
+    assert result.returncode == 0, result.stderr
+    deletes = [
+        c for c in fake_az.calls if c.startswith("identity federated-credential delete")
+    ]
+    assert len(deletes) == 1
+    assert f"--identity-name {BUILD_ID} " in deletes[0]
+    assert "--name github-main" in deletes[0]
+
+
+def test_setup_deletes_nothing_when_the_old_credential_is_absent(
+    fake_az: FakeAz,
+) -> None:
+    result = fake_az.run("setup-github-apps-deploy.sh")
+    assert result.returncode == 0, result.stderr
+    assert not any(
+        c.startswith("identity federated-credential delete") for c in fake_az.calls
+    )
 
 
 def test_setup_restricts_the_environment_to_main(fake_az: FakeAz) -> None:
@@ -661,10 +787,28 @@ def test_workflows_read_the_azure_ids_from_secrets_not_variables() -> None:
     assert workflows
     for workflow in workflows:
         assert "vars.AZURE_" not in workflow.read_text(), workflow.name
-    for name in ("ci.yml", "deploy-apps.yml", "deploy-functions.yml"):
+    for name in ("deploy-apps.yml", "deploy-functions.yml"):
         text = (REPO_ROOT / ".github" / "workflows" / name).read_text()
         assert "secrets.AZURE_TENANT_ID" in text, name
         assert "secrets.AZURE_SUBSCRIPTION_ID" in text, name
+
+
+def test_deploy_workflow_builds_with_the_build_identity_before_the_deploy_login() -> (
+    None
+):
+    text = (REPO_ROOT / ".github" / "workflows" / "deploy-apps.yml").read_text()
+    order = [
+        text.index("scripts/resolve-image-sha.sh"),
+        text.index("secrets.AZURE_BUILD_CLIENT_ID"),
+        text.index('scripts/build-push.sh "$SHA"'),
+        text.index("Log in to Azure to deploy"),
+        text.index("az logout"),
+        text.index('scripts/redeploy.sh "$SHA"'),
+    ]
+    assert order == sorted(order)
+    assert "secrets.AZURE_APPS_DEPLOY_CLIENT_ID" in text
+    # The build identity is trusted only inside the production environment.
+    assert "environment: production" in text
 
 
 def test_setup_never_touches_the_function_app_variable(fake_az: FakeAz) -> None:
