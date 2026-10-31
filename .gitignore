@@ -1,18 +1,53 @@
+# Env / secrets
 .env
-node_modules
-.DS_Store
-*.pyc
+.env*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+local.settings.json
+terraform.tfstate
+terraform.tfstate.*
+.azure/
+mcp-tools/local.settings.json
+
+# Python
 __pycache__
+*.pyc
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.venv/
+venv/*
+
+# Node / Vite
+node_modules
+.next/
+out/
+build/
 dist
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+*.log
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+
+# Project specific
 testing.py
 *data/*cw*
-venv/*
-.venv/
 backup
 mcp-tools/content/
 frontend/content/
 frontend/playwright-report/
 frontend/test-results/
 mcp-tools/.azurite/
-mcp-tools/local.settings.json
 .superpowers/
