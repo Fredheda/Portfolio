@@ -113,11 +113,11 @@ Tests run one at a time because they share the backend's call log. CSS locators 
 
 ### CI
 
-`.github/workflows/ci.yml` runs all of the above on every pull request, and on nothing else (a push to `main` runs no CI). A first job, `changes`, runs `scripts/changed-areas.sh`; a PR that touches only Markdown files in the repository root, `docs/` or `deployment/` skips the rest (Markdown elsewhere, such as `backend/agent/system_prompt.md`, is runtime input and counts as code). Otherwise it runs five checks: `backend` (pytest, ruff, pyright), `mcp-tools-test`, `deploy-scripts-test`, `frontend` (vitest, eslint, build) and `e2e`. A skipped job counts as passing for the required `e2e` check. Images are built by the **Deploy apps** workflow, not by CI (see [deployment/github.md](../deployment/github.md)).
+`.github/workflows/ci.yml` runs all of the above on every pull request, and on nothing else (a push to `main` runs no CI). A first job, `changes`, runs `scripts/changed-areas.sh`; a PR that touches only Markdown files in the repository root, `docs/` or `deployment/` skips the rest (Markdown elsewhere, such as `backend/agent/system_prompt.md`, is runtime input and counts as code). Otherwise it runs five checks: `backend` (pytest, ruff, pyright), `mcp-tools-test`, `deploy-scripts-test`, `frontend` (vitest, eslint, build) and `e2e`. CI is draft-first: a push to a draft PR runs only the light jobs; `e2e` and the frontend production build run once the PR is marked ready (`gh pr ready`), together with the AI review. A skipped job counts as passing for the required `e2e` check, but GitHub does not merge a draft, and a ready PR runs `e2e`. `./scripts/ci-local.sh` runs every check CI runs, in the same order; get it green before `gh pr ready`. Images are built by the **Deploy apps** workflow, not by CI (see [deployment/github.md](../deployment/github.md)).
 
 ## Making a change
 
 1. Branch from `origin/main`, in your own git worktree if other sessions share the checkout.
 2. Make the change and run the checks for what you touched. Run `npm run e2e` when behavior crosses the frontend, backend and tools.
-3. Open a pull request and wait for the checks and the AI review (`.github/workflows/claude-review.yml`) before asking for review.
+3. Run `./scripts/ci-local.sh` until it is green, open the pull request as a draft, then `gh pr ready` it. Wait for the checks and the AI review (`.github/workflows/claude-review.yml`, which skips drafts) before asking for review.
 4. After merge, deploy by hand when needed. See [deployment/README.md](../deployment/README.md).

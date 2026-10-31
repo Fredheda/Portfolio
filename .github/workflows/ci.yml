@@ -3,8 +3,14 @@ name: CI
 # Pull requests only: a push to main runs no CI, because the PR that landed it
 # already did. Images are not built here either; the manual Deploy apps
 # workflow builds a commit the first time it is deployed.
+#
+# Draft-first: a push to a draft PR runs only the light jobs. The heavy ones
+# (e2e, the frontend production build) and the AI review run once the PR is
+# marked ready (`gh pr ready`). Run ./scripts/ci-local.sh, which mirrors this
+# file, and get it green before marking a PR ready.
 on:
   pull_request:
+    types: [opened, reopened, synchronize, ready_for_review]
 
 # A new push to the same PR cancels the run that is still going.
 concurrency:
@@ -119,8 +125,10 @@ jobs:
       # `pretest` syncs content/site-content.json into frontend/content/.
       - run: npm test
       - run: npm run lint
-      # `prebuild` syncs content, then vite builds.
-      - run: npm run build
+      # `prebuild` syncs content, then vite builds. Heavy: ready PRs only.
+      - name: Production build
+        if: ${{ github.event.pull_request.draft == false }}
+        run: npm run build
 
   # Playwright against the production build, the real backend (scripted
   # model, fake moderation and logging) and the real mcp-tools handlers.
@@ -128,7 +136,7 @@ jobs:
   # requires this job by name, so keep the id.
   e2e:
     needs: changes
-    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' && github.event.pull_request.draft == false }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
