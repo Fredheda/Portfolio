@@ -119,7 +119,7 @@ Security scans live in `.github/workflows/security.yml`; jobs, what blocks and l
 
 ## Making a change
 
-1. Branch from `origin/main`, in your own git worktree if other sessions share the checkout.
-2. Make the change and run the checks for what you touched. Run `npm run e2e` when behavior crosses the frontend, backend and tools.
-3. Run `./scripts/ci-local.sh` until it is green, open the pull request as a draft, then `gh pr ready` it. Wait for the checks and the AI review (`.github/workflows/claude-review.yml`, which skips drafts) before asking for review.
-4. After merge, deploy by hand when needed. See [deployment/README.md](../deployment/README.md).
+1. Branch from `origin/main`.
+2. Run the checks for what you touched; `npm run e2e` when behavior crosses the frontend, backend and tools.
+3. `./scripts/ci-local.sh` green, open the PR as a draft, then `gh pr ready`. The AI review skips drafts.
+4. After merge, deploy by hand when needed: [deployment/README.md](../deployment/README.md).
