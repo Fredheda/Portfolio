@@ -28,6 +28,13 @@ test('the home page has no serious accessibility violations', async ({ page }) =
   expect(await seriousViolations(page)).toEqual([]);
 });
 
+test('a project page with "For engineers" on has no serious accessibility violations', async ({ page }) => {
+  await page.goto('/projects/paper-podcasts');
+  await page.getByRole('button', { name: 'For engineers' }).click();
+  await expect(page.getByRole('heading', { level: 2, name: "How it's built" })).toBeVisible();
+  expect(await seriousViolations(page)).toEqual([]);
+});
+
 // Opened directly, so these also cover server.js serving the SPA for a deep link.
 for (const path of ['/privacy-policy', '/about', '/projects/paper-podcasts']) {
   test(`${path} has no serious accessibility violations`, async ({ page }) => {
