@@ -109,6 +109,8 @@ Test seams (production sets none): `build_graph(model, moderation_client, db)` a
 
 `pip-audit` audits the locked sets of `backend/` and `data/` (no install). Fix a finding, or add a dated ignore with the reason next to the command.
 
+`frontend/package.json` `overrides.zod` forces zod 4 over CopilotKit's zod 3: no zod 3 release fixes GHSA-mrhx-c7xc-m3w5. The e2e chat flow is the gate; keep the override's range equal to the direct `zod` dependency (npm rejects a mismatch). `vite` is a dev dependency (build only, not in the runtime image).
+
 ## PR review
 
 `.github/workflows/claude-review.yml` posts an AI security-first review on every push to a ready (non-draft) PR. It also runs a documentation check: it flags docs that contradict the change or were not updated, or says "Docs: current". The owner can request one with a `@claude` comment. Token expiry and renewal: `deployment/expirations.md`.
