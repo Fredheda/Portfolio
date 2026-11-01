@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Lenis from 'lenis';
 import Header from './components/Headers';
 import TerminalHero from './components/TerminalHero';
-import Projects from './components/Projects';
+import Projects from './components/home/Projects';
 import Footer from './components/Footer';
 import AgentTools from './components/AgentTools';
 
