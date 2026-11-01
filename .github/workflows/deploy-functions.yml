@@ -3,6 +3,7 @@ name: Deploy functions
 # Manual only. Publishes the MCP tools Function App (func-portfolio-mcp-tools)
 # from a commit that is on main; nothing here runs on a merge or a schedule.
 # Run it from the Actions tab or: gh workflow run deploy-functions.yml --ref main
+# The run waits in the production environment until the repo owner approves it.
 # Rollback is the same button with an older commit SHA. The two container apps
 # are not touched; they still deploy with scripts/ship.sh.
 on:
