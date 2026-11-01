@@ -1,151 +1,85 @@
-import { useState, useEffect } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { content } from '../lib/content';
+import ContactLinks from './ContactLinks';
 
-const navLinks = [];
+const { profile } = content;
+
+// Section links point at the home page ("/#experience"), so they work from
+// every route; useHashScroll on the home page does the scrolling.
+export const navLinks = [
+  { label: 'About', to: '/about' },
+  { label: 'Experience', to: '/#experience' },
+  { label: 'Projects', to: '/#projects' },
+  { label: 'Posts', to: '/#posts' },
+  { label: 'Ask fredbot', to: '/#fredbot' },
+];
 
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
 
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 50);
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
-
-  // Lock body scroll when mobile menu is open
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
+    return () => {
+      document.body.style.overflow = '';
+    };
   }, [mobileOpen]);
 
-  return (
-    <>
-      <header
-        className={`sticky top-0 z-40 flex flex-row justify-between items-center px-6 backdrop-blur-md text-white transition-all duration-300 border-b ${
-          scrolled
-            ? 'py-3 bg-surface-900/95 border-zinc-800'
-            : 'py-4 bg-surface-900/80 border-accent-cyan/20'
-        }`}
-      >
-        {/* Logo */}
-        <RouterLink to="/" className="flex items-center gap-2 text-zinc-300 hover:text-accent-cyan transition-colors duration-300 no-underline">
-          <span className="font-mono text-base font-semibold tracking-wide">FH</span>
-        </RouterLink>
+  const close = () => setMobileOpen(false);
 
-        {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-8">
+  return (
+    <header className="sticky top-0 z-40 border-b border-line bg-page/90 backdrop-blur">
+      <div className="mx-auto flex max-w-page items-center justify-between gap-4 px-4 py-3 md:px-6">
+        <Link to="/" onClick={close} className="font-serif text-lg font-semibold text-ink no-underline">
+          {profile.name}
+        </Link>
+
+        <nav aria-label="Main" className="hidden items-center gap-6 md:flex">
           {navLinks.map((link) => (
-            <a
+            <Link
               key={link.label}
-              href={link.href}
-              className="link-underline text-zinc-400 hover:text-white text-sm font-medium transition-colors duration-300"
+              to={link.to}
+              className="text-sm font-medium text-muted no-underline transition-colors hover:text-ink"
             >
               {link.label}
-            </a>
+            </Link>
           ))}
         </nav>
 
-        {/* Social icons + hamburger */}
-        <div className="flex items-center gap-4">
-          <a
-            href="mailto:frederik.heda@gmx.net"
-            aria-label="Email"
-            className="hidden sm:flex text-zinc-300 hover:text-accent-gold no-underline text-xl bg-zinc-800/50 p-2.5 rounded-lg border border-zinc-700/50 hover:border-accent-gold/50 transition-all duration-300 hover:scale-110"
-          >
-            <i className="fas fa-envelope" />
-          </a>
-          <a
-            href="https://www.linkedin.com/in/frederik-heda/"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="LinkedIn"
-            className="hidden sm:flex text-zinc-300 hover:text-[#0A66C2] no-underline text-xl bg-zinc-800/50 p-2.5 rounded-lg border border-zinc-700/50 hover:border-[#0A66C2]/50 transition-all duration-300 hover:scale-110"
-          >
-            <i className="fab fa-linkedin" />
-          </a>
-          <a
-            href="https://github.com/Fredheda?tab=repositories"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="GitHub"
-            className="hidden sm:flex text-zinc-300 hover:text-white no-underline text-xl bg-zinc-800/50 p-2.5 rounded-lg border border-zinc-700/50 hover:border-zinc-400/50 transition-all duration-300 hover:scale-110"
-          >
-            <i className="fab fa-github" />
-          </a>
-
-          {/* Hamburger (mobile only) */}
+        <div className="flex items-center gap-2">
+          <ContactLinks className="hidden sm:flex" />
           <button
-            onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden flex flex-col justify-center items-center w-10 h-10 gap-1.5 rounded-lg bg-zinc-800/50 border border-zinc-700/50"
-            aria-label="Toggle menu"
+            type="button"
+            onClick={() => setMobileOpen((open) => !open)}
+            aria-expanded={mobileOpen}
+            aria-controls="mobile-nav"
+            className="rounded-lg border border-line bg-white px-3 py-2 text-sm font-medium text-ink md:hidden"
           >
-            <motion.span
-              className="block w-5 h-[2px] bg-zinc-300 rounded-full"
-              animate={mobileOpen ? { rotate: 45, y: 5 } : { rotate: 0, y: 0 }}
-              transition={{ duration: 0.25 }}
-            />
-            <motion.span
-              className="block w-5 h-[2px] bg-zinc-300 rounded-full"
-              animate={mobileOpen ? { opacity: 0 } : { opacity: 1 }}
-              transition={{ duration: 0.15 }}
-            />
-            <motion.span
-              className="block w-5 h-[2px] bg-zinc-300 rounded-full"
-              animate={mobileOpen ? { rotate: -45, y: -5 } : { rotate: 0, y: 0 }}
-              transition={{ duration: 0.25 }}
-            />
+            Menu
           </button>
         </div>
-      </header>
+      </div>
 
-      {/* Mobile menu overlay */}
-      <AnimatePresence>
-        {mobileOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-30 bg-surface-900/98 backdrop-blur-lg flex flex-col items-center justify-center gap-8"
-          >
-            {navLinks.map((link, i) => (
-              <motion.a
-                key={link.label}
-                href={link.href}
-                onClick={() => setMobileOpen(false)}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                transition={{ delay: i * 0.1, duration: 0.3 }}
-                className="text-2xl font-heading font-bold text-white hover:text-accent-cyan transition-colors"
-              >
-                {link.label}
-              </motion.a>
-            ))}
-
-            {/* Mobile social icons */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.4 }}
-              className="flex gap-6 mt-4"
+      {mobileOpen && (
+        <nav
+          id="mobile-nav"
+          aria-label="Mobile"
+          className="fixed inset-x-0 bottom-0 top-[57px] z-30 flex flex-col gap-1 overflow-y-auto border-t border-line bg-page px-4 py-6 md:hidden"
+        >
+          {navLinks.map((link) => (
+            <Link
+              key={link.label}
+              to={link.to}
+              onClick={close}
+              className="rounded-lg px-2 py-3 font-serif text-2xl font-semibold text-ink no-underline"
             >
-              <a href="mailto:frederik.heda@gmx.net" aria-label="Email" className="text-zinc-400 hover:text-accent-gold text-2xl transition-colors">
-                <i className="fas fa-envelope" />
-              </a>
-              <a href="https://www.linkedin.com/in/frederik-heda/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="text-zinc-400 hover:text-[#0A66C2] text-2xl transition-colors">
-                <i className="fab fa-linkedin" />
-              </a>
-              <a href="https://github.com/Fredheda?tab=repositories" target="_blank" rel="noopener noreferrer" aria-label="GitHub" className="text-zinc-400 hover:text-white text-2xl transition-colors">
-                <i className="fab fa-github" />
-              </a>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
+              {link.label}
+            </Link>
+          ))}
+          <ContactLinks className="mt-6 flex px-2" />
+        </nav>
+      )}
+    </header>
   );
 };
 

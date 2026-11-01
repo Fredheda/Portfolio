@@ -28,16 +28,13 @@ function App() {
 
   return (
     <Router>
-      <div className="relative flex flex-col min-h-screen bg-surface-900">
-        {/* Noise texture overlay */}
-        <div className="noise-overlay fixed inset-0 z-50 pointer-events-none" />
-
+      <div className="relative flex min-h-screen flex-col">
         <Header />
-        <main className="flex-1 px-4 py-8">
+        <main className="flex-1">
           <Routes>
             <Route path="/" element={<MainContent />} />
             <Route path="/privacy-policy" element={
-              <Suspense fallback={<div className="flex items-center justify-center min-h-[60vh] text-zinc-400">Loading...</div>}>
+              <Suspense fallback={<div className="flex items-center justify-center min-h-[60vh] text-muted">Loading...</div>}>
                 <PrivacyPolicy />
               </Suspense>
             } />

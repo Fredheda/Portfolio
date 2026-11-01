@@ -2,52 +2,33 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ---- Selection ---- */
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-page text-ink font-sans antialiased;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply text-ink;
+  }
+  :focus-visible {
+    outline: 2px solid #1d4ed8;
+    outline-offset: 2px;
+  }
+}
+
 ::selection {
-  background: rgba(34, 211, 238, 0.3);
-  color: #fff;
+  background: rgba(29, 78, 216, 0.18);
 }
 
-/* ---- Scrollbar ---- */
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  background: #18181b;
-}
-::-webkit-scrollbar-thumb {
-  background: #3f3f46;
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #22d3ee;
-}
-
-/* ---- Noise texture overlay ---- */
-.noise-overlay {
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
-  background-repeat: repeat;
-  background-size: 256px 256px;
-}
-
-/* ---- Link underline animation ---- */
-.link-underline {
-  position: relative;
-}
-.link-underline::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background: linear-gradient(90deg, #22d3ee, #a78bfa);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.3s ease;
-}
-.link-underline:hover::after {
-  transform: scaleX(1);
+/* Faint blue and lilac washes behind the hero (scheme 3). */
+.hero-wash {
+  background:
+    radial-gradient(900px 420px at 15% -10%, #dbe7ff 0%, rgba(219, 231, 255, 0) 60%),
+    radial-gradient(700px 320px at 100% 5%, #e9e4ff 0%, rgba(233, 228, 255, 0) 60%);
 }
 
 /* ---- Reduced motion ---- */
@@ -56,18 +37,15 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
-/* ---- Terminal (mono-glow) ---- */
+/* ---- fredbot panel ---- */
 @keyframes terminal-blink {
   0%, 45% { opacity: 1; }
   50%, 95% { opacity: 0; }
   100% { opacity: 1; }
-}
-@keyframes terminal-scan {
-  0% { background-position: 0 0; }
-  100% { background-position: 0 40px; }
 }
 @keyframes terminal-bar-fill {
   from { width: 0%; }
@@ -76,7 +54,6 @@
 
 .terminal-bar-fill {
   animation: terminal-bar-fill 1.2s ease-out forwards;
-  box-shadow: 0 0 6px rgba(34, 211, 238, 0.5);
 }
 
 .terminal-cursor {
@@ -84,36 +61,6 @@
   width: 7px;
   height: 14px;
   vertical-align: -2px;
-  background: #f2f2f2;
-  box-shadow: 0 0 6px rgba(242, 242, 242, 0.6);
+  background: #e6edf8;
   animation: terminal-blink 1s steps(1) infinite;
-}
-
-.terminal-scanlines {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: repeating-linear-gradient(
-    0deg,
-    rgba(255, 255, 255, 0.035) 0px,
-    rgba(255, 255, 255, 0.035) 1px,
-    transparent 1px,
-    transparent 3px
-  );
-  animation: terminal-scan 0.6s linear infinite;
-}
-
-.terminal-vignette {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  box-shadow: inset 0 0 80px 15px rgba(0, 0, 0, 0.65);
-}
-
-.terminal-glow {
-  text-shadow: 0 0 5px rgba(242, 242, 242, 0.4);
-}
-
-.terminal-glow-user {
-  text-shadow: 0 0 5px rgba(255, 154, 60, 0.45);
 }
