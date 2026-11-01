@@ -5,6 +5,7 @@ name: Deploy apps
 # apps (ca-portfolio-backend and ca-portfolio-web) to that commit. CI never
 # builds: a commit is built the first time it is deployed.
 # Run it from the Actions tab or: gh workflow run deploy-apps.yml --ref main
+# The run waits in the production environment until the repo owner approves it.
 # Rollback is the same button with an older commit SHA; its images already
 # exist, so nothing is rebuilt. The MCP tools Function App has its own button
 # (Deploy functions).

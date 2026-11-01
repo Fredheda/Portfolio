@@ -17,6 +17,7 @@ Azure without touching it:
   whether frontend/content/site-content.json existed at that moment.
 """
 
+import json
 import os
 import subprocess
 from dataclasses import dataclass
@@ -111,7 +112,8 @@ echo '{"value":"fake-token"}'
 
 # Stands in for the GitHub CLI. Listing the environment's branch policies
 # prints FAKE_POLICY_NAMES (`\n` separates names), as the script's --jq filter
-# would.
+# would. A user lookup prints the id 77542239. A request body given on stdin
+# (`--input -`) is kept in `$FAKE_LOG.gh-body`.
 FAKE_GH = r"""#!/usr/bin/env bash
 echo "$*" >> "$FAKE_LOG.gh"
 case "$*" in
@@ -119,6 +121,8 @@ case "$*" in
     case "$*" in *"-X POST"*) exit 0 ;; esac
     printf '%b' "${FAKE_POLICY_NAMES:-}"
     exit 0 ;;
+  *" users/"*) echo 77542239; exit 0 ;;
+  *"--input -"*) cat >> "$FAKE_LOG.gh-body"; exit 0 ;;
 esac
 exit 0
 """
@@ -721,6 +725,11 @@ def test_setup_deletes_nothing_when_the_old_credential_is_absent(
     )
 
 
+def environment_body(fake_az: FakeAz) -> dict[str, object]:
+    """The JSON the script sends to `PUT .../environments/production`."""
+    return json.loads(Path(f"{fake_az.log}.gh-body").read_text())
+
+
 def test_setup_restricts_the_environment_to_main(fake_az: FakeAz) -> None:
     result = fake_az.run("setup-github-apps-deploy.sh")
     assert result.returncode == 0, result.stderr
@@ -730,11 +739,26 @@ def test_setup_restricts_the_environment_to_main(fake_az: FakeAz) -> None:
         if f"api -X PUT repos/{GH_REPO}/environments/production" in c
     ]
     assert len(put) == 1
-    assert "deployment_branch_policy[custom_branch_policies]=true" in put[0]
+    assert environment_body(fake_az)["deployment_branch_policy"] == {
+        "protected_branches": False,
+        "custom_branch_policies": True,
+    }
     assert any(
         "-X POST" in c and "deployment-branch-policies" in c and "name=main" in c
         for c in fake_az.gh_calls
     )
+
+
+def test_setup_makes_the_repo_owner_the_required_reviewer(fake_az: FakeAz) -> None:
+    # Every deploy then waits for the owner's approval in GitHub, and no admin
+    # can bypass the gate.
+    result = fake_az.run("setup-github-apps-deploy.sh")
+    assert result.returncode == 0, result.stderr
+    assert "api users/Fredheda --jq .id" in fake_az.gh_calls
+    body = environment_body(fake_az)
+    assert body["reviewers"] == [{"type": "User", "id": 77542239}]
+    assert body["prevent_self_review"] is False
+    assert body["can_admins_bypass"] is False
 
 
 def test_setup_does_not_add_the_main_policy_twice(fake_az: FakeAz) -> None:

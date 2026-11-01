@@ -22,7 +22,9 @@
 #      in the `production` environment (and removes the build identity's old
 #      credential that trusted any workflow on refs/heads/main).
 #   4. Ensures the `production` GitHub environment only admits jobs running on
-#      the main branch (a branch author cannot edit their way around it), and
+#      the main branch (a branch author cannot edit their way around it) and
+#      has the repo owner as required reviewer (every deploy waits for his
+#      approval in GitHub), and
 #      stores the Azure IDs the workflows read as repo SECRETS: AZURE_TENANT_ID,
 #      AZURE_SUBSCRIPTION_ID, AZURE_BUILD_CLIENT_ID, AZURE_APPS_DEPLOY_CLIENT_ID.
 #      They are identifiers, not credentials, but the run logs of a public
@@ -121,11 +123,20 @@ fi
 # The deploy identity trusts any job that runs in the `production` environment,
 # whatever branch it runs on, and the `main`-only check inside deploy-apps.yml
 # is in a file any branch author can edit. So the environment itself only
-# admits jobs from main: GitHub enforces this outside the workflow file.
-gh api -X PUT "repos/$GH_REPO/environments/production" \
-  -F 'deployment_branch_policy[protected_branches]=false' \
-  -F 'deployment_branch_policy[custom_branch_policies]=true' \
-  --jq '"environment " + .name + ": ensured"'
+# admits jobs from main: GitHub enforces this outside the workflow file. The
+# repo owner is its required reviewer, so every deploy waits for his approval
+# in GitHub (the run shows `waiting`) and no admin can bypass that. Required
+# reviewers need a public repo on the Free plan.
+OWNER_ID=$(gh api "users/${GH_REPO%%/*}" --jq .id)
+gh api -X PUT "repos/$GH_REPO/environments/production" --input - \
+  --jq '"environment " + .name + ": ensured"' <<EOF
+{
+  "deployment_branch_policy": {"protected_branches": false, "custom_branch_policies": true},
+  "reviewers": [{"type": "User", "id": $OWNER_ID}],
+  "prevent_self_review": false,
+  "can_admins_bypass": false
+}
+EOF
 policies=$(gh api "repos/$GH_REPO/environments/production/deployment-branch-policies" \
   --jq '.branch_policies[].name')
 if grep -qx main <<<"$policies"; then
