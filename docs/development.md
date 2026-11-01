@@ -59,6 +59,7 @@ poetry run python main.py              # production server
 `content/site-content.json` is the one source for the page text (profile, About, experience, posts, projects, fredbot's intro and suggestions), the link previews and fredbot's `get_profile`, `list_projects` and `get_project_details` tools. `frontend/content/` and `mcp-tools/content/` are git-ignored copies made by `npm run sync-content` and the deploy scripts. The schema is `frontend/src/lib/content.js`; `npm test` fails on a malformed edit.
 
 - Add a LinkedIn post: add an entry to `posts` (date `YYYY-MM-DD`, the first 300 characters, the post URL, reaction and comment counts at the time). Keep three to six; the page sorts newest first.
+- Each project's `caseStudy` (`problem`, `built`, `decisions`, `differently`, `architecture`) is Markdown; `architecture` and the tech line show only behind the page's "For engineers" toggle.
 - Text still waiting for the owner starts with `[draft]`: `grep -n '\[draft\]' content/site-content.json` lists it.
 - Deploying a content change: see [deployment/README.md](../deployment/README.md).
 
