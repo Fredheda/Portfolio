@@ -111,9 +111,10 @@ const routeMeta = JSON.parse(readFileSync(path.join(__dirname, 'dist', 'route-me
 app.get('*', (req, res) => {
   const pathname = req.path.length > 1 ? req.path.replace(/\/+$/, '') : req.path;
   const meta = routeMeta[pathname] ?? routeMeta['/'];
+  // Replacer functions, not strings: a "$&" in content text stays literal.
   const html = indexHtml
-    .replace(/<title>[^<]*<\/title>/, `<title>${meta.title}</title>`)
-    .replace('<!--route-meta-->', meta.head);
+    .replace(/<title>[^<]*<\/title>/, () => `<title>${meta.title}</title>`)
+    .replace('<!--route-meta-->', () => meta.head);
   res.status(routeMeta[pathname] ? 200 : 404).type('html').send(html);
 });
 
