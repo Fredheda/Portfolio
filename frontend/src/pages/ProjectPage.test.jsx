@@ -5,6 +5,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { content } from '../lib/content';
 import ProjectPage from './ProjectPage';
 
+// The drawing itself is covered by Diagram.test.jsx and the browser test.
+vi.mock('../components/Diagram', () => ({ default: ({ source }) => <pre data-testid="diagram">{source}</pre> }));
+
 const byId = (id) => content.projects.find((p) => p.id === id);
 const podcasts = byId('paper-podcasts');
 const canvas = byId('copilotkit-canvas');
@@ -36,18 +39,12 @@ describe('ProjectPage', () => {
     expect(screen.getByRole('link', { name: 'All projects' })).toHaveAttribute('href', '/#projects');
   });
 
-  it('shows the four sections in order with the case-study text', () => {
+  it('shows the problem and what was built, in that order', () => {
     renderAt(`/projects/${podcasts.id}`);
     const headings = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
-    expect(headings).toEqual(['The problem', 'What I built', 'Decisions and trade-offs', "What I'd do differently"]);
-    const { caseStudy } = podcasts;
-    expect(screen.getByText(caseStudy.problem)).toBeInTheDocument();
-    expect(screen.getByText(caseStudy.built)).toBeInTheDocument();
-    for (const decision of caseStudy.decisions) {
-      expect(screen.getByText(decision.title)).toBeInTheDocument();
-      expect(screen.getByText(decision.text)).toBeInTheDocument();
-    }
-    expect(screen.getByText(caseStudy.differently)).toBeInTheDocument();
+    expect(headings).toEqual(['The problem', 'What I built']);
+    expect(screen.getByText(podcasts.caseStudy.problem)).toBeInTheDocument();
+    expect(screen.getByText(podcasts.caseStudy.built)).toBeInTheDocument();
     expect(screen.queryByText(/case study is on its way/)).not.toBeInTheDocument();
   });
 
@@ -61,7 +58,7 @@ describe('ProjectPage', () => {
     expect(toggle()).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('heading', { level: 2, name: "How it's built" })).toBeInTheDocument();
     expect(screen.getByText(podcasts.techLine)).toBeInTheDocument();
-    expect(screen.getByText(podcasts.caseStudy.architecture)).toBeInTheDocument();
+    expect(screen.getByTestId('diagram').textContent).toBe(podcasts.caseStudy.architecture);
   });
 
   it('keeps the toggle on and scrolls to the top when moving to another project', async () => {

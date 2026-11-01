@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Link, useParams } from 'react-router-dom';
+import Diagram from '../components/Diagram';
 import { content } from '../lib/content';
 import { useEngineerMode } from '../lib/useEngineerMode';
 import NotFound from './NotFound';
@@ -65,23 +66,10 @@ export default function ProjectPage() {
           <Section title="What I built">
             <Md>{caseStudy.built}</Md>
           </Section>
-          <Section title="Decisions and trade-offs">
-            <ul className="m-0 list-none space-y-4 p-0">
-              {caseStudy.decisions.map((decision) => (
-                <li key={decision.title}>
-                  <Md className={`${prose} font-semibold`}>{decision.title}</Md>
-                  <Md>{decision.text}</Md>
-                </li>
-              ))}
-            </ul>
-          </Section>
-          <Section title="What I'd do differently">
-            <Md>{caseStudy.differently}</Md>
-          </Section>
           {forEngineers && (
             <Section title="How it's built">
               <Md className={`${prose} text-muted`}>{project.techLine}</Md>
-              <Md>{caseStudy.architecture}</Md>
+              {caseStudy.architecture && <Diagram source={caseStudy.architecture} />}
             </Section>
           )}
           {project.link && (

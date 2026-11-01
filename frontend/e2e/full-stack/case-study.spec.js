@@ -1,6 +1,22 @@
+import { readFileSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
+import { diagramSvg } from '../selectors.js';
+
+const { projects } = JSON.parse(
+  readFileSync(new URL('../../../content/site-content.json', import.meta.url), 'utf8'),
+);
 
 const PHONE = { width: 360, height: 740 };
+
+// Mermaid runs in the real browser here; jsdom cannot draw it.
+for (const { id } of projects.filter((p) => p.caseStudy.architecture)) {
+  test(`${id}: "For engineers" draws the architecture diagram`, async ({ page }) => {
+    await page.goto(`/projects/${id}`);
+    await expect(diagramSvg(page)).toHaveCount(0);
+    await page.getByRole('button', { name: 'For engineers' }).click();
+    await expect(diagramSvg(page)).toBeVisible({ timeout: 20_000 });
+  });
+}
 
 // The unit tests cover the toggle's content; this covers what jsdom cannot:
 // the choice surviving a real reload, and the opened detail fitting a phone.

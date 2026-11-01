@@ -73,129 +73,70 @@
     {
       "id": "paper-podcasts",
       "title": "Paper Podcasts",
-      "plainEnglish": "[draft] It reads new research papers and turns them into a short podcast.",
-      "techLine": "[draft] Python pipeline: arXiv, LLM summaries, text to speech, FastAPI and React.",
+      "plainEnglish": "It reads new research papers and turns them into a short podcast I can listen to on a walk.",
+      "techLine": "Python pipeline: arXiv, LLM summaries, text to speech, FastAPI and React.",
       "link": "https://github.com/Fredheda/paper-podcasts",
       "categories": ["Agentic AI", "Python", "LLM"],
       "featured": true,
       "caseStudy": {
-        "problem": "[draft] Keeping up with AI research is a reading problem: most papers never get read. Audio turns dead time into reading time.",
-        "built": "[draft] A four-stage pipeline (download, extract, summarise, generate audio) that can resume from any stage; a library UI with listen state; two storage backends (local, Azure) behind one interface.",
-        "decisions": [
-          {
-            "title": "[draft] A state machine, not a script",
-            "text": "[draft] A failed stage is retried instead of restarting the whole run."
-          },
-          {
-            "title": "[draft] Write locally, then persist",
-            "text": "[draft] The container disk is ephemeral, so artifacts are saved to storage after each stage."
-          },
-          {
-            "title": "[draft] Pause polling when idle",
-            "text": "[draft] The frontend stops polling so the apps can scale to zero."
-          }
-        ],
-        "differently": "[draft] [owner] What he would do differently.",
-        "architecture": "[draft] Four services run in order (arXiv download, PDF to text with markitdown, LLM summary, text to speech) behind a status state machine that saves state after each stage and resumes from it. LLM and TTS sit behind provider interfaces. FastAPI backend and React frontend on Azure Container Apps."
+        "problem": "I can't keep up with new AI research, and most papers never get read. Turning them into audio makes dead time useful.",
+        "built": "A pipeline with four steps: download the paper, extract the text, write a summary and turn it into audio. I wanted to try building something as a finite state machine, and because it felt like a good choice for making each step resilient. A step that fails is retried without starting over. A library page shows the episodes and what I have listened to.",
+        "architecture": "flowchart TB\n  subgraph BR[\"Browser\"]\n    UI[\"Library page: episodes and listen state\"]\n  end\n  subgraph APP[\"Azure Container Apps\"]\n    API[\"FastAPI backend\"]\n    subgraph PIPE[\"Pipeline, a state machine\"]\n      D[\"Download from arXiv\"] --> X[\"Extract text\"] --> S[\"Summarise with an LLM\"] --> A[\"Text to speech\"]\n    end\n  end\n  subgraph DATA[\"Storage\"]\n    ST[(\"Papers and audio\")]\n  end\n  UI --> API --> D\n  A --> ST"
       }
     },
     {
       "id": "tfl-mcp-server",
       "title": "TfL agent",
-      "plainEnglish": "[draft] Ask how the Tube is doing, and a second deployed agent answers.",
-      "techLine": "[draft] MCP tools on Azure Functions and an A2A agent over live TfL data.",
+      "plainEnglish": "Ask how the Tube is doing, and a second deployed agent answers.",
+      "techLine": "MCP tools on Azure Functions and an A2A agent over live TfL data.",
       "link": "https://github.com/Fredheda/tfl-mcp",
       "categories": ["MCP", "A2A", "Python"],
       "featured": true,
       "caseStudy": {
-        "problem": "[draft] A real, public API with real disruptions is a good test bed for tool design: batching, failure handling, and knowing which line ids are valid.",
-        "built": "[draft] Five tools (line status, disrupted lines, station search, journey planning, arrivals), the Function App that serves them, and an A2A agent other agents can call.",
-        "decisions": [
-          {
-            "title": "[draft] Batch by mode, not per line",
-            "text": "[draft] Fewer calls and one failure mode."
-          },
-          {
-            "title": "[draft] The agent reads tool schemas at startup",
-            "text": "[draft] No duplicated schemas to keep in step."
-          },
-          {
-            "title": "[draft] A2A instead of a shared library",
-            "text": "[draft] A second deployed agent can call this one without sharing code."
-          }
-        ],
-        "differently": "[draft] [owner] What he would do differently.",
-        "architecture": "[draft] Five MCP tools in an Azure Function App, also runnable over stdio. A LangGraph agent served over A2A."
+        "problem": "I wanted an agent that can answer any question about how to get from A to B in London.",
+        "built": "An MCP server over the TfL API, used by a LangGraph agent. The server offers five tools: line status, disrupted lines, station search, journey planning and arrivals.",
+        "architecture": "flowchart TB\n  subgraph CALLERS[\"Callers\"]\n    C[\"Another agent or client\"]\n  end\n  subgraph AGENT[\"LangGraph agent, served over A2A\"]\n    AG[\"Tube agent\"]\n  end\n  subgraph FN[\"Azure Function App: MCP server\"]\n    T[\"Five tools: line status, disrupted lines, station search, journey planning, arrivals\"]\n  end\n  subgraph EXT[\"External\"]\n    TFL[\"TfL API\"]\n  end\n  C --> AG --> T --> TFL"
       }
     },
     {
       "id": "copilotkit-canvas",
       "title": "CopilotKit agent canvas",
-      "plainEnglish": "[draft] A chat where the assistant builds charts and documents on a canvas while you talk, and can hand questions to other agents.",
-      "techLine": "[draft] Next.js 16, CopilotKit v2 and AG-UI, a LangGraph agent with frontend tools, A2A delegation, Playwright suites, Azure Container Apps.",
+      "plainEnglish": "A playground where an assistant builds charts and documents on a canvas while we talk.",
+      "techLine": "Next.js 16, CopilotKit v2 and AG-UI, a LangGraph agent with frontend tools, A2A delegation, Playwright suites, Azure Container Apps.",
       "link": null,
       "categories": ["Agentic AI", "CopilotKit", "A2A"],
       "featured": true,
       "caseStudy": {
-        "problem": "[draft] The interesting part of agent UX is not the chat bubble but the agent changing the thing you are looking at.",
-        "built": "[draft] Frontend tools for charts and markdown documents with an inventory the agent reads back; delegation to other agents with progress streamed into a trace panel; a two-tier browser test suite.",
-        "decisions": [
-          {
-            "title": "[draft] Tool calls instead of shared graph state",
-            "text": "[draft] A simpler contract and easier tests."
-          },
-          {
-            "title": "[draft] Compile chart specs before rendering",
-            "text": "[draft] The agent gets the error and can retry."
-          },
-          {
-            "title": "[draft] Two test tiers",
-            "text": "[draft] A fake agent for fast tests and a scripted model for real protocol coverage."
-          }
-        ],
-        "differently": "[draft] [owner] What he would do differently.",
-        "architecture": "[draft] Next.js 16 and CopilotKit v2 frontend talking AG-UI to a LangGraph agent on FastAPI. The agent delegates to a second LangGraph agent over A2A as a plain backend tool."
+        "problem": "I wanted a place to test new agent technologies without being tied to specific products.",
+        "built": "A chat with a canvas next to it. The agent draws charts and writes documents there, and it hands questions to other agents over A2A. I use it to try AG-UI, A2UI-style charting and whatever comes next, one piece at a time.",
+        "architecture": "flowchart TB\n  subgraph BR[\"Browser\"]\n    UI[\"Next.js 16 and CopilotKit v2: chat and canvas\"]\n  end\n  subgraph BE[\"Backend on FastAPI\"]\n    AG[\"LangGraph agent\"]\n  end\n  subgraph OTHER[\"Second agent\"]\n    FA[\"LangGraph agent served over A2A\"]\n  end\n  UI -- \"AG-UI\" --> AG\n  AG -- \"frontend tools: charts, documents\" --> UI\n  AG -- \"A2A\" --> FA"
       }
     },
     {
       "id": "restaurant-researcher",
       "title": "Restaurant Researcher",
-      "plainEnglish": "[draft] A personal venue finder with an agent that learns what he likes.",
-      "techLine": "[draft] Next.js, CopilotKit and a LangGraph agent over Google Places.",
+      "plainEnglish": "A personal venue finder with an agent that learns what I like.",
+      "techLine": "Next.js, CopilotKit and a LangGraph agent over Google Places.",
       "link": null,
       "categories": ["Agentic AI", "CopilotKit"],
       "featured": true,
       "caseStudy": {
-        "problem": "[draft] Every recommendation app knows what everyone likes. This one should know what he likes, down to the dish.",
-        "built": "[draft] A card board with fast search and background research per venue, and a taste profile the agent reasons from.",
-        "decisions": [
-          {
-            "title": "[draft] First paint never waits for the model",
-            "text": "[draft] Research arrives later and fills in the cards."
-          },
-          {
-            "title": "[draft] Cache venue data within the provider's terms",
-            "text": "[draft] Keeps running costs near zero."
-          }
-        ],
-        "differently": "[draft] [owner] What he would do differently.",
-        "architecture": "[draft] Next.js 16 (React 19, Tailwind 4) frontend with a FastAPI backend. Chat and places are still stubs and fixtures in the repo, so the owner rewrites this line when the real agent lands."
+        "problem": "Recommendation apps know what everyone likes. I wanted one that knows what I like.",
+        "built": "A card board for finding restaurants in London, with an agent that looks into each place and learns my taste. I am still building it.",
+        "architecture": "flowchart TB\n  subgraph BR[\"Browser\"]\n    UI[\"Next.js 16 frontend: card board and chat\"]\n  end\n  subgraph BE[\"Backend\"]\n    API[\"FastAPI backend\"]\n    AG[\"Research agent, in progress\"]\n  end\n  UI --> API --> AG"
       }
     },
     {
       "id": "shap-open-source",
       "title": "SHAP contribution",
-      "plainEnglish": "[draft] Work on the most used open-source tool for explaining why a model made a prediction.",
-      "techLine": "[draft] Contribution to SHAP, Shapley-value explanations in Python.",
+      "plainEnglish": "I contributed to SHAP, an open-source library for explaining why a machine-learning model made a prediction.",
+      "techLine": "Contribution to SHAP, Shapley-value explanations in Python.",
       "link": "https://github.com/Fredheda/shap",
       "categories": ["Open Source", "ML", "Explainability"],
       "featured": false,
       "caseStudy": {
-        "problem": "[draft] [owner] The problem the change fixed, in two or three sentences.",
-        "built": "[draft] [owner] What he changed.",
-        "decisions": [{ "title": "[draft] [owner] Decision", "text": "[draft] [owner] Trade-off." }],
-        "differently": "[draft] [owner] What he would do differently.",
-        "architecture": "[draft] [owner] Describe the change."
+        "problem": "SHAP is a widely used open-source Python library that explains the predictions of machine-learning models.",
+        "built": "I contributed to the open-source repository."
       }
     }
   ],

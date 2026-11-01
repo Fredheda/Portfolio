@@ -76,9 +76,8 @@ export const contentSchema = z.object({
         caseStudy: z.object({
           problem: text,
           built: text,
-          decisions: z.array(z.object({ title: text, text })),
-          differently: text,
-          architecture: text,
+          // Mermaid source (top-down flowchart), drawn behind "For engineers".
+          architecture: text.optional(),
         }),
       }),
     )
