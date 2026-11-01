@@ -11,6 +11,8 @@ gh workflow run deploy-apps.yml --ref main                  # head of main
 gh workflow run deploy-apps.yml --ref main -f sha=<full sha>  # rollback
 ```
 
+The run stops at `waiting` until the owner approves it: Actions, the run, **Review deployments**, approve. The owner is the only required reviewer of `production`, and admins cannot bypass it. An agent never approves a waiting deployment. `gh run watch` keeps polling while the run waits; run it again after the approval.
+
 The optional `sha` input takes a full 40-character commit SHA; empty means the head of `main`. Before it logs in to Azure it checks that the SHA is a full lowercase SHA and on `main`. Then, as the build identity, it builds `portfolio-backend` and `portfolio-web` for that commit in ACR (`scripts/build-push.sh <sha>`, exported with `git archive`, tagged with the full SHA and `:latest`); an image that already exists for the commit is skipped, so a second run of the same SHA, or a rollback, builds nothing. Before it changes any app it checks that **both** images exist. Then, as the deploy identity, it rolls `ca-portfolio-backend` and `ca-portfolio-web`, locks the two new tags against the registry purge, unlocks the tags the apps ran before, waits until both new revisions are `Provisioned`, and writes the deployed images to the run summary.
 
 ### Rollback
@@ -25,7 +27,7 @@ This needs rights to create identities and assign roles, and admin on the GitHub
 ./scripts/setup-github-apps-deploy.sh
 ```
 
-It creates two managed identities: `id-portfolio-gh-build` (builds and pushes images) and `id-portfolio-gh-deploy` (rolls the two apps). Both are trusted only for the `production` environment; the script removes the build identity's older credential that trusted any workflow on `main`. It makes sure `production` only admits `main`, and stores the Azure IDs the workflows read as repo secrets (identifiers, not credentials, but the logs of this public repo are public and a secret's value is masked there). No credential is stored in GitHub. Re-running it changes nothing.
+It creates two managed identities: `id-portfolio-gh-build` (builds and pushes images) and `id-portfolio-gh-deploy` (rolls the two apps). Both are trusted only for the `production` environment; the script removes the build identity's older credential that trusted any workflow on `main`. It makes sure `production` only admits `main` and has the owner as required reviewer, and stores the Azure IDs the workflows read as repo secrets (identifiers, not credentials, but the logs of this public repo are public and a secret's value is masked there). No credential is stored in GitHub. Re-running it changes nothing.
 
 ### Registry purge
 
@@ -53,6 +55,8 @@ gh workflow run deploy-functions.yml --ref main                  # head of main
 gh workflow run deploy-functions.yml --ref main -f sha=<full sha>  # rollback
 ```
 
+The same approval gate as **Deploy apps** applies: the run waits until the owner approves it under **Review deployments**.
+
 Before it logs in to Azure it checks that the SHA is a full lowercase SHA, is on `main`, and has `mcp-tools/` and `content/site-content.json`. It then copies `content/site-content.json` into `mcp-tools/content/` like `deploy-mcp-tools.sh` does, zips `mcp-tools/`, and pushes the zip with `az functionapp deployment source config-zip --build-remote true`. The run ends by waiting until the Function App lists its functions and prints them in the run summary.
 
 ### Rollback
@@ -67,7 +71,7 @@ This needs rights to create identities and assign roles, and admin on the GitHub
 ./scripts/setup-github-deploy.sh
 ```
 
-It creates the managed identity `id-portfolio-mcp-gh-deploy` with Website Contributor on `func-portfolio-mcp-tools` only, and a federated credential that trusts only the `production` environment of this repo. It restricts that environment to `main` and stores the Azure IDs the workflow reads as repo secrets (masked in the public run logs). No credential is stored in GitHub. Re-running it changes nothing.
+It creates the managed identity `id-portfolio-mcp-gh-deploy` with Website Contributor on `func-portfolio-mcp-tools` only, and a federated credential that trusts only the `production` environment of this repo. It restricts that environment to `main`, makes the owner its required reviewer, and stores the Azure IDs the workflow reads as repo secrets (masked in the public run logs). No credential is stored in GitHub. Re-running it changes nothing.
 
 ### Limits
 

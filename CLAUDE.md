@@ -44,6 +44,8 @@ cd data && poetry run python populate_index.py
 
 Three independent targets; run only the one matching what changed: `./scripts/ship.sh` (frontend/backend), `./scripts/deploy-mcp-tools.sh` (`mcp-tools/`; a `content/site-content.json` change needs both this and `ship.sh`), `./infra/deploy.sh` (Bicep or a `.env` secret). Each has a manual GitHub workflow (**Deploy apps**, **Deploy functions**; `main` only, rollback = an older SHA) and the script is the laptop fallback. A merge runs nothing; **Deploy apps** builds a commit's images the first time it is deployed. `infra/deploy.sh` defaults its image tag to local `HEAD`: pass the deployed SHA. See `deployment/`.
 
+Every deploy waits in GitHub for the owner's approval (`production` requires him as reviewer). Run one only on the owner's explicit yes for that specific deploy, and never approve a waiting deployment. Rule: workspace `CLAUDE.md`, "Deploy only on the owner's explicit yes for that deploy".
+
 ## Architecture contracts
 
 ### Frontend
