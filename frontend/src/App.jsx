@@ -2,7 +2,7 @@ import React, { Suspense, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Lenis from 'lenis';
 import Header from './components/Headers';
-import TerminalHero from './components/TerminalHero';
+import TerminalHero from './components/FredbotPanel';
 import Projects from './components/home/Projects';
 import Footer from './components/Footer';
 import AgentTools from './components/AgentTools';
