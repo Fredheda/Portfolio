@@ -23,6 +23,11 @@ updates:
       python:
         patterns:
           - "*"
+    # Major bumps (azure-functions 2 needs Python 3.13, openai 3, ...) are
+    # done by hand: offline tests cannot prove they work.
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: npm
     directory: /frontend
