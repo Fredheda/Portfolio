@@ -26,12 +26,12 @@ describe('Header', () => {
       About: '/about',
       Experience: '/#experience',
       Projects: '/#projects',
-      Posts: '/#posts',
       'Ask fredbot': '/#fredbot',
     };
     for (const [name, href] of Object.entries(expected)) {
       expect(nav.getByRole('link', { name })).toHaveAttribute('href', href);
     }
+    expect(nav.queryByRole('link', { name: 'Posts' })).toBeNull();
   });
 
   it('links to email, LinkedIn and GitHub from the content file', () => {

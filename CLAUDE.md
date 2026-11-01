@@ -47,7 +47,7 @@ Three independent targets; run only the one matching what changed: `./scripts/sh
 ## Architecture contracts
 
 ### Frontend
-- Routes: `/` (hero, experience, posts, projects, fredbot), `/about`, `/projects/:slug` (case studies; the "For engineers" choice is kept in `sessionStorage` by `useEngineerMode`), `/privacy-policy`, and a not-found page. Header section links are `/#id`; `useHashScroll` scrolls to them on the home page.
+- Routes: `/` (hero, experience, projects, fredbot; the Posts section is hidden, `Posts.jsx` stays), `/about`, `/projects/:slug` (case studies; the "For engineers" choice is kept in `sessionStorage` by `useEngineerMode`), `/privacy-policy`, and a not-found page. Header section links are `/#id`; `useHashScroll` scrolls to them on the home page.
 - All page text comes from `content/site-content.json`, read through `src/lib/content.js` (zod schema; never import the JSON directly). Content flow and `[draft]` markers: `docs/development.md`, "Site content".
 - `FredbotPanel` (the "Ask fredbot" section) owns the chat UI: prompt lines, tool lines measured from AG-UI tool-call events (`useToolTimings`), suggestion chips. It takes focus only after the visitor uses it, with `preventScroll`. `AgentTools` renders nothing; it registers the two frontend tools (`highlightProjects`, `renderProjectCard`) and stays mounted on every route.
 - On mount, `FredbotPanel` fires a fire-and-forget `GET /api/warmup` to start the backend's cold-start chain (container wake + MCP tool loading) before the first real message.

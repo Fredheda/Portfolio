@@ -12,7 +12,6 @@ describe('site content', () => {
   it('has the sections the home page renders', () => {
     const content = contentSchema.parse(raw);
     expect(content.experience.length).toBeGreaterThanOrEqual(1);
-    expect(content.posts.length).toBeGreaterThanOrEqual(3);
     expect(content.posts.length).toBeLessThanOrEqual(6);
     expect(content.fredbot.suggestions).toHaveLength(3);
     const ids = content.projects.map((p) => p.id);
@@ -28,9 +27,18 @@ describe('site content', () => {
     }
   });
 
-  it('ships no [draft] marker in any project text', () => {
-    const { projects } = contentSchema.parse(raw);
-    expect(JSON.stringify(projects)).not.toContain('[draft]');
+  it('ships no [draft] marker in any text', () => {
+    expect(JSON.stringify(contentSchema.parse(raw))).not.toContain('[draft]');
+  });
+
+  it('names the role "AI & Engineering Lead" and lists no earlier role', () => {
+    const { profile, experience } = contentSchema.parse(raw);
+    expect(profile.headline).toBe('AI & Engineering Lead');
+    expect(experience.map((entry) => entry.role)).toEqual(['AI & Engineering Lead']);
+  });
+
+  it('lists no posts while the Posts section is hidden', () => {
+    expect(contentSchema.parse(raw).posts).toEqual([]);
   });
 
   it('lists the five featured projects and no MCP client', () => {
@@ -40,7 +48,9 @@ describe('site content', () => {
 
   it('rejects an impossible post date', () => {
     const bad = copy();
-    bad.posts[0].date = '2026-13-40';
+    bad.posts = [
+      { id: 'p', date: '2026-13-40', text: 'x', url: 'https://example.com', reactions: 0, comments: 0 },
+    ];
     expect(() => contentSchema.parse(bad)).toThrow();
   });
 
