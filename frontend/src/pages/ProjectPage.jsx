@@ -1,12 +1,32 @@
 import { useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { Link, useParams } from 'react-router-dom';
 import { content } from '../lib/content';
+import { useEngineerMode } from '../lib/useEngineerMode';
 import NotFound from './NotFound';
 
-// Phase 1 stub: the case study itself (problem, decisions, "try it") comes in
-// phase 2. The page exists now so project links and previews have a URL.
+const prose = 'break-words text-[1.05rem] leading-[1.7] [&_a]:text-royal [&_a]:underline [&_p]:m-0';
+
+function Section({ title, children }) {
+  return (
+    <section className="mt-10">
+      <h2 className="m-0 font-serif text-2xl font-semibold tracking-[-0.01em]">{title}</h2>
+      <div className="mt-3 space-y-3">{children}</div>
+    </section>
+  );
+}
+
+function Md({ children, className = prose }) {
+  return (
+    <div className={className}>
+      <ReactMarkdown>{children}</ReactMarkdown>
+    </div>
+  );
+}
+
 export default function ProjectPage() {
   const { slug } = useParams();
+  const [forEngineers, toggleEngineers] = useEngineerMode();
   const project = content.projects.find((p) => p.id === slug);
 
   useEffect(() => {
@@ -14,6 +34,8 @@ export default function ProjectPage() {
   }, [slug]);
 
   if (!project) return <NotFound />;
+
+  const { caseStudy } = project;
 
   return (
     <article className="hero-wash">
@@ -25,20 +47,54 @@ export default function ProjectPage() {
           {project.title}
         </h1>
         <p className="mt-4 max-w-[60ch] text-xl leading-relaxed">{project.plainEnglish}</p>
-        <p className="mt-2 max-w-[60ch] text-muted">{project.techLine}</p>
-        <p className="mt-10 max-w-[60ch] rounded-xl border border-line bg-white p-5 text-muted">
-          The full case study is on its way: the problem, the decisions and trade-offs, and a way to try it.
-        </p>
-        {project.link && (
-          <a
-            href={project.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-6 inline-block rounded-lg border border-line bg-white px-4 py-2.5 text-sm font-semibold text-ink no-underline hover:border-royal"
-          >
-            Code on GitHub
-          </a>
-        )}
+        <button
+          type="button"
+          aria-pressed={forEngineers}
+          onClick={toggleEngineers}
+          className={`mt-6 rounded-lg border px-4 py-2 text-sm font-semibold ${
+            forEngineers ? 'border-royal bg-royal text-white' : 'border-line bg-white text-ink hover:border-royal'
+          }`}
+        >
+          For engineers
+        </button>
+
+        <div className="max-w-[65ch]">
+          <Section title="The problem">
+            <Md>{caseStudy.problem}</Md>
+          </Section>
+          <Section title="What I built">
+            <Md>{caseStudy.built}</Md>
+          </Section>
+          <Section title="Decisions and trade-offs">
+            <ul className="m-0 list-none space-y-4 p-0">
+              {caseStudy.decisions.map((decision) => (
+                <li key={decision.title}>
+                  <Md className={`${prose} font-semibold`}>{decision.title}</Md>
+                  <Md>{decision.text}</Md>
+                </li>
+              ))}
+            </ul>
+          </Section>
+          <Section title="What I'd do differently">
+            <Md>{caseStudy.differently}</Md>
+          </Section>
+          {forEngineers && (
+            <Section title="How it's built">
+              <Md className={`${prose} text-muted`}>{project.techLine}</Md>
+              <Md>{caseStudy.architecture}</Md>
+            </Section>
+          )}
+          {project.link && (
+            <a
+              href={project.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-10 inline-block rounded-lg border border-line bg-white px-4 py-2.5 text-sm font-semibold text-ink no-underline hover:border-royal"
+            >
+              Code on GitHub
+            </a>
+          )}
+        </div>
       </div>
     </article>
   );

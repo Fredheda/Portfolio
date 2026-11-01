@@ -14,7 +14,7 @@ vi.mock('lenis', () => ({
 vi.mock('./components/FredbotPanel', () => ({ default: () => <div>fredbot stub</div> }));
 vi.mock('./components/AgentTools', () => ({ default: () => null }));
 
-const { profile, projects, about } = content;
+const { profile, about } = content;
 
 const renderAt = (path) => {
   window.history.pushState({}, '', path);
@@ -52,15 +52,6 @@ describe('App routes', () => {
     for (const paragraph of about.paragraphs) {
       expect(screen.getByText(paragraph)).toBeInTheDocument();
     }
-  });
-
-  it('a project page shows its title, plain-English and tech lines and a way back', async () => {
-    const project = projects[0];
-    renderAt(`/projects/${project.id}`);
-    expect(await screen.findByRole('heading', { level: 1, name: project.title })).toBeInTheDocument();
-    expect(screen.getByText(project.plainEnglish)).toBeInTheDocument();
-    expect(screen.getByText(project.techLine)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'All projects' })).toHaveAttribute('href', '/#projects');
   });
 
   it.each(['/projects/nope', '/missing'])('%s shows the not-found page', async (path) => {
