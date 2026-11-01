@@ -1,5 +1,6 @@
 import os
 import threading
+import time
 from datetime import datetime
 
 import mssql_python
@@ -7,8 +8,14 @@ from dotenv import load_dotenv
 
 _ = load_dotenv()
 
+# Azure SQL error: database not currently available (serverless auto-pause).
+PAUSED_ERROR = "40613"
+
 
 class database_client:
+    # Resume takes several seconds; the write runs on a background thread.
+    retry_delay_seconds = 10
+
     def __init__(self):
         self.server = os.getenv("AZURE_SQL_SERVER")
         self.database = os.getenv("AZURE_SQL_DATABASE")
@@ -35,7 +42,23 @@ class database_client:
         return f"Server={self.server};Database={self.database};{auth}Encrypt=yes;"
 
     def _write_log(self, message: str, message_type: str, duration: int):
+        # The free-tier database auto-pauses; the first connection after an
+        # idle gap fails with 40613 while it resumes. Retry once, then drop
+        # the row quietly like any other logging error.
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        try:
+            self._insert(timestamp, message, message_type, duration)
+        except Exception as e:
+            if PAUSED_ERROR not in str(e):
+                print(f"Error logging chatbot interaction: {e}")
+                return
+            time.sleep(self.retry_delay_seconds)
+            try:
+                self._insert(timestamp, message, message_type, duration)
+            except Exception as retry_error:
+                print(f"Error logging chatbot interaction: {retry_error}")
+
+    def _insert(self, timestamp: str, message: str, message_type: str, duration: int):
         conn = None
         cursor = None
         try:
@@ -46,8 +69,6 @@ class database_client:
                 (timestamp, message_type, message, duration),
             )
             conn.commit()
-        except Exception as e:
-            print(f"Error logging chatbot interaction: {e}")
         finally:
             if cursor is not None:
                 cursor.close()
