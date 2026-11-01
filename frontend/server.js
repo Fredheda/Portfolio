@@ -96,8 +96,9 @@ app.get('/api/warmup', warmupLimiter, (req, res) => {
 // and friends. Dedicated Express adapter, not a hand-rolled Fetch bridge.
 app.use(createCopilotExpressHandler({ runtime, basePath: '/api/copilotkit' }));
 
-// Serve static files from the dist directory
-app.use(express.static(path.join(__dirname, 'dist')));
+// Serve static files from the dist directory. `index: false`: "/" must reach
+// the fallback below, which adds the route's title and link-preview tags.
+app.use(express.static(path.join(__dirname, 'dist'), { index: false }));
 
 // SPA fallback with per-route <title> and link-preview tags. Both files are
 // build output (vite.config.mjs writes route-meta.json from the content

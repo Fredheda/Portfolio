@@ -61,6 +61,11 @@ const CONTENT = JSON.parse(readFileSync(new URL('../../../content/site-content.j
 const metaContent = (html, property) => html.match(new RegExp(`<meta property="${property}" content="([^"]*)">`))?.[1];
 
 test('each route gets its own title and link-preview tags', async ({ prodServer }) => {
+  const home = await (await prodServer.get('/')).text();
+  expect(home).toContain(`<title>${CONTENT.profile.name}</title>`);
+  expect(metaContent(home, 'og:url')).toBe('https://frederikheda.com');
+  expect(home).not.toContain('<!--route-meta-->');
+
   const about = await prodServer.get('/about');
   expect(about.status()).toBe(200);
   const html = await about.text();
