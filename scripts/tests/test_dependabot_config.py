@@ -54,8 +54,10 @@ def test_every_ecosystem_groups_all_updates_into_one_pr() -> None:
         assert 'patterns:\n          - "*"' in block, block[:40]
 
 
-def test_npm_and_docker_ignore_major_bumps() -> None:
-    for ecosystem in ("npm", "docker"):
+def test_pip_npm_and_docker_ignore_major_bumps() -> None:
+    # Majors (azure-functions 2 needs Python 3.13, openai 3, ...) are done by
+    # hand: offline tests cannot prove they work.
+    for ecosystem in ("pip", "npm", "docker"):
         block = entry(ecosystem)
         assert 'dependency-name: "*"' in block, ecosystem
         assert 'update-types: ["version-update:semver-major"]' in block, ecosystem
