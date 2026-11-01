@@ -74,6 +74,10 @@ It creates the managed identity `id-portfolio-mcp-gh-deploy` with Website Contri
 - The workflow covers the Function App's code only. The two container apps (`scripts/ship.sh`), infra (`infra/deploy.sh`) and the Function key stay manual.
 - `scripts/deploy-mcp-tools.sh` still works as the laptop fallback.
 
+## Branch protection
+
+The `main-protect` ruleset (id 25783728) requires a PR and the checks listed in `CLAUDE.md`, and blocks deletion and force-push. Admins bypass in PR mode only. Change the check list with `gh api -X PUT repos/Fredheda/Portfolio/rulesets/25783728 --input <file>` after the owner agrees; fetch the current ruleset first and keep a copy for rollback. Renaming a job in `ci.yml` or `security.yml` needs this update in the same change.
+
 ## PR review
 
 `.github/workflows/claude-review.yml` posts an AI security-first review when a PR is opened and on every push to it. The repo owner can also request one by commenting `@claude`. Each review also runs a documentation check: it flags docs that contradict the change, were not updated, or hold stale names, paths or counts, or it says "Docs: current". It is comment-only and authenticates with the `CLAUDE_CODE_OAUTH_TOKEN` repo secret. For when that token expires and how to renew it, see [expirations.md](expirations.md).
