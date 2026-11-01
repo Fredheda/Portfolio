@@ -79,10 +79,24 @@
       "categories": ["Agentic AI", "Python", "LLM"],
       "featured": true,
       "caseStudy": {
-        "problem": "[draft] The problem it solves.",
-        "built": "[draft] What he built.",
-        "decisions": [{ "title": "[draft] Decision", "text": "[draft] Trade-off." }],
-        "differently": "[draft] What he would do differently."
+        "problem": "[draft] Keeping up with AI research is a reading problem: most papers never get read. Audio turns dead time into reading time.",
+        "built": "[draft] A four-stage pipeline (download, extract, summarise, generate audio) that can resume from any stage; a library UI with listen state; two storage backends (local, Azure) behind one interface.",
+        "decisions": [
+          {
+            "title": "[draft] A state machine, not a script",
+            "text": "[draft] A failed stage is retried instead of restarting the whole run."
+          },
+          {
+            "title": "[draft] Write locally, then persist",
+            "text": "[draft] The container disk is ephemeral, so artifacts are saved to storage after each stage."
+          },
+          {
+            "title": "[draft] Pause polling when idle",
+            "text": "[draft] The frontend stops polling so the apps can scale to zero."
+          }
+        ],
+        "differently": "[draft] [owner] What he would do differently.",
+        "architecture": "[draft] Four services run in order (arXiv download, PDF to text with markitdown, LLM summary, text to speech) behind a status state machine that saves state after each stage and resumes from it. LLM and TTS sit behind provider interfaces. FastAPI backend and React frontend on Azure Container Apps."
       }
     },
     {
@@ -94,10 +108,53 @@
       "categories": ["MCP", "A2A", "Python"],
       "featured": true,
       "caseStudy": {
-        "problem": "[draft] The problem it solves.",
-        "built": "[draft] What he built.",
-        "decisions": [{ "title": "[draft] Decision", "text": "[draft] Trade-off." }],
-        "differently": "[draft] What he would do differently."
+        "problem": "[draft] A real, public API with real disruptions is a good test bed for tool design: batching, failure handling, and knowing which line ids are valid.",
+        "built": "[draft] Five tools (line status, disrupted lines, station search, journey planning, arrivals), the Function App that serves them, and an A2A agent other agents can call.",
+        "decisions": [
+          {
+            "title": "[draft] Batch by mode, not per line",
+            "text": "[draft] Fewer calls and one failure mode."
+          },
+          {
+            "title": "[draft] The agent reads tool schemas at startup",
+            "text": "[draft] No duplicated schemas to keep in step."
+          },
+          {
+            "title": "[draft] A2A instead of a shared library",
+            "text": "[draft] A second deployed agent can call this one without sharing code."
+          }
+        ],
+        "differently": "[draft] [owner] What he would do differently.",
+        "architecture": "[draft] Five MCP tools in an Azure Function App, also runnable over stdio. A LangGraph agent served over A2A."
+      }
+    },
+    {
+      "id": "copilotkit-canvas",
+      "title": "CopilotKit agent canvas",
+      "plainEnglish": "[draft] A chat where the assistant builds charts and documents on a canvas while you talk, and can hand questions to other agents.",
+      "techLine": "[draft] Next.js 16, CopilotKit v2 and AG-UI, a LangGraph agent with frontend tools, A2A delegation, Playwright suites, Azure Container Apps.",
+      "link": null,
+      "categories": ["Agentic AI", "CopilotKit", "A2A"],
+      "featured": true,
+      "caseStudy": {
+        "problem": "[draft] The interesting part of agent UX is not the chat bubble but the agent changing the thing you are looking at.",
+        "built": "[draft] Frontend tools for charts and markdown documents with an inventory the agent reads back; delegation to other agents with progress streamed into a trace panel; a two-tier browser test suite.",
+        "decisions": [
+          {
+            "title": "[draft] Tool calls instead of shared graph state",
+            "text": "[draft] A simpler contract and easier tests."
+          },
+          {
+            "title": "[draft] Compile chart specs before rendering",
+            "text": "[draft] The agent gets the error and can retry."
+          },
+          {
+            "title": "[draft] Two test tiers",
+            "text": "[draft] A fake agent for fast tests and a scripted model for real protocol coverage."
+          }
+        ],
+        "differently": "[draft] [owner] What he would do differently.",
+        "architecture": "[draft] Next.js 16 and CopilotKit v2 frontend talking AG-UI to a LangGraph agent on FastAPI. The agent delegates to a second LangGraph agent over A2A as a plain backend tool."
       }
     },
     {
@@ -109,25 +166,20 @@
       "categories": ["Agentic AI", "CopilotKit"],
       "featured": true,
       "caseStudy": {
-        "problem": "[draft] The problem it solves.",
-        "built": "[draft] What he built.",
-        "decisions": [{ "title": "[draft] Decision", "text": "[draft] Trade-off." }],
-        "differently": "[draft] What he would do differently."
-      }
-    },
-    {
-      "id": "mcp-client",
-      "title": "MCP Client",
-      "plainEnglish": "[draft] A small library that lets an AI agent use tools from any MCP server.",
-      "techLine": "[draft] Python client for the Model Context Protocol.",
-      "link": "https://github.com/Fredheda/mcp-client",
-      "categories": ["MCP", "Python"],
-      "featured": false,
-      "caseStudy": {
-        "problem": "[draft] The problem it solves.",
-        "built": "[draft] What he built.",
-        "decisions": [{ "title": "[draft] Decision", "text": "[draft] Trade-off." }],
-        "differently": "[draft] What he would do differently."
+        "problem": "[draft] Every recommendation app knows what everyone likes. This one should know what he likes, down to the dish.",
+        "built": "[draft] A card board with fast search and background research per venue, and a taste profile the agent reasons from.",
+        "decisions": [
+          {
+            "title": "[draft] First paint never waits for the model",
+            "text": "[draft] Research arrives later and fills in the cards."
+          },
+          {
+            "title": "[draft] Cache venue data within the provider's terms",
+            "text": "[draft] Keeps running costs near zero."
+          }
+        ],
+        "differently": "[draft] [owner] What he would do differently.",
+        "architecture": "[draft] Next.js 16 (React 19, Tailwind 4) frontend with a FastAPI backend. Chat and places are still stubs and fixtures in the repo, so the owner rewrites this line when the real agent lands."
       }
     },
     {
@@ -139,10 +191,11 @@
       "categories": ["Open Source", "ML", "Explainability"],
       "featured": false,
       "caseStudy": {
-        "problem": "[draft] The problem it solves.",
-        "built": "[draft] What he built.",
-        "decisions": [{ "title": "[draft] Decision", "text": "[draft] Trade-off." }],
-        "differently": "[draft] What he would do differently."
+        "problem": "[draft] [owner] The problem the change fixed, in two or three sentences.",
+        "built": "[draft] [owner] What he changed.",
+        "decisions": [{ "title": "[draft] [owner] Decision", "text": "[draft] [owner] Trade-off." }],
+        "differently": "[draft] [owner] What he would do differently.",
+        "architecture": "[draft] [owner] Describe the change."
       }
     }
   ],

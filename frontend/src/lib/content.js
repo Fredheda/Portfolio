@@ -78,6 +78,7 @@ export const contentSchema = z.object({
           built: text,
           decisions: z.array(z.object({ title: text, text })),
           differently: text,
+          architecture: text,
         }),
       }),
     )
