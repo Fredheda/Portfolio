@@ -85,10 +85,10 @@ const STAGES = {
 // choice (not a real warning) -- keeps the tone strictly technical while
 // still exercising the category.
 const CATEGORY_CLASSNAMES = {
-  default: 'text-zinc-500',
-  io: 'text-cyan-700',
-  compute: 'text-violet-700',
-  warn: 'text-accent-gold/70',
+  default: 'text-panelMuted',
+  io: 'text-toolLine',
+  compute: 'text-[#c4b5fd]',
+  warn: 'text-prompt',
 };
 
 const MIN_DELAY_MS = 40;
@@ -102,11 +102,11 @@ const DEFAULT_HOLD_MS = [MIN_DELAY_MS, MAX_DELAY_MS];
 // seconds). Below 1 makes it an occasional beat instead of a fixture.
 const BAR_LINE_CHANCE = 0.1;
 
-// Styled identically to the pool lines (same text-zinc-500, no glow) --
+// Styled identically to the pool lines (same text-panelMuted, no glow) --
 // no visual distinction at all from the rest of the fake log, so nothing
 // in this sequence is ever mistaken for the real assistant reply.
-const IDENTITY_LINE = { text: 'IDENTITY CONFIRMED: visitor', className: 'text-zinc-500', holdMs: DEFAULT_HOLD_MS };
-const FINAL_LINE = { text: 'RESPONSE READY', className: 'text-zinc-500', holdMs: DEFAULT_HOLD_MS };
+const IDENTITY_LINE = { text: 'IDENTITY CONFIRMED: visitor', className: 'text-panelMuted', holdMs: DEFAULT_HOLD_MS };
+const FINAL_LINE = { text: 'RESPONSE READY', className: 'text-panelMuted', holdMs: DEFAULT_HOLD_MS };
 
 // First-message (non-loop) only: how long the final "IDENTITY
 // CONFIRMED"/"RESPONSE READY" pair holds on screen before handing off --
@@ -255,11 +255,11 @@ export default function ThinkingSequence({ onDone, loop = false, scrollContainer
         line.type === 'bar' ? (
           <div key={index} className={`flex items-center gap-2 ${line.className}`}>
             <span>{line.text}</span>
-            <span className="text-zinc-600">[</span>
-            <span className="relative inline-block w-24 h-2 bg-zinc-800 rounded-sm overflow-hidden align-middle">
-              <span className="absolute inset-y-0 left-0 bg-accent-cyan terminal-bar-fill" />
+            <span className="text-panelMuted">[</span>
+            <span className="relative inline-block w-24 h-2 bg-white/10 rounded-sm overflow-hidden align-middle">
+              <span className="absolute inset-y-0 left-0 bg-toolLine terminal-bar-fill" />
             </span>
-            <span className="text-zinc-600">]</span>
+            <span className="text-panelMuted">]</span>
           </div>
         ) : (
           <div key={index} className={line.className}>{line.text}</div>

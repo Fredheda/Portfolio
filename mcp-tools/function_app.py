@@ -7,7 +7,7 @@ from search_client import retrieve_information as _retrieve_information
 
 app = func.FunctionApp()
 
-_LIST_PROJECTS_PROPERTIES = json.dumps([])
+_NO_PROPERTIES = json.dumps([])
 
 _GET_PROJECT_DETAILS_PROPERTIES = json.dumps(
     [
@@ -35,16 +35,40 @@ _RETRIEVE_INFORMATION_PROPERTIES = json.dumps(
 @app.mcp_tool_trigger(
     arg_name="context",
     tool_name="list_projects",
-    description="List all portfolio projects with their id, title, and short description.",
-    tool_properties=_LIST_PROJECTS_PROPERTIES,
+    description=(
+        "List all portfolio projects with their id, title, a plain-English line "
+        "(plainEnglish) and a one-line tech summary (techLine)."
+    ),
+    tool_properties=_NO_PROPERTIES,
 )
 def list_projects(context) -> str:
     projects = load_content()["projects"]
     summary = [
-        {"id": p["id"], "title": p["title"], "description": p["description"]}
+        {
+            "id": p["id"],
+            "title": p["title"],
+            "plainEnglish": p["plainEnglish"],
+            "techLine": p["techLine"],
+        }
         for p in projects
     ]
     return json.dumps(summary)
+
+
+@app.mcp_tool_trigger(
+    arg_name="context",
+    tool_name="get_profile",
+    description=(
+        "Get Frederik's profile, About text, experience and recent LinkedIn posts, "
+        "exactly as the site shows them."
+    ),
+    tool_properties=_NO_PROPERTIES,
+)
+def get_profile(context) -> str:
+    content = load_content()
+    return json.dumps(
+        {key: content[key] for key in ("profile", "about", "experience", "posts")}
+    )
 
 
 @app.mcp_tool_trigger(

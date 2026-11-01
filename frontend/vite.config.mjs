@@ -1,5 +1,7 @@
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
+import { content } from './src/lib/content.js';
+import { routeHeads } from './src/lib/routeMeta.js';
 
 // @copilotkit/react-core/v2's own entry module does `import "./index.css"`
 // internally as a side effect (unconditionally, regardless of how this app
@@ -60,8 +62,24 @@ function stubCopilotKitV2CssEsbuildPlugin() {
   };
 }
 
+// Writes dist/route-meta.json (per-route <title> and link-preview tags) from
+// the content file; server.js reads it, since its image ships only dist/.
+function routeMetaFile() {
+  return {
+    name: 'route-meta-file',
+    apply: 'build',
+    generateBundle() {
+      this.emitFile({
+        type: 'asset',
+        fileName: 'route-meta.json',
+        source: JSON.stringify(routeHeads(content), null, 2),
+      });
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [stubCopilotKitV2Css(), react()],
+  plugins: [stubCopilotKitV2Css(), react(), routeMetaFile()],
   css: {
     postcss: './postcss.config.js',
   },

@@ -1,7 +1,10 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it } from 'vitest';
+import { content } from '../lib/content';
 import Footer from './Footer';
+
+const { profile } = content;
 
 const renderFooter = () =>
   render(
@@ -18,24 +21,20 @@ beforeEach(() => {
 describe('Footer', () => {
   it('shows the copyright year and a privacy policy link', () => {
     renderFooter();
-    expect(screen.getByText(new RegExp(`© ${new Date().getFullYear()} Frederik Heda`))).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Privacy Policy' })).toHaveAttribute(
-      'href',
-      '/privacy-policy',
-    );
+    expect(screen.getByText(new RegExp(`© ${new Date().getFullYear()} ${profile.name}`))).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Privacy policy' })).toHaveAttribute('href', '/privacy-policy');
   });
 
-  it('links to email, LinkedIn and GitHub', () => {
+  it('links to email, LinkedIn and GitHub from the content file', () => {
     renderFooter();
-    expect(screen.getByLabelText('Email')).toHaveAttribute('href', 'mailto:frederik.heda@gmx.net');
-    expect(screen.getByLabelText('LinkedIn')).toHaveAttribute(
-      'href',
-      'https://www.linkedin.com/in/frederik-heda/',
-    );
-    expect(screen.getByLabelText('GitHub')).toHaveAttribute(
-      'href',
-      'https://github.com/Fredheda?tab=repositories',
-    );
+    expect(screen.getByLabelText('Email')).toHaveAttribute('href', profile.links.email);
+    expect(screen.getByLabelText('LinkedIn')).toHaveAttribute('href', profile.links.linkedin);
+    expect(screen.getByLabelText('GitHub')).toHaveAttribute('href', profile.links.github);
+  });
+
+  it('never offers a CV or says he is looking', () => {
+    renderFooter();
+    expect(document.body.textContent).not.toMatch(/\bcv\b|résumé|resume|open to work|hire me/i);
   });
 
   it('shows the back-to-top button only after scrolling, and scrolls to the top', () => {
@@ -47,8 +46,7 @@ describe('Footer', () => {
       fireEvent.scroll(window);
     });
 
-    const button = screen.getByLabelText('Back to top');
-    fireEvent.click(button);
+    fireEvent.click(screen.getByLabelText('Back to top'));
     expect(window.scrollTo).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' });
   });
 });

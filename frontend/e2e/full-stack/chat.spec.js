@@ -19,7 +19,7 @@ test.beforeEach(async ({ page, request }) => {
   await page.goto('/');
 });
 
-test('a message reaches the model with the system prompt and all five tools, and the reply shows', async ({
+test('a message reaches the model with the system prompt and all six tools, and the reply shows', async ({
   page,
   request,
 }) => {
@@ -30,6 +30,7 @@ test('a message reaches the model with the system prompt and all five tools, and
   expect(calls).toHaveLength(1);
   expect(calls[0].system.startsWith(SYSTEM_PROMPT.trim())).toBe(true);
   expect(calls[0].tools).toEqual([
+    'get_profile',
     'get_project_details',
     'highlightProjects',
     'list_projects',

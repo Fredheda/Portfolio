@@ -1,7 +1,10 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
+import { content } from '../lib/content';
 import Header from './Headers';
+
+const { profile } = content;
 
 const renderHeader = () =>
   render(
@@ -11,30 +14,51 @@ const renderHeader = () =>
   );
 
 describe('Header', () => {
-  it('links the logo to the home page', () => {
+  it('links the name to the home page', () => {
     renderHeader();
-    expect(screen.getByRole('link', { name: 'FH' })).toHaveAttribute('href', '/');
+    expect(screen.getByRole('link', { name: profile.name })).toHaveAttribute('href', '/');
   });
 
-  it('links to email, LinkedIn and GitHub', () => {
+  it('links each section, also from other routes', () => {
     renderHeader();
-    const hrefs = screen.getAllByRole('link').map((a) => a.getAttribute('href'));
-    expect(hrefs).toContain('mailto:frederik.heda@gmx.net');
-    expect(hrefs).toContain('https://www.linkedin.com/in/frederik-heda/');
-    expect(hrefs).toContain('https://github.com/Fredheda?tab=repositories');
+    const nav = within(screen.getByRole('navigation', { name: 'Main' }));
+    const expected = {
+      About: '/about',
+      Experience: '/#experience',
+      Projects: '/#projects',
+      Posts: '/#posts',
+      'Ask fredbot': '/#fredbot',
+    };
+    for (const [name, href] of Object.entries(expected)) {
+      expect(nav.getByRole('link', { name })).toHaveAttribute('href', href);
+    }
   });
 
-  it('opens the mobile menu and locks body scroll, then restores it', () => {
+  it('links to email, LinkedIn and GitHub from the content file', () => {
     renderHeader();
-    const before = screen.getAllByRole('link').length;
+    expect(screen.getByLabelText('Email')).toHaveAttribute('href', profile.links.email);
+    expect(screen.getByLabelText('LinkedIn')).toHaveAttribute('href', profile.links.linkedin);
+    expect(screen.getByLabelText('GitHub')).toHaveAttribute('href', profile.links.github);
+  });
 
-    fireEvent.click(screen.getByLabelText('Toggle menu'));
+  it('opens and closes the mobile menu', () => {
+    renderHeader();
+    const toggle = screen.getByRole('button', { name: 'Menu' });
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
 
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
     expect(document.body.style.overflow).toBe('hidden');
-    // The overlay repeats the three social links.
-    expect(screen.getAllByRole('link').length).toBe(before + 3);
+    expect(within(screen.getByRole('navigation', { name: 'Mobile' })).getByRole('link', { name: 'About' })).toBeVisible();
 
-    fireEvent.click(screen.getByLabelText('Toggle menu'));
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
     expect(document.body.style.overflow).toBe('');
+  });
+
+  it('never offers a CV or says he is looking', () => {
+    renderHeader();
+    fireEvent.click(screen.getByRole('button', { name: 'Menu' }));
+    expect(document.body.textContent).not.toMatch(/\bcv\b|résumé|resume|open to work|hire me/i);
   });
 });

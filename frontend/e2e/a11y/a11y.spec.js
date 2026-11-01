@@ -28,9 +28,11 @@ test('the home page has no serious accessibility violations', async ({ page }) =
   expect(await seriousViolations(page)).toEqual([]);
 });
 
-// Opened directly, so this also covers server.js serving the SPA for a deep link.
-test('the privacy page has no serious accessibility violations', async ({ page }) => {
-  await page.goto('/privacy-policy');
-  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-  expect(await seriousViolations(page)).toEqual([]);
-});
+// Opened directly, so these also cover server.js serving the SPA for a deep link.
+for (const path of ['/privacy-policy', '/about', '/projects/paper-podcasts']) {
+  test(`${path} has no serious accessibility violations`, async ({ page }) => {
+    await page.goto(path);
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    expect(await seriousViolations(page)).toEqual([]);
+  });
+}

@@ -1,9 +1,9 @@
 import { useFrontendTool } from '@copilotkit/react-core/v2';
 import { z } from 'zod';
 import { useAgentUI } from '../context/AgentUIContext';
-import siteContent from '../../content/site-content.json';
+import { content } from '../lib/content';
 
-const KNOWN_IDS = siteContent.projects.map((p) => p.id);
+const KNOWN_IDS = content.projects.map((p) => p.id);
 
 export default function AgentTools() {
   const { setHighlightedProjectIds, setExpandedProjectId } = useAgentUI();
