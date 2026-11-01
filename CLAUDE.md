@@ -95,6 +95,21 @@ Frontend: `BACKEND_URL`, read by `server.js` at runtime (not the browser bundle)
 
 Test seams (production sets none): `build_graph(model, moderation_client, db)` and `create_app(build)` in the backend; `RUN_RATE_LIMIT` and `WARMUP_RATE_LIMIT` in `server.js` (defaults 5 and 10 per minute).
 
+## Security checks
+
+`.github/workflows/security.yml` runs on PRs and weekly (Mon 05:23 UTC), never on a push to `main`. `gitleaks` and `workflow-lint` run on every PR push; the rest run when the PR is ready. Job ids are stable (required-checks ruleset).
+
+| Job | Blocks PR? | Run locally |
+|---|---|---|
+| `gitleaks` | yes | `docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.30.1 git /repo --redact --no-banner` |
+| `workflow-lint` | yes | `docker run --rm -v "$PWD:/repo" --workdir /repo rhysd/actionlint:1.7.12` |
+| `bandit` (HIGH only) | yes | `uvx bandit@1.9.4 -r backend data mcp-tools scripts e2e_backend -lll -x backend/tests,mcp-tools/tests,scripts/tests,.venv` |
+| `pip-audit` | advisory on PRs, fails weekly | `poetry -C backend export --without-hashes -o /tmp/b.txt && uvx pip-audit@2.10.1 -r /tmp/b.txt --no-deps --disable-pip` (same for `data`); `uvx pip-audit@2.10.1 -r mcp-tools/requirements.txt` |
+| `npm-audit` | advisory on PRs, fails weekly | `cd frontend && npm audit --omit=dev --audit-level=high` |
+| `codeql` | no, findings in the Security tab | CI only |
+
+`pip-audit` audits the locked sets of `backend/` and `data/` (no install). Fix a finding, or add a dated ignore with the reason next to the command.
+
 ## PR review
 
 `.github/workflows/claude-review.yml` posts an AI security-first review on every push to a ready (non-draft) PR. It also runs a documentation check: it flags docs that contradict the change or were not updated, or says "Docs: current". The owner can request one with a `@claude` comment. Token expiry and renewal: `deployment/expirations.md`.
