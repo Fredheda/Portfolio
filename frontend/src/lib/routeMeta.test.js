@@ -34,7 +34,8 @@ describe('renderHead', () => {
     });
     expect(head).toContain('content="Tom &amp; &quot;Jerry&quot; &lt;b&gt;"');
     expect(head).toContain('content="it&#39;s &lt;script&gt;"');
-    expect(head).not.toMatch(/<b>|<script>/);
+    expect(head).not.toContain('<b>');
+    expect(head).not.toContain('<script>');
   });
 
   it('carries the Open Graph and Twitter tags a link preview reads', () => {
