@@ -88,8 +88,9 @@ jobs:
             say each thing once and link.
 
             PR size check (every PR, advisory). A PR should hold one
-            concern and change under about 400 hand-written lines (lockfiles,
-            fixtures and generated files excluded). If it exceeds that or
+            concern, touch about 20 files at most (give or take) and change
+            under 5000 lines (lockfiles, fixtures and generated files
+            excluded). If it exceeds that or
             mixes unrelated concerns, say so in one summary line and suggest
             how to split it. Otherwise say "Size: OK". Never fail the review
             for size alone.

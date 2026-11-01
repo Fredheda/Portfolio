@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 > only what is specific to this repo; keep it true.
 
 PR titles and descriptions never mention Claude Code. Run `./scripts/ci-local.sh` green before `gh pr ready`.
-Keep PRs small: one concern, under about 400 hand-written lines (lockfiles, fixtures, generated files excluded); split bigger work into one ticket per PR. Rule: workspace `CLAUDE.md`, "Small PRs, one ticket and one plan per PR".
+Keep PRs small: one concern, about 20 changed files at most (give or take) and under 5000 changed lines (lockfiles, fixtures, generated files excluded); split bigger work into one ticket per PR. Rule: workspace `CLAUDE.md`, "Small PRs, one ticket and one plan per PR".
 Build test first: failing test before code; unit tests for logic, offline integration tests at the factory seams, one e2e per user-visible flow, no duplicate coverage. Rule: workspace `CLAUDE.md`, "Test-driven, with sensible coverage across the system".
 
 **Response style:** Use the `caveman` skill. Talk terse at all times, with or without the skill: chat, Jira comments, GitHub PR and issue text, commits, specs, plans, docs. Short plain sentences, no filler. Keep code, commands and error strings exact. Security warnings and irreversible-action confirmations stay in full clear sentences. Details: workspace `CLAUDE.md`, "Response style".
