@@ -6,7 +6,7 @@ import Experience from './Experience';
 import Hero from './Hero';
 import Posts from './Posts';
 
-const { profile, experience, posts, postsUrl } = content;
+const { profile, experience, postsUrl } = content;
 
 const post = (overrides) => ({
   id: 'p',
@@ -74,10 +74,10 @@ describe('Posts', () => {
     expect(screen.getByRole('region', { name: 'Recent posts' })).not.toHaveTextContent(/NaN|-\d/);
   });
 
-  it('defaults to the content file and links to all posts', () => {
-    render(<Posts />);
+  it('is the section with id "posts" and links to all posts', () => {
+    render(<Posts posts={[post({})]} />);
     expect(screen.getByRole('region', { name: 'Recent posts' })).toHaveAttribute('id', 'posts');
-    expect(screen.getAllByRole('article')).toHaveLength(posts.length);
+    expect(screen.getAllByRole('article')).toHaveLength(1);
     expect(screen.getByRole('link', { name: 'See all on LinkedIn' })).toHaveAttribute('href', postsUrl);
   });
 });

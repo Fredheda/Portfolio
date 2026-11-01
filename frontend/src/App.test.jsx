@@ -31,15 +31,15 @@ beforeEach(() => {
 });
 
 describe('App routes', () => {
-  it('home shows hero, experience, posts, projects and fredbot in that order', () => {
+  it('home shows hero, experience, projects and fredbot in that order, with no posts', () => {
     renderAt('/');
-    const order = ['experience', 'posts', 'projects'].map((id) => document.getElementById(id));
+    const order = ['experience', 'projects'].map((id) => document.getElementById(id));
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(profile.claim);
     expect(order.every(Boolean)).toBe(true);
+    expect(document.getElementById('posts')).toBeNull();
     const fredbot = screen.getByText('fredbot stub');
     expect(order[0].compareDocumentPosition(order[1]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(order[1].compareDocumentPosition(order[2]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(order[2].compareDocumentPosition(fredbot) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(order[1].compareDocumentPosition(fredbot) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it('about shows the name, the photo and every About paragraph', async () => {

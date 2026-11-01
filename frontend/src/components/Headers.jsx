@@ -11,7 +11,6 @@ export const navLinks = [
   { label: 'About', to: '/about' },
   { label: 'Experience', to: '/#experience' },
   { label: 'Projects', to: '/#projects' },
-  { label: 'Posts', to: '/#posts' },
   { label: 'Ask fredbot', to: '/#fredbot' },
 ];
 

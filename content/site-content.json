@@ -1,9 +1,9 @@
 {
   "profile": {
     "name": "Frederik Heda",
-    "claim": "[draft] I build and lead teams that ship agentic AI.",
-    "now": "[draft] Leads the AI team in trading and shipping: 6 teams, around 40 people, building agentic AI applications and other AI-enabled solutions.",
-    "headline": "[draft] AI engineering leader",
+    "claim": "I build and lead teams that ship agentic AI.",
+    "now": "Leads the AI team in trading and shipping: 6 teams, around 40 people, building agentic AI applications and other AI-enabled solutions.",
+    "headline": "AI & Engineering Lead",
     "links": {
       "linkedin": "https://www.linkedin.com/in/frederik-heda/",
       "github": "https://github.com/Fredheda",
@@ -19,56 +19,23 @@
   },
   "about": {
     "paragraphs": [
-      "[draft] Career arc: where Frederik started, and how he moved from data science into leading AI engineering teams.",
-      "[draft] How he leads: small teams that own a problem end to end, shared evaluation before new features, and shipping to real users early.",
-      "[draft] What he cares about: agentic systems that are useful, measurable and safe, and engineers who grow by shipping."
+      "Career arc: where Frederik started, and how he moved from data science into leading AI engineering teams.",
+      "How he leads: small teams that own a problem end to end, shared evaluation before new features, and shipping to real users early.",
+      "What he cares about: agentic systems that are useful, measurable and safe, and engineers who grow by shipping."
     ]
   },
   "experience": [
     {
       "id": "ai-lead-trading-shipping",
-      "role": "[draft] Head of AI engineering",
-      "sector": "[draft] Trading and shipping",
+      "role": "AI & Engineering Lead",
+      "sector": "Trading and shipping",
       "start": "2024",
       "end": null,
-      "impact": "[draft] Grew the AI function to 6 teams and around 40 people shipping agentic applications."
-    },
-    {
-      "id": "earlier-role",
-      "role": "[draft] Earlier role",
-      "sector": "[draft] Sector",
-      "start": "2019",
-      "end": "2024",
-      "impact": "[draft] One line on what changed because of him."
+      "impact": "Grew the AI function to 6 teams and around 40 people shipping agentic applications."
     }
   ],
   "postsUrl": "https://www.linkedin.com/in/frederik-heda/recent-activity/all/",
-  "posts": [
-    {
-      "id": "draft-post-1",
-      "date": "2026-10-29",
-      "text": "[draft] Text of a recent LinkedIn post, first 300 characters.",
-      "url": "https://www.linkedin.com/in/frederik-heda/recent-activity/all/",
-      "reactions": 0,
-      "comments": 0
-    },
-    {
-      "id": "draft-post-2",
-      "date": "2026-10-22",
-      "text": "[draft] Text of an earlier LinkedIn post, first 300 characters.",
-      "url": "https://www.linkedin.com/in/frederik-heda/recent-activity/all/",
-      "reactions": 0,
-      "comments": 0
-    },
-    {
-      "id": "draft-post-3",
-      "date": "2026-10-15",
-      "text": "[draft] Text of a third LinkedIn post, first 300 characters.",
-      "url": "https://www.linkedin.com/in/frederik-heda/recent-activity/all/",
-      "reactions": 0,
-      "comments": 0
-    }
-  ],
+  "posts": [],
   "projects": [
     {
       "id": "paper-podcasts",
@@ -141,7 +108,7 @@
     }
   ],
   "fredbot": {
-    "intro": "[draft] An agent that knows this site. Ask about my work, and watch it call its tools.",
+    "intro": "An agent that knows this site. Ask about my work, and watch it call its tools.",
     "suggestions": ["What does Frederik lead?", "Show me the projects", "Which project should I look at first?"]
   }
 }

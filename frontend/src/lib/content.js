@@ -61,7 +61,6 @@ export const contentSchema = z.object({
         comments: count,
       }),
     )
-    .min(3)
     .max(6),
   projects: z
     .array(
