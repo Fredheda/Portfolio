@@ -4,12 +4,17 @@ from unittest.mock import MagicMock
 import function_app
 
 
-def test_list_projects_returns_all_ids():
+def test_list_projects_returns_plain_english_fields():
     result = json.loads(function_app.list_projects(context="{}"))
-    ids = {p["id"] for p in result}
-    assert "paper-podcasts" in ids
-    assert "tfl-mcp-server" in ids
-    assert len(result) == 4
+    assert {p["id"] for p in result} >= {"paper-podcasts", "tfl-mcp-server"}
+    for project in result:
+        assert set(project) == {"id", "title", "plainEnglish", "techLine"}
+
+
+def test_get_profile_returns_page_content():
+    result = json.loads(function_app.get_profile(context="{}"))
+    assert set(result) == {"profile", "about", "experience", "posts"}
+    assert result["profile"]["name"] == "Frederik Heda"
 
 
 # A known id's full record is checked end to end, over MCP, by the browser

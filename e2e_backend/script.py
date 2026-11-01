@@ -30,6 +30,8 @@ def plan_reply(messages: list[BaseMessage]) -> AIMessage:
     text = next((m.text for m in reversed(messages) if isinstance(m, HumanMessage)), "")
     if "project details" in text:
         return _tool_call("get_project_details", {"project_id": "paper-podcasts"})
+    if "show profile" in text:
+        return _tool_call("get_profile", {})
     if "highlight" in text:
         return _tool_call(
             "highlightProjects", {"ids": ["paper-podcasts", "tfl-mcp-server"]}
