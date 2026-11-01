@@ -1,0 +1,80 @@
+# Monthly version updates, one grouped PR per ecosystem per run, to save
+# Actions minutes (each PR runs full CI). Alerts and security-update PRs are
+# separate repo settings, not configured here; they are not grouped and ignore
+# the cooldown. The cooldown keeps releases under 14 days old out of version-
+# update PRs. Dependabot PRs get no repo secrets, so the AI review skips them.
+version: 2
+updates:
+  # backend/ and data/ are Poetry projects (the `pip` ecosystem reads
+  # pyproject.toml and poetry.lock); mcp-tools/ uses requirements.txt.
+  - package-ecosystem: pip
+    directories:
+      - /backend
+      - /data
+      - /mcp-tools
+    schedule:
+      interval: monthly
+    labels:
+      - dependencies
+    open-pull-requests-limit: 1
+    cooldown:
+      default-days: 14
+    groups:
+      python:
+        patterns:
+          - "*"
+
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: monthly
+    labels:
+      - dependencies
+    open-pull-requests-limit: 1
+    cooldown:
+      default-days: 14
+    groups:
+      # One group holds everything, so @copilotkit/* and @ag-ui/* always move
+      # together.
+      npm:
+        patterns:
+          - "*"
+    # Major bumps (CopilotKit, vite, serve) are done by hand in their own PR.
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    labels:
+      - dependencies
+    open-pull-requests-limit: 1
+    cooldown:
+      default-days: 14
+    groups:
+      actions:
+        patterns:
+          - "*"
+
+  - package-ecosystem: docker
+    directories:
+      - /backend
+      - /frontend
+    schedule:
+      interval: monthly
+    labels:
+      - dependencies
+    open-pull-requests-limit: 1
+    cooldown:
+      default-days: 14
+    groups:
+      docker:
+        patterns:
+          - "*"
+    # The runtimes are pinned on purpose (Node 24 LTS, Python 3.13 from
+    # .python-version), so major base-image bumps are done by hand.
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
