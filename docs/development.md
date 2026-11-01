@@ -54,6 +54,14 @@ poetry run python main.py              # production server
 
 `backend/` and `data/` are separate Poetry projects, each with its own `pyproject.toml` and `poetry.lock`. They cannot share one environment because they pin conflicting `tiktoken` versions. `mcp-tools/` uses a plain virtualenv and `requirements.txt`, as Azure Functions Core Tools expects.
 
+## Site content
+
+`content/site-content.json` is the one source for the page text (profile, About, experience, posts, projects, fredbot's intro and suggestions), the link previews and fredbot's `get_profile`, `list_projects` and `get_project_details` tools. `frontend/content/` and `mcp-tools/content/` are git-ignored copies made by `npm run sync-content` and the deploy scripts. The schema is `frontend/src/lib/content.js`; `npm test` fails on a malformed edit.
+
+- Add a LinkedIn post: add an entry to `posts` (date `YYYY-MM-DD`, the first 300 characters, the post URL, reaction and comment counts at the time). Keep three to six; the page sorts newest first.
+- Text still waiting for the owner starts with `[draft]`: `grep -n '\[draft\]' content/site-content.json` lists it.
+- Deploying a content change: see [deployment/README.md](../deployment/README.md).
+
 ## Database
 
 `backend/sql/schema.sql` defines the `chatbot_logs` table, and `backend/scripts/init_azure_sql.py` applies it. It is idempotent, so it is safe to re-run. `backend/sql/grant_identity.sql` is a one-time, manually run statement that grants the deployed container app's managed identity write access to the database. No script runs it, because re-running `CREATE USER` on an existing user errors.
@@ -105,9 +113,9 @@ From `frontend/`: `npm run e2e`. The first time, run `npx playwright install chr
 
 Projects:
 
-- `server`: each test spawns its own `server.js` at production settings (redirect, headers, both rate limits).
-- `full-stack`: browser and AG-UI protocol tests.
-- `a11y`: axe on `/` and `/privacy-policy` with every rule on, once entrance animations have finished. Fails on serious or critical issues.
+- `server`: each test spawns its own `server.js` at production settings (redirect, headers, both rate limits, per-route titles and link-preview tags, 404 for unknown paths).
+- `full-stack`: browser and AG-UI protocol tests, plus the pages: 360px phone width, hash links from other routes, fredbot's tool lines.
+- `a11y`: axe on `/`, `/about`, a project page and `/privacy-policy` with every rule on, once finite animations have finished. Fails on serious or critical issues.
 
 Tests run one at a time because they share the backend's call log. CSS locators live in `e2e/selectors.js`, and ESLint rejects `.locator(` in spec files. `e2e_backend/` sits outside `backend/` because the backend image copies all of `backend/`. A new test must catch a bug that no other test (vitest, pytest or e2e) catches.
 

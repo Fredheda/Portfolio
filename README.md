@@ -1,6 +1,6 @@
 # Portfolio
 
-My personal portfolio site, built around Fredbot: a chat-first hero where an AI agent answers questions about my projects and experience.
+My personal portfolio site: who I am, what I lead and what I built, plus Fredbot, an AI agent that answers questions about my projects and experience and shows each tool it calls.
 
 **Live:** [frederikheda.com](https://frederikheda.com)
 
@@ -29,7 +29,7 @@ flowchart LR
 
 The browser talks to a small Express server that serves the React app and proxies chat runs to the backend through the CopilotKit runtime. The backend exposes a LangGraph agent over the AG-UI protocol. Each message passes through a content-safety middleware (OpenAI's moderation API), then the model, and a logging middleware writes the exchange to Azure SQL afterwards.
 
-The agent's backend tools (`list_projects`, `get_project_details`, `retrieve_information`) are not defined in the backend. They are served by a separate Azure Function App over MCP, which is also where the vector search against Azure AI Search happens. The frontend registers two more tools that the agent can call to control the page. The whole stack is covered by an offline Playwright suite that runs the production build against the real backend, MCP handlers and agent graph, with only the model, moderation, SQL logging and Azure Search faked. It is a required check on `main`.
+The agent's backend tools (`get_profile`, `list_projects`, `get_project_details`, `retrieve_information`) are not defined in the backend. They are served by a separate Azure Function App over MCP, which is also where the vector search against Azure AI Search happens. The frontend registers two more tools that the agent can call to control the page. The whole stack is covered by an offline Playwright suite that runs the production build against the real backend, MCP handlers and agent graph, with only the model, moderation, SQL logging and Azure Search faked. It is a required check on `main`.
 
 ## Tech stack
 

@@ -9,8 +9,11 @@ Nothing runs on a merge to `main`. You press a button on GitHub (or run a script
 | Changed | Run |
 |---|---|
 | `frontend/` or `backend/` code | the **Deploy apps** button on GitHub (or `./scripts/ship.sh`) |
-| `mcp-tools/` code, or `content/site-content.json` | the **Deploy functions** button on GitHub (or `./scripts/deploy-mcp-tools.sh`) |
+| `mcp-tools/` code | the **Deploy functions** button on GitHub (or `./scripts/deploy-mcp-tools.sh`) |
+| `content/site-content.json` | both buttons, same SHA: **Deploy apps** (the page and link previews bundle it at build) and **Deploy functions** (fredbot's tools read their own copy) |
 | `infra/main.bicep`, or a secret in `.env` | `./infra/deploy.sh` |
+
+A content change is one commit and two deploys. Deploy only one and the page and fredbot disagree until the other runs.
 
 These are three independent deploy targets with their own tooling and their own change cadence. A Container Apps image roll, a Function App code publish and a Bicep re-run are different enough operations (and mcp-tools changes rarely enough) that combining them into one script would mean redeploying the Function App on every routine frontend or backend ship for no reason. Run only the one(s) that match what you actually changed.
 

@@ -18,7 +18,7 @@ Builds and pushes both images (tagged with the current git SHA), then rolls both
 
 Publishes `mcp-tools/`'s code to the `func-portfolio-mcp-tools` Function App via `func azure functionapp publish`. It copies the canonical `content/site-content.json` into `mcp-tools/content/` first, so the deployed function serves the same content the frontend does. It requires [Azure Functions Core Tools](https://learn.microsoft.com/azure/azure-functions/functions-run-local) (`func`) installed locally. That is a separate CLI from `az`, not something `az` installs for you.
 
-Run this whenever `mcp-tools/` itself changes, or when `content/site-content.json` changes and the agent's tool responses need to reflect it. The frontend picks up that same file automatically on its next `ship.sh`, but the Function App only picks it up when explicitly republished.
+Run this whenever `mcp-tools/` itself changes, and together with `ship.sh` whenever `content/site-content.json` changes (see [README.md](README.md)).
 
 First deploy, or after `infra/deploy.sh` recreates the Function App from scratch: `infra/deploy.sh`'s own output prints the follow-up steps to wire a fresh `FUNCTION_MCP_KEY` into the backend container app. Run `deploy-mcp-tools.sh` first, then follow those printed steps.
 

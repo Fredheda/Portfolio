@@ -40,13 +40,16 @@ cd data && poetry run python populate_index.py
 
 ## Deployment
 
-Three independent targets; run only the one matching what changed: `./scripts/ship.sh` (frontend/backend), `./scripts/deploy-mcp-tools.sh` (`mcp-tools/` or `content/site-content.json`), `./infra/deploy.sh` (Bicep or a `.env` secret). Each has a manual GitHub workflow (**Deploy apps**, **Deploy functions**; `main` only, rollback = an older SHA) and the script is the laptop fallback. A merge runs nothing; **Deploy apps** builds a commit's images the first time it is deployed. `infra/deploy.sh` defaults its image tag to local `HEAD`: pass the deployed SHA. See `deployment/`.
+Three independent targets; run only the one matching what changed: `./scripts/ship.sh` (frontend/backend), `./scripts/deploy-mcp-tools.sh` (`mcp-tools/`; a `content/site-content.json` change needs both this and `ship.sh`), `./infra/deploy.sh` (Bicep or a `.env` secret). Each has a manual GitHub workflow (**Deploy apps**, **Deploy functions**; `main` only, rollback = an older SHA) and the script is the laptop fallback. A merge runs nothing; **Deploy apps** builds a commit's images the first time it is deployed. `infra/deploy.sh` defaults its image tag to local `HEAD`: pass the deployed SHA. See `deployment/`.
 
 ## Architecture contracts
 
 ### Frontend
-- Two routes: `/` and `/privacy-policy`. `TerminalHero` is the chat-first hero and owns the CopilotKit wiring. `AgentTools` renders nothing; it registers the two frontend tools (`highlightProjects`, `renderProjectCard`).
-- On mount, `TerminalHero` fires a fire-and-forget `GET /api/warmup` to start the backend's cold-start chain (container wake + MCP tool loading) before the first real message.
+- Routes: `/` (hero, experience, posts, projects, fredbot), `/about`, `/projects/:slug` (phase 1 stubs), `/privacy-policy`, and a not-found page. Header section links are `/#id`; `useHashScroll` scrolls to them on the home page.
+- All page text comes from `content/site-content.json`, read through `src/lib/content.js` (zod schema; never import the JSON directly). Content flow and `[draft]` markers: `docs/development.md`, "Site content".
+- `FredbotPanel` (the "Ask fredbot" section) owns the chat UI: prompt lines, tool lines measured from AG-UI tool-call events (`useToolTimings`), suggestion chips. It takes focus only after the visitor uses it, with `preventScroll`. `AgentTools` renders nothing; it registers the two frontend tools (`highlightProjects`, `renderProjectCard`) and stays mounted on every route.
+- On mount, `FredbotPanel` fires a fire-and-forget `GET /api/warmup` to start the backend's cold-start chain (container wake + MCP tool loading) before the first real message.
+- `server.js` serves `dist/index.html` with each route's `<title>` and Open Graph tags from `dist/route-meta.json`, which the Vite build writes from the content file (`src/lib/routeMeta.js`); a path not in it gets the app shell with a 404.
 - `server.js` (production, not Vite) also: 301-redirects `www.frederikheda.com` to the apex; hosts the CopilotKit runtime at `/api/copilotkit` (forwards runs to `AGENT_URL`, default `${BACKEND_URL}/agent/portfolio_agent`, and rate-limits `POST /api/copilotkit/agent/:agentId/run`); serves the rate-limited `/api/warmup`; sets security headers. `ca-portfolio-backend` has internal ingress only (no public endpoint), so the browser can only reach it through this server's proxy. Both domains are bound on `ca-portfolio-web` with free managed certificates (redo steps: Task 7 of `docs/Portfolio/plans/2026-08-09-azure-migration.md`).
 - Replies and user messages render through `react-markdown` with `remark-math`/`rehype-katex`, so LaTeX renders as equations.
 
@@ -55,7 +58,7 @@ Three independent targets; run only the one matching what changed: `./scripts/sh
 1. `ContentSafetyMiddleware` screens the latest user message with OpenAI's moderation API (`omni-moderation-latest`, not Azure Content Safety) before the model runs; a flagged message gets a refusal and skips the model.
 2. `CopilotKitMiddleware` bridges AG-UI and merges the frontend's registered tools into the model's tool set.
 3. The agent (`create_agent` in `agent/agent.py`) uses `gpt-5.6-luna` via `ChatOpenAI` with `reasoning_effort="none"` — the model 400s on tool calls without it. Checkpointer is `MemorySaver`.
-4. `list_projects`, `get_project_details` and `retrieve_information` are loaded at startup from the Function App over MCP (`agent/mcp_tools.py`, streamable-http, `FUNCTION_APP_URL`/`FUNCTION_MCP_KEY`). The vector query lives in `mcp-tools/`, not here. If the Function App is unreachable or rejects the key, the backend logs a warning and starts without those three tools; they come back on the next restart.
+4. `get_profile`, `list_projects`, `get_project_details` and `retrieve_information` are loaded at startup from the Function App over MCP (`agent/mcp_tools.py`, streamable-http, `FUNCTION_APP_URL`/`FUNCTION_MCP_KEY`). The first three read the content file; the vector query lives in `mcp-tools/`, not here. If the Function App is unreachable or rejects the key, the backend logs a warning and starts without those four tools; they come back on the next restart.
 5. `LoggingMiddleware` logs the user message and reply to Azure SQL via `services/database_client.py` (fire-and-forget background thread) after the agent finishes.
 
 `agent/system_prompt.md` is the model's real instruction source, including the description of every backend and frontend tool. Edit it whenever a tool is added, renamed or changes behavior; a frontend tool's own `description` field is not what the model reads its instructions from.
