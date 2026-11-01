@@ -38,7 +38,6 @@ export default function Posts({ posts = content.posts, now = new Date() }) {
                 href={post.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label={`LinkedIn post: ${shorten(post.text)}`}
                 className="flex w-full flex-col gap-3 rounded-xl border border-line bg-white p-4 text-ink no-underline hover:border-royal"
               >
                 <div className="flex items-center gap-3">
