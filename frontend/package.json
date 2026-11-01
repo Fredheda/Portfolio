@@ -38,9 +38,10 @@
     "rehype-katex": "^7.0.1",
     "remark-gfm": "^4.0.1",
     "remark-math": "^6.0.0",
-    "serve": "^14.2.4",
-    "vite": "^5.4.10",
-    "zod": "^4.4.3"
+    "zod": "^4.6.6"
+  },
+  "overrides": {
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.14.0",
@@ -59,6 +60,7 @@
     "jsdom": "^25.0.1",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.14",
+    "vite": "^5.4.10",
     "vitest": "3.2.7"
   },
   "browserslist": {

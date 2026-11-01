@@ -109,6 +109,8 @@ Test seams (production sets none): `build_graph(model, moderation_client, db)` a
 
 `pip-audit` audits the locked sets of `backend/` and `data/` (no install). Fix a finding, or add a dated ignore with the reason next to the command.
 
+`frontend/package.json` `overrides.zod` forces zod 4 over CopilotKit's zod 3: no zod 3 release fixes GHSA-mrhx-c7xc-m3w5. The e2e chat flow is the gate; keep the override's range equal to the direct `zod` dependency (npm rejects a mismatch). `vite` is a dev dependency (build only, not in the runtime image).
+
 ## Dependabot
 
 `.github/dependabot.yml`: monthly version updates, one grouped PR per ecosystem (pip for `backend/`, `data/`, `mcp-tools/`; npm for `frontend/`; GitHub Actions; Docker for both Dockerfiles), label `dependencies`, 14-day cooldown. npm and Docker major bumps are ignored and done by hand. Security-update PRs are separate: not grouped, no cooldown. Dependabot PRs get no secrets, so the AI review skips them; CI and `security.yml` run as usual. The owner merges them; agents never do.
