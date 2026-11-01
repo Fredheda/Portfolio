@@ -8,6 +8,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 > only what is specific to this repo; keep it true.
 
 PR titles and descriptions never mention Claude Code. Run `./scripts/ci-local.sh` green before `gh pr ready`.
+Keep PRs small: one concern, about 20 changed files at most (give or take) and under 5000 changed lines (lockfiles, fixtures, generated files excluded); split bigger work into one ticket per PR. Rule: workspace `CLAUDE.md`, "Small PRs, one ticket and one plan per PR".
+Build test first: failing test before code; unit tests for logic, offline integration tests at the factory seams, one e2e per user-visible flow, no duplicate coverage. Rule: workspace `CLAUDE.md`, "Test-driven, with sensible coverage across the system".
 
 **Response style:** Use the `caveman` skill. Talk terse at all times, with or without the skill: chat, Jira comments, GitHub PR and issue text, commits, specs, plans, docs. Short plain sentences, no filler. Keep code, commands and error strings exact. Security warnings and irreversible-action confirmations stay in full clear sentences. Details: workspace `CLAUDE.md`, "Response style".
 
@@ -104,7 +106,7 @@ Test seams (production sets none): `build_graph(model, moderation_client, db)` a
 
 ## PR review
 
-`.github/workflows/claude-review.yml` posts an AI security-first review on every push to a ready (non-draft) PR. It also runs a documentation check: it flags docs that contradict the change or were not updated, or says "Docs: current". The owner can request one with a `@claude` comment. Token expiry and renewal: `deployment/expirations.md`.
+`.github/workflows/claude-review.yml` posts an AI security-first review on every push to a ready (non-draft) PR. It also runs a documentation check: it flags docs that contradict the change or were not updated, or says "Docs: current". It also gives advisory size and tests checks ("Size: OK", "Tests: OK", "Tests: n/a" or a finding). The owner can request one with a `@claude` comment. Token expiry and renewal: `deployment/expirations.md`.
 
 ## MCP servers and skills
 
