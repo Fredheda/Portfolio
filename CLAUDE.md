@@ -2,28 +2,12 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-> This repo lives inside a multi-repo workspace with its own root `CLAUDE.md`
-> (`../CLAUDE.md`, one level up) covering workspace-wide conventions — where
-> specs/plans go, the git rule, shared MCP/skill usage. Keep that
-> file's per-project facts about this repo (test-suite status, architecture
-> pointers, etc.) in sync whenever they drift from what's true here.
+> This repo lives in a multi-repo workspace. The workspace `CLAUDE.md` (`../CLAUDE.md`)
+> owns the workflow: "Ways of working" (worktrees, draft PRs, review comments, handover,
+> cleanup), the git rules, "Response style" and where specs and plans go. This file holds
+> only what is specific to this repo; keep it true.
 
-**Git:** you may run git freely up to a commit, and push a feature branch and
-open a PR. `fetch` and `pull` are fine too (default to `pull --ff-only`). Ask
-first for `rebase`, `reset`, force-push, deleting branches, or anything on
-`main`. Reviewing and merging PRs is the user's alone — hand over the PR URL.
-Other Claude sessions share this workspace: work in your own git worktree,
-never the main checkout (`git worktree add ../.worktrees/<repo>-<slug> -b <branch> origin/main`,
-or the `EnterWorktree` tool; remove it after the PR merges). Full rule in the root `CLAUDE.md`.
-PR titles and descriptions must not mention Claude Code or link the Claude
-session (no "Generated with Claude Code" footer).
-Open PRs as drafts, get `./scripts/ci-local.sh` green, then `gh pr ready`.
-After that, wait for CI to pass (`gh pr checks --watch`), then read the
-LLM review comments (`gh pr view <n> --comments` and
-`gh api repos/Fredheda/Portfolio/pulls/<n>/comments`) and address every one of
-them, always, before handing the PR URL over for review. Fix the finding, or
-reply on the PR with the reason it does not apply. Never leave one unanswered,
-and re-check after each push, because the review runs again.
+PR titles and descriptions never mention Claude Code. Run `./scripts/ci-local.sh` green before `gh pr ready`.
 
 **Response style:** Use the `caveman` skill. Talk terse at all times, with or without the skill: chat, Jira comments, GitHub PR and issue text, commits, specs, plans, docs. Short plain sentences, no filler. Keep code, commands and error strings exact. Security warnings and irreversible-action confirmations stay in full clear sentences. Details: workspace `CLAUDE.md`, "Response style".
 
