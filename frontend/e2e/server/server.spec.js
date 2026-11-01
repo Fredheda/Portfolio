@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { fileURLToPath } from 'node:url';
 import { test as base, expect } from '@playwright/test';
@@ -54,6 +55,29 @@ test('responses carry the security headers', async ({ prodServer }) => {
   expect(headers['x-content-type-options']).toBe('nosniff');
   expect(headers['x-xss-protection']).toBe('1; mode=block');
   expect(headers['referrer-policy']).toBe('strict-origin-when-cross-origin');
+});
+
+const CONTENT = JSON.parse(readFileSync(new URL('../../../content/site-content.json', import.meta.url), 'utf8'));
+const metaContent = (html, property) => html.match(new RegExp(`<meta property="${property}" content="([^"]*)">`))?.[1];
+
+test('each route gets its own title and link-preview tags', async ({ prodServer }) => {
+  const about = await prodServer.get('/about');
+  expect(about.status()).toBe(200);
+  const html = await about.text();
+  expect(html).toContain(`<title>About ${CONTENT.profile.name}</title>`);
+  expect(metaContent(html, 'og:description')).toBe(CONTENT.profile.claim);
+
+  const project = CONTENT.projects[0];
+  const projectHtml = await (await prodServer.get(`/projects/${project.id}`)).text();
+  expect(projectHtml).toContain(`<title>${project.title} · ${CONTENT.profile.name}</title>`);
+});
+
+test('an unknown page or project answers 404 with the app shell', async ({ prodServer }) => {
+  for (const path of ['/projects/nope', '/nope']) {
+    const response = await prodServer.get(path);
+    expect(response.status()).toBe(404);
+    expect(await response.text()).toContain('<div id="root"></div>');
+  }
 });
 
 test('warmup allows ten calls a minute', async ({ prodServer }) => {

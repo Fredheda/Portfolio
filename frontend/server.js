@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import express from 'express';
+import { readFileSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { CopilotRuntime } from '@copilotkit/runtime/v2';
@@ -98,9 +99,21 @@ app.use(createCopilotExpressHandler({ runtime, basePath: '/api/copilotkit' }));
 // Serve static files from the dist directory
 app.use(express.static(path.join(__dirname, 'dist')));
 
-// SPA fallback: serve index.html for all routes (React Router support)
+// SPA fallback with per-route <title> and link-preview tags. Both files are
+// build output (vite.config.mjs writes route-meta.json from the content
+// file); the values in route-meta.json are already HTML-escaped. A path not
+// in it still gets the app shell, so the app shows its not-found page, but
+// with a 404 so crawlers and previews do not treat it as a page.
+const indexHtml = readFileSync(path.join(__dirname, 'dist', 'index.html'), 'utf8');
+const routeMeta = JSON.parse(readFileSync(path.join(__dirname, 'dist', 'route-meta.json'), 'utf8'));
+
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+  const pathname = req.path.length > 1 ? req.path.replace(/\/+$/, '') : req.path;
+  const meta = routeMeta[pathname] ?? routeMeta['/'];
+  const html = indexHtml
+    .replace(/<title>[^<]*<\/title>/, `<title>${meta.title}</title>`)
+    .replace('<!--route-meta-->', meta.head);
+  res.status(routeMeta[pathname] ? 200 : 404).type('html').send(html);
 });
 
 app.listen(PORT, () => {
