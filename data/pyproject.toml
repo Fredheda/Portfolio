@@ -6,7 +6,7 @@ requires-python = ">=3.13,<3.14"
 dependencies = [
     "markitdown[pdf,docx]==0.1.7",
     "pyarrow==18.0.0",
-    "langchain-text-splitters==0.3.4",
+    "langchain-text-splitters==1.1.2",
     "tiktoken==0.8.0",
     "azure-core==1.32.0",
     "azure-search-documents==11.5.2",
