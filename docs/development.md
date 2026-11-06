@@ -20,6 +20,7 @@ Backend values go in `Portfolio/.env` (the repo root, not a file inside `backend
 | `FUNCTION_APP_URL` | backend | The `mcp-tools` Function App. Required at startup; locally `http://localhost:7071`. |
 | `FUNCTION_MCP_KEY` | backend | Optional locally; required once the Function App enforces its function key in Azure. |
 | `AZURE_SQL_SERVER`, `AZURE_SQL_DATABASE` | backend | Chat logging. No password: Microsoft Entra ID auth. |
+| `AZURE_CLIENT_ID` | backend, deployed only | The container app's user-assigned managed identity, used for the Azure SQL token. Not set locally (`az login` is used instead). |
 | `azure_search_endpoint`, `azure_index_name`, `azure_search_api_key` | `mcp-tools/`, `data/` | Not backend variables. `mcp-tools/` uses them for the vector query behind `retrieve_information`, and `data/` uses them to build the index. |
 
 The frontend reads `BACKEND_URL` from `frontend/.env` (gitignored). `server.js` reads it at runtime, not the browser bundle. Set it to `http://localhost:8000` for local runs. When deployed, it defaults to `http://ca-portfolio-backend`, which Bicep sets.
@@ -118,11 +119,11 @@ Projects:
 - `full-stack`: browser and AG-UI protocol tests, plus the pages: 360px phone width, hash links from other routes, fredbot's tool lines.
 - `a11y`: axe on `/`, `/about`, a project page and `/privacy-policy` with every rule on, once finite animations have finished. Fails on serious or critical issues.
 
-Tests run one at a time because they share the backend's call log. CSS locators live in `e2e/selectors.js`, and ESLint rejects `.locator(` in spec files. `e2e_backend/` sits outside `backend/` because the backend image copies all of `backend/`. A new test must catch a bug that no other test (vitest, pytest or e2e) catches.
+Tests run one at a time because they share the backend's call log. Test rules (locators in `e2e/selectors.js`, why `e2e_backend/` sits outside `backend/`, no duplicate coverage): `CLAUDE.md`, "Commands".
 
 ### CI
 
-`.github/workflows/ci.yml` runs all of the above on every pull request, and on nothing else (a push to `main` runs no CI). A first job, `changes`, runs `scripts/changed-areas.sh`; a PR that touches only Markdown files in the repository root, `docs/` or `deployment/` skips the rest (Markdown elsewhere, such as `backend/agent/system_prompt.md`, is runtime input and counts as code). Otherwise it runs five checks: `backend` (pytest, ruff, pyright), `mcp-tools-test`, `deploy-scripts-test`, `frontend` (vitest, eslint, build) and `e2e`. CI is draft-first: a push to a draft PR runs only the light jobs; `e2e` and the frontend production build run once the PR is marked ready (`gh pr ready`), together with the AI review. A skipped job counts as passing for the required checks (list: `CLAUDE.md`), but GitHub does not merge a draft, and a ready PR runs `e2e`. `./scripts/ci-local.sh` runs every check CI runs, in the same order; get it green before `gh pr ready`. Images are built by the **Deploy apps** workflow, not by CI (see [deployment/github.md](../deployment/github.md)).
+`.github/workflows/ci.yml` runs all of the above on every pull request, and on nothing else (a push to `main` runs no CI). Job ids, the draft-first rule, the docs-only skip and the checks the `main` ruleset requires: `CLAUDE.md`, "Commands". `./scripts/ci-local.sh` runs every check CI runs, in the same order; get it green before `gh pr ready`. Images are built by the **Deploy apps** workflow, not by CI (see [deployment/github.md](../deployment/github.md)).
 
 Security scans live in `.github/workflows/security.yml`; jobs, what blocks and local commands: `CLAUDE.md`, "Security checks".
 

@@ -1,17 +1,8 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Repo-specific facts for Claude Code. The workspace `CLAUDE.md` (`../CLAUDE.md`) owns everything else: response style, git and worktrees, ways of working (tickets and tiers, production deploys, PR size, test first, the PR loop), tooling, Jira, specs and plans. Keep this file true.
 
-> This repo lives in a multi-repo workspace. The workspace `CLAUDE.md` (`../CLAUDE.md`)
-> owns the workflow: "Ways of working" (worktrees, draft PRs, review comments, handover,
-> cleanup), the git rules, "Response style" and where specs and plans go. This file holds
-> only what is specific to this repo; keep it true.
-
-PR titles and descriptions never mention Claude Code. Run `./scripts/ci-local.sh` green before `gh pr ready`.
-Keep PRs small: one concern, about 20 changed files at most (give or take) and under 5000 changed lines (lockfiles, fixtures, generated files excluded); split bigger work into one ticket per PR. Rule: workspace `CLAUDE.md`, "Small PRs, one ticket and one plan per PR".
-Build test first: failing test before code; unit tests for logic, offline integration tests at the factory seams, one e2e per user-visible flow, no duplicate coverage. Rule: workspace `CLAUDE.md`, "Test-driven, with sensible coverage across the system".
-
-**Response style:** Use the `caveman` skill. Talk terse at all times, with or without the skill: chat, Jira comments, GitHub PR and issue text, commits, specs, plans, docs. Short plain sentences, no filler. Keep code, commands and error strings exact. Security warnings and irreversible-action confirmations stay in full clear sentences. Details: workspace `CLAUDE.md`, "Response style".
+PR titles and descriptions never mention Claude Code. `./scripts/ci-local.sh` is this repo's local CI script: green before `gh pr ready`.
 
 ## Project overview
 
@@ -35,16 +26,15 @@ cd backend && poetry run pytest -v && poetry run pyright
 cd data && poetry run python populate_index.py
 ```
 
-- `backend/` and `data/` are separate Poetry projects (Python 3.13, `.python-version`); they pin conflicting `tiktoken` versions and must not share an environment. `data/`'s heavy ML dependencies are deliberately kept out of `backend/pyproject.toml` so they never reach the production image.
-- `mcp-tools/` tests run in their own venv (see `docs/development.md`).
-- CI (`.github/workflows/ci.yml`) runs on pull requests only, never on a push to `main`, and is draft-first: a draft PR runs only the light jobs (`changes`, `backend`, `mcp-tools-test`, `deploy-scripts-test`, `frontend` without its build); `e2e`, the frontend build and the AI review run once the PR is ready. A docs-only PR (root Markdown files, `docs/`, `deployment/`; not `backend/agent/system_prompt.md`, which is runtime input) skips the heavy jobs. The `main-protect` ruleset requires these checks on `main`: `backend`, `mcp-tools-test`, `deploy-scripts-test`, `frontend`, `e2e`, `gitleaks`, `bandit`, `workflow-lint` (a skipped job counts as passing; `pip-audit`, `npm-audit` and `codeql` are not required). Changing a job id needs the ruleset updated in the same change. Let the draft run finish before `gh pr ready`: `ready` cancels a run still in flight, and its cancelled required checks keep the PR BLOCKED until you `gh run rerun` it. **`./scripts/ci-local.sh` runs every CI check in order; it must be green before `gh pr ready`.** Images are built by the **Deploy apps** workflow, not by CI.
+- `backend/` and `data/` are separate Poetry projects (Python 3.13, `.python-version`) that never share one environment; `mcp-tools/` tests run in their own venv. Why and how: `docs/development.md`.
+- CI (`.github/workflows/ci.yml`) runs on pull requests only, never on a push to `main`, and is draft-first: a draft PR runs only the light jobs (`changes`, `backend`, `mcp-tools-test`, `deploy-scripts-test`, `frontend` without its build); `e2e`, the frontend build and the AI review run once the PR is ready. The `changes` job (`scripts/changed-areas.sh`) skips the heavy jobs for a docs-only PR (root Markdown files, `docs/`, `deployment/`; not `backend/agent/system_prompt.md`, which is runtime input). The `main-protect` ruleset requires these checks on `main`: `backend`, `mcp-tools-test`, `deploy-scripts-test`, `frontend`, `e2e`, `gitleaks`, `bandit`, `workflow-lint` (a skipped job counts as passing; `pip-audit`, `npm-audit` and `codeql` are not required). Changing a job id needs the ruleset updated in the same change. Let the draft run finish before `gh pr ready`: `ready` cancels a run still in flight, and its cancelled required checks keep the PR BLOCKED until you `gh run rerun` it. Images are built by the **Deploy apps** workflow, not by CI.
 - A new test must catch a bug that no other test (vitest, pytest or e2e) catches. `e2e_backend/` sits outside `backend/` because the backend image copies all of `backend/`. In Playwright specs, CSS locators live in `e2e/selectors.js`; ESLint rejects `.locator(` in spec files.
 
 ## Deployment
 
 Three independent targets; run only the one matching what changed: `./scripts/ship.sh` (frontend/backend), `./scripts/deploy-mcp-tools.sh` (`mcp-tools/`; a `content/site-content.json` change needs both this and `ship.sh`), `./infra/deploy.sh` (Bicep or a `.env` secret). Each has a manual GitHub workflow (**Deploy apps**, **Deploy functions**; `main` only, rollback = an older SHA) and the script is the laptop fallback. A merge runs nothing; **Deploy apps** builds a commit's images the first time it is deployed. `infra/deploy.sh` defaults its image tag to local `HEAD`: pass the deployed SHA. See `deployment/`.
 
-Every deploy waits in GitHub for the owner's approval (`production` requires him as reviewer). Run one only on the owner's explicit yes for that specific deploy, and never approve a waiting deployment. Rule: workspace `CLAUDE.md`, "Deploy only on the owner's explicit yes for that deploy".
+Every workflow run waits in GitHub for the owner's approval (`production` requires him as reviewer; `gh run watch` keeps polling until his click). Rule: workspace `CLAUDE.md`, "Production deploys".
 
 ## Architecture contracts
 
@@ -70,20 +60,16 @@ Every deploy waits in GitHub for the owner's approval (`production` requires him
 There is no `backend/LLM/`, `PromptManager`, `OpenAIClient` or `ToolOrchestrator`; an earlier implementation shaped that way was replaced by the LangGraph agent.
 
 ### Data pipeline
-`data/DocumentProcessor` chunks `.txt`, `.docx` and `.pdf` (Markdown-header split first, recursive split at 5000 tokens / 500 overlap as fallback); `IndexCreator` builds the index; `populate_index.py` reads source documents from a `cw/` directory.
+`data/DocumentProcessor` chunks `.txt`, `.docx` and `.pdf` (Markdown-header split first, recursive split at 5000 tokens / 500 overlap as fallback); `IndexCreator` builds the index; `populate_index.py` reads source documents from a `cw/` directory. It runs at import time (no `__main__` guard): importing it, or any test that does, re-embeds every chunk and upserts the live index.
 
 ## Environment variables
 
-Backend (repo-root `.env` locally; Container Apps env vars when deployed, set by `infra/deploy.sh`):
-- `OPENAI_API_KEY` — moderation API and `ChatOpenAI`; required at startup.
-- `FUNCTION_APP_URL`, `FUNCTION_MCP_KEY` — the `mcp-tools` Function App. `FUNCTION_APP_URL` required at startup (locally `http://localhost:7071`); `FUNCTION_MCP_KEY` optional locally, required once Azure enforces the function key.
-- `AZURE_SQL_SERVER`, `AZURE_SQL_DATABASE` — no password; Microsoft Entra ID auth.
+Names only; what each does and where it goes: `docs/development.md`, "Environment variables".
 
-`azure_search_endpoint` / `azure_index_name` / `azure_search_api_key` are `mcp-tools/` and `data/` configuration, not backend env vars.
-
-Frontend: `BACKEND_URL`, read by `server.js` at runtime (not the browser bundle). Defaults to `http://ca-portfolio-backend` (set by Bicep); use `http://localhost:8000` locally (`frontend/.env`).
-
-Test seams (production sets none): `build_graph(model, moderation_client, db)` and `create_app(build)` in the backend; `RUN_RATE_LIMIT` and `WARMUP_RATE_LIMIT` in `server.js` (defaults 5 and 10 per minute).
+- Backend (repo-root `.env` locally; Container Apps env vars set by `infra/deploy.sh`): `OPENAI_API_KEY`, `FUNCTION_APP_URL`, `FUNCTION_MCP_KEY`, `AZURE_SQL_SERVER`, `AZURE_SQL_DATABASE`, and when deployed `AZURE_CLIENT_ID` (the app's managed identity for Azure SQL).
+- `azure_search_endpoint`, `azure_index_name`, `azure_search_api_key`: `mcp-tools/` and `data/`, not backend variables.
+- Frontend: `BACKEND_URL`, read by `server.js` at runtime (`frontend/.env` locally).
+- Test seams (production sets none): `build_graph(model, moderation_client, db)` and `create_app(build)` in the backend; `RUN_RATE_LIMIT` and `WARMUP_RATE_LIMIT` in `server.js` (defaults 5 and 10 per minute).
 
 ## Security checks
 
@@ -108,12 +94,10 @@ Test seams (production sets none): `build_graph(model, moderation_client, db)` a
 
 ## PR review
 
-`.github/workflows/claude-review.yml` posts an AI security-first review on every push to a ready (non-draft) PR. It also runs a documentation check: it flags docs that contradict the change or were not updated, or says "Docs: current". It also gives advisory size and tests checks ("Size: OK", "Tests: OK", "Tests: n/a" or a finding). The owner can request one with a `@claude` comment. Token expiry and renewal: `deployment/expirations.md`.
+`.github/workflows/claude-review.yml` posts a comment-only AI review on every push to a ready (non-draft) PR: security first, a documentation check ("Docs: current" or findings) and advisory size and tests checks. The owner can request one with a `@claude` comment. Token expiry and renewal: `deployment/expirations.md`.
 
-## MCP servers and skills
+## Skills
 
-Prefer up-to-date external sources over training knowledge:
-- **context7** for any library or framework here (React, Vite, Tailwind, FastAPI, OpenAI SDK, LangChain, CopilotKit, Azure SDK). Fetch current docs before writing code that touches them.
-- **Microsoft Learn** for Azure AI Search, Azure OpenAI and any Azure/Microsoft service, including billing and scaling questions (Container Apps idle vs. active billing, `minReplicas`). If a specific price isn't in Microsoft Learn, say so and ask how to proceed rather than using WebFetch/WebSearch.
-- **`claude-api` skill** when touching an OpenAI SDK call site (`backend/agent/content_safety_middleware.py`, `ChatOpenAI` in `backend/agent/agent.py`) or adding LLM features.
-- **`frontend-design` skill** for UI changes.
+- `claude-api` when touching an OpenAI SDK call site (`backend/agent/content_safety_middleware.py`, `ChatOpenAI` in `backend/agent/agent.py`) or adding LLM features.
+- `frontend-design` for UI changes.
+- Context7 and Microsoft Learn per the workspace rule; this repo's lookups are React, Vite, Tailwind, FastAPI, LangChain, CopilotKit, the OpenAI and Azure SDKs, Azure AI Search and Azure OpenAI.
