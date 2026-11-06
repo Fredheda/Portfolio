@@ -81,6 +81,7 @@ poetry run python populate_index.py    # process documents and upload to the ind
 - `DocumentProcessor.py` converts `.txt`, `.docx` and `.pdf` documents to chunks using MarkItDown. It splits on Markdown headers first and falls back to a recursive splitter if headers give oversized chunks.
 - `IndexCreator.py` creates the Azure AI Search index and uploads embeddings.
 - `populate_index.py` is the entry point. It reads source documents from a `cw/` directory.
+- Tests: `cd data && poetry run pytest`. They import only `DocumentProcessor`; never import `IndexCreator` or `populate_index.py` in a test or a check (they write the live index and call paid embeddings). They call no paid API, but the first run downloads tiktoken's `gpt2` encoding file, so they need network once (free). CI does not run them.
 
 ## Checks
 
