@@ -1,7 +1,43 @@
 import json
+import logging
 from unittest.mock import MagicMock
 
 import function_app
+
+PLANTED_OPENAI = (
+    "Error code: 401 - Incorrect API key provided (sk-proj-PLANTEDKEY1234). "
+    "organization org-PLANTEDORG request req_PLANTEDREQ"
+)
+PLANTED_SEARCH = (
+    "(InvalidRequest) https://planted-search.search.windows.net/indexes('planted-index') "
+    "api-key: PLANTEDSEARCHKEY request req_PLANTEDSEARCH"
+)
+SEARCH_CONTEXT = '{"arguments": {"search_query": "GenAI leadership"}}'
+
+
+def _retrieve_with(monkeypatch, *, openai_error=None, search_error=None):
+    """Route function_app's search through fakes, one of which raises."""
+    import search_client as function_app_search_client
+
+    fake_embedding = MagicMock()
+    fake_embedding.data = [MagicMock(embedding=[0.1, 0.2, 0.3])]
+    fake_openai = MagicMock()
+    fake_openai.embeddings.create.return_value = fake_embedding
+    if openai_error is not None:
+        fake_openai.embeddings.create.side_effect = openai_error
+
+    fake_search = MagicMock()
+    fake_search.search.return_value = []
+    if search_error is not None:
+        fake_search.search.side_effect = search_error
+
+    monkeypatch.setattr(
+        function_app,
+        "_retrieve_information",
+        lambda q: function_app_search_client.retrieve_information(
+            q, search_client=fake_search, openai_client=fake_openai
+        ),
+    )
 
 
 def test_list_projects_returns_plain_english_fields():
@@ -58,3 +94,37 @@ def test_retrieve_information_missing_query_returns_error():
     context = '{"arguments": {}}'
     result = function_app.retrieve_information(context=context)
     assert result.startswith("Error:")
+
+
+def test_retrieve_information_hides_an_openai_error(monkeypatch, caplog):
+    _retrieve_with(monkeypatch, openai_error=RuntimeError(PLANTED_OPENAI))
+    with caplog.at_level(logging.ERROR):
+        result = function_app.retrieve_information(context=SEARCH_CONTEXT)
+    assert result == function_app.SEARCH_UNAVAILABLE
+    assert "RuntimeError" in caplog.text
+    assert "[redacted-key]" in caplog.text
+    for planted in ("sk-proj-PLANTEDKEY1234", "org-PLANTEDORG", "req_PLANTEDREQ"):
+        assert planted not in caplog.text
+        assert planted not in result
+
+
+def test_retrieve_information_hides_a_search_error(monkeypatch, caplog):
+    _retrieve_with(monkeypatch, search_error=RuntimeError(PLANTED_SEARCH))
+    with caplog.at_level(logging.ERROR):
+        result = function_app.retrieve_information(context=SEARCH_CONTEXT)
+    assert result == function_app.SEARCH_UNAVAILABLE
+    assert "RuntimeError" in caplog.text
+    assert "[redacted-url]" in caplog.text
+    for planted in (
+        "planted-search.search.windows.net",
+        "PLANTEDSEARCHKEY",
+        "req_PLANTEDSEARCH",
+        "planted-index",
+    ):
+        assert planted not in result
+    for planted in (
+        "planted-search.search.windows.net",
+        "PLANTEDSEARCHKEY",
+        "req_PLANTEDSEARCH",
+    ):
+        assert planted not in caplog.text
