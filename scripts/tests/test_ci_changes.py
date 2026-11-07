@@ -204,7 +204,13 @@ def test_the_data_job_runs_the_data_tests_without_installing_the_project() -> No
 
 def test_the_data_job_never_touches_the_index_or_a_secret() -> None:
     block = data_job().lower()
-    for forbidden in ("populate_index", "indexcreator", "secrets.", "api_key", "azure/login"):
+    for forbidden in (
+        "populate_index",
+        "indexcreator",
+        "secrets.",
+        "api_key",
+        "azure/login",
+    ):
         assert forbidden not in block, forbidden
 
 
