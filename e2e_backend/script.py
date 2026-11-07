@@ -32,6 +32,8 @@ def plan_reply(messages: list[BaseMessage]) -> AIMessage:
         return _tool_call("get_project_details", {"project_id": "paper-podcasts"})
     if "show profile" in text:
         return _tool_call("get_profile", {})
+    if "background" in text:
+        return _tool_call("retrieve_information", {"search_query": text})
     if "highlight" in text:
         return _tool_call(
             "highlightProjects", {"ids": ["paper-podcasts", "tfl-mcp-server"]}

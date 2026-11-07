@@ -15,6 +15,11 @@ from pydantic import Field
 
 from e2e_backend.script import plan_reply
 
+PLANTED_MODEL_ERROR = (
+    "Error code: 401 - Incorrect API key provided (sk-proj-PLANTEDKEY1234). "
+    "organization org-PLANTEDORG request req_PLANTEDREQ"
+)
+
 
 class ScriptedChatModel(BaseChatModel):
     calls: list[dict] = Field(default_factory=list)
@@ -46,7 +51,9 @@ class ScriptedChatModel(BaseChatModel):
         )
         if self.fail_next:
             self.fail_next = False
-            raise RuntimeError("scripted model failure")
+            # Shaped like an OpenAI error: the browser suite asserts none of
+            # it reaches the stream, the log rows or the next model call.
+            raise RuntimeError(PLANTED_MODEL_ERROR)
         return plan_reply(messages)
 
     def _generate(self, messages, stop=None, run_manager=None, **kwargs):
