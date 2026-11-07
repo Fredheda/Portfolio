@@ -3,9 +3,19 @@ import logging
 
 import azure.functions as func
 from content_loader import load_content
+from redact import redact
 from search_client import retrieve_information as _retrieve_information
 
 app = func.FunctionApp()
+
+# What the model reads when the search cannot run. Fixed on purpose: a
+# provider error (OpenAI, Azure AI Search) can carry a key prefix, an
+# organisation name, a request id or a host, and a tool result reaches the
+# model and the browser's event stream.
+SEARCH_UNAVAILABLE = (
+    "Search is temporarily unavailable. Answer from what you already know and "
+    "tell the visitor the background search could not be run."
+)
 
 _NO_PROPERTIES = json.dumps([])
 
@@ -106,4 +116,13 @@ def retrieve_information(context) -> str:
     search_query = invocation["arguments"].get("search_query")
     if not search_query:
         return "Error: search_query is required."
-    return _retrieve_information(search_query)
+    try:
+        return _retrieve_information(search_query)
+    except Exception as exc:
+        # The trigger boundary: nothing may escape as an MCP error result.
+        logging.error(
+            "retrieve_information failed: %s: %s",
+            type(exc).__name__,
+            redact(str(exc)),
+        )
+        return SEARCH_UNAVAILABLE
