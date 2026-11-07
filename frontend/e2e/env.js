@@ -5,4 +5,5 @@ export const BACKEND_PORT = 8210;
 export const MCP_PORT = 8211;
 export const MCP_KEY = 'e2e-test-key';
 export const BACKEND_URL = `http://127.0.0.1:${BACKEND_PORT}`;
+export const MCP_URL = `http://127.0.0.1:${MCP_PORT}`;
 export const WEB_URL = `http://127.0.0.1:${WEB_PORT}`;

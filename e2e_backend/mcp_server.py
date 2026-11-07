@@ -50,13 +50,35 @@ class _AzureFunctionsShim(types.ModuleType):
         )
 
 
+PLANTED_SEARCH_ERROR = (
+    "(InvalidRequest) https://planted-search.search.windows.net/indexes('planted-index') "
+    "api-key: PLANTEDSEARCHKEY request req_PLANTEDSEARCH"
+)
+# POST /__fail_search makes the next search raise, the way Azure AI Search or
+# the embeddings call would; function_app.py's own try/except must turn that
+# into its fixed text before it becomes an MCP result.
+FAIL_SEARCH = {"next": False}
+
+
+def _stub_search(query: str) -> str:
+    if FAIL_SEARCH["next"]:
+        FAIL_SEARCH["next"] = False
+        raise RuntimeError(PLANTED_SEARCH_ERROR)
+    return f"Stub search result for: {query}"
+
+
+async def _fail_search(request) -> PlainTextResponse:
+    FAIL_SEARCH["next"] = True
+    return PlainTextResponse("ok")
+
+
 def _install_shims() -> None:
     shim = _AzureFunctionsShim("azure.functions")
     shim.FunctionApp = _FunctionApp  # type: ignore[attr-defined]
     sys.modules["azure.functions"] = shim
 
     search = types.ModuleType("search_client")
-    search.retrieve_information = lambda q: f"Stub search result for: {q}"  # type: ignore[attr-defined]
+    search.retrieve_information = _stub_search  # type: ignore[attr-defined]
     sys.modules["search_client"] = search
 
     sys.path.insert(0, str(REPO / "mcp-tools"))
@@ -118,6 +140,7 @@ def build_app() -> Starlette:
     return Starlette(
         routes=[
             Route("/health", lambda request: PlainTextResponse("ok")),
+            Route("/__fail_search", _fail_search, methods=["POST"]),
             Route(
                 "/runtime/webhooks/mcp",
                 McpEndpoint(),

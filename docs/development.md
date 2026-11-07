@@ -111,7 +111,7 @@ The deploy scripts have tests too: `python -m pytest scripts/tests -v` (needs on
 From `frontend/`: `npm run e2e`. The first time, run `npx playwright install chromium` and `poetry install` in `backend/`. It builds the frontend, then Playwright starts three servers and runs every test offline:
 
 - `e2e_backend.mcp_server` on 8211: the real `mcp-tools/function_app.py` handlers behind a small `azure.functions` shim, over MCP streamable HTTP at `/runtime/webhooks/mcp`, requiring `x-functions-key`. Only Azure AI Search is stubbed.
-- `e2e_backend.backend_server` on 8210: the real `main.create_app` and `agent.build_graph` with a scripted model (`e2e_backend/model.py`, keyword script in `script.py`), a fake moderation client (flags `forbidden-topic`) and a recording SQL logger. Test-only routes: `GET /__model_calls`, `GET /__db_log`, `POST /__reset`, `POST /__fail` (next model call raises).
+- `e2e_backend.backend_server` on 8210: the real `main.create_app` and `agent.build_graph` with a scripted model (`e2e_backend/model.py`, keyword script in `script.py`), a fake moderation client (flags `forbidden-topic`) and a recording SQL logger. Test-only routes: `GET /__model_calls`, `GET /__db_log`, `POST /__reset`, `POST /__fail` (next model call raises with a planted, secret-shaped message); on the fake MCP server, `POST /__fail_search` (next search raises inside the real `function_app.py` handler).
 - `server.js` on 3210 with `BACKEND_URL` only (so its production `AGENT_URL` default is used) and raised rate limits.
 
 Projects:
