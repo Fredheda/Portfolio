@@ -31,6 +31,7 @@ jobs:
     timeout-minutes: 5
     outputs:
       code: ${{ steps.areas.outputs.code }}
+      data: ${{ steps.areas.outputs.data }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -87,6 +88,37 @@ jobs:
       - name: Run mcp-tools tests
         working-directory: mcp-tools
         run: .venv/bin/python -m pytest tests -v
+
+  # The offline DocumentProcessor tests of data/ (the index builder's own
+  # Poetry project). Runs when the PR touches data/, a workflow or a script.
+  # No secrets, and never populate_index.py or IndexCreator.py: those write the
+  # live search index and call the paid embeddings API. The tests download
+  # tiktoken's gpt2 file on first use, so that folder is cached.
+  data:
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.data != 'false' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      TIKTOKEN_CACHE_DIR: ${{ github.workspace }}/.tiktoken-cache
+    defaults:
+      run:
+        working-directory: data
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install Poetry
+        run: pipx install "poetry>=2.0,<3.0"
+      - uses: actions/setup-python@v7
+        with:
+          python-version-file: data/.python-version
+          cache: poetry
+          cache-dependency-path: data/poetry.lock
+      - uses: actions/cache@v6
+        with:
+          path: ${{ github.workspace }}/.tiktoken-cache
+          key: tiktoken-gpt2-v1
+      - run: poetry install --no-root --no-interaction
+      - run: poetry run pytest -v
 
   # The deploy and CI scripts are plain bash, tested against a fake `az`; they
   # need only pytest, so no project environment is installed.
