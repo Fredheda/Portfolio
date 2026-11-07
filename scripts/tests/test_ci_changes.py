@@ -32,7 +32,7 @@ def repo(tmp_path: Path) -> Path:
     return tmp_path
 
 
-def classify(repo: Path) -> str:
+def run_script(repo: Path) -> list[str]:
     git(repo, "add", "-A")
     git(repo, "commit", "-q", "--allow-empty", "-m", "change")
     result = subprocess.run(
@@ -42,7 +42,17 @@ def classify(repo: Path) -> str:
         text=True,
         check=True,
     )
-    return result.stdout.strip()
+    return result.stdout.strip().splitlines()
+
+
+def classify(repo: Path) -> str:
+    """The `code=` line."""
+    return run_script(repo)[0]
+
+
+def data_flag(repo: Path) -> str:
+    """The `data=` line."""
+    return run_script(repo)[1]
 
 
 def test_only_markdown_and_docs_is_not_code(repo: Path) -> None:
@@ -85,6 +95,31 @@ def test_a_deleted_code_file_is_code(repo: Path) -> None:
 
 def test_an_empty_diff_is_not_code(repo: Path) -> None:
     assert classify(repo) == "code=false"
+
+
+def test_a_data_file_sets_the_data_flag(repo: Path) -> None:
+    (repo / "data").mkdir()
+    (repo / "data" / "DocumentProcessor.py").write_text("changed\n")
+    assert data_flag(repo) == "data=true"
+
+
+def test_a_workflow_or_script_change_sets_the_data_flag(repo: Path) -> None:
+    (repo / ".github" / "workflows" / "ci.yml").write_text("changed\n")
+    assert data_flag(repo) == "data=true"
+
+
+def test_a_backend_only_change_leaves_the_data_flag_off(repo: Path) -> None:
+    (repo / "backend" / "x.py").write_text("changed\n")
+    assert data_flag(repo) == "data=false"
+
+
+def test_a_docs_only_change_leaves_the_data_flag_off(repo: Path) -> None:
+    (repo / "docs" / "a.md").write_text("changed\n")
+    assert data_flag(repo) == "data=false"
+
+
+def test_an_empty_diff_leaves_the_data_flag_off(repo: Path) -> None:
+    assert data_flag(repo) == "data=false"
 
 
 CI_YML = Path(__file__).resolve().parents[2] / ".github" / "workflows" / "ci.yml"

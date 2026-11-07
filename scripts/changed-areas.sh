@@ -8,7 +8,10 @@
 # and scripts count as code, so a change to CI itself always runs all of CI.
 # An empty diff counts as documentation-only.
 #
-# The `changes` job in ci.yml appends this line to $GITHUB_OUTPUT.
+# A second line, `data=true`, says the PR touches data/, a workflow or a
+# script, so the data tests in ci.yml are worth running; otherwise `data=false`.
+#
+# The `changes` job in ci.yml appends both lines to $GITHUB_OUTPUT.
 #
 # Usage: ./scripts/changed-areas.sh <base-ref>   (for example origin/main)
 set -euo pipefail
@@ -20,9 +23,14 @@ if ! git rev-parse --verify --quiet "$base^{commit}" >/dev/null; then
 fi
 
 code=false
+data=false
 while IFS= read -r path; do
   case "$path" in
     docs/* | deployment/*) ;;
+    data/* | .github/workflows/* | scripts/*)
+      code=true
+      data=true
+      ;;
     */*) code=true ;;
     *.md) ;;
     *) code=true ;;
@@ -30,3 +38,4 @@ while IFS= read -r path; do
 done < <(git diff --name-only "$base"...HEAD)
 
 echo "code=$code"
+echo "data=$data"
