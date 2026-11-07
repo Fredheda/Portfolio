@@ -57,7 +57,7 @@ poetry run python main.py              # production server
 
 ## Site content
 
-`content/site-content.json` is the one source for the page text (profile, About, experience, posts, projects, fredbot's intro and suggestions), the link previews and fredbot's `get_profile`, `list_projects` and `get_project_details` tools. `frontend/content/` and `mcp-tools/content/` are git-ignored copies made by `npm run sync-content` and the deploy scripts. The schema is `frontend/src/lib/content.js`; `npm test` fails on a malformed edit.
+`content/site-content.json` is the one source for the page text (profile, About, experience, posts, hero graph labels, projects, fredbot's intro and suggestions), the link previews and fredbot's `get_profile`, `list_projects` and `get_project_details` tools. `frontend/content/` and `mcp-tools/content/` are git-ignored copies made by `npm run sync-content` and the deploy scripts. The schema is `frontend/src/lib/content.js`; `npm test` fails on a malformed edit.
 
 - LinkedIn posts: `posts` is empty and the Posts section is hidden (not rendered in `Home.jsx`, no header link). To show it again, add entries (date `YYYY-MM-DD`, the first 300 characters, the post URL, reaction and comment counts; at most six; sorted newest first), render `<Posts />` in `Home.jsx` and restore the header link.
 - Each project's `caseStudy` has `problem` and `built` (Markdown) and an optional `architecture`: Mermaid source (`flowchart TB`, neutral site theme, no state colours), drawn by `Diagram.jsx` behind the page's "For engineers" toggle together with the tech line. Mermaid loads lazily, only then.

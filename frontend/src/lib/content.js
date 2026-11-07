@@ -62,6 +62,10 @@ export const contentSchema = z.object({
       }),
     )
     .max(6),
+  // Short labels on the hero graph's four labelled nodes (fredbot is fixed).
+  heroGraph: z.object({
+    labels: z.object({ lead: text, focus: text, openSource: text, community: text }),
+  }),
   projects: z
     .array(
       z.object({

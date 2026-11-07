@@ -41,6 +41,15 @@ describe('site content', () => {
     expect(contentSchema.parse(raw).posts).toEqual([]);
   });
 
+  it('labels the hero graph with the four owner-picked labels', () => {
+    expect(contentSchema.parse(raw).heroGraph.labels).toEqual({
+      lead: 'AI & Eng. Lead',
+      focus: 'Agentic AI',
+      openSource: 'SHAP (open source)',
+      community: 'Community Builder',
+    });
+  });
+
   it('lists the five featured projects and no MCP client', () => {
     const ids = contentSchema.parse(raw).projects.map((p) => p.id);
     expect(ids).toEqual(['paper-podcasts', 'tfl-mcp-server', 'copilotkit-canvas', 'restaurant-researcher', 'shap-open-source']);
