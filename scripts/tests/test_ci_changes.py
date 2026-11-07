@@ -176,6 +176,38 @@ def test_the_review_runs_on_ready_prs_only() -> None:
     assert NOT_DRAFT not in claude
 
 
+def data_job() -> str:
+    text = CI_YML.read_text()
+    assert "\n  data:\n" in text, "ci.yml has no data job"
+    return text.split("\n  data:\n", 1)[1].split("\n  # ", 1)[0]
+
+
+def test_the_data_job_runs_on_data_changes_and_fails_open() -> None:
+    block = data_job()
+    assert "needs: changes" in block
+    assert "if: ${{ !cancelled() && needs.changes.outputs.data != 'false' }}" in block
+
+
+def test_the_data_job_caches_the_tiktoken_download() -> None:
+    block = data_job()
+    assert "TIKTOKEN_CACHE_DIR" in block
+    assert "actions/cache@" in block
+    assert "tiktoken-gpt2-v1" in block
+
+
+def test_the_data_job_runs_the_data_tests_without_installing_the_project() -> None:
+    block = data_job()
+    assert "poetry install --no-root --no-interaction" in block
+    assert "poetry run pytest -v" in block
+    assert "working-directory: data" in block
+
+
+def test_the_data_job_never_touches_the_index_or_a_secret() -> None:
+    block = data_job().lower()
+    for forbidden in ("populate_index", "indexcreator", "secrets.", "api_key", "azure/login"):
+        assert forbidden not in block, forbidden
+
+
 def test_an_unknown_base_fails_loudly(repo: Path) -> None:
     result = subprocess.run(
         ["bash", str(SCRIPT), "no-such-ref"],

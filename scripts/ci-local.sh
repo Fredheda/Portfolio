@@ -35,6 +35,13 @@ mcp-tools/.venv/bin/pip install -r mcp-tools/requirements.txt pytest==9.1.1
   .venv/bin/python -m pytest tests -v
 )
 
+step "data: tests (offline, no index, no embeddings)"
+(
+  cd data
+  poetry install --no-root --no-interaction
+  poetry run pytest -v
+)
+
 step "deploy and CI script tests"
 python -m pytest scripts/tests -v
 
