@@ -200,7 +200,9 @@ def _noop_graph():
 
 
 def _safe_agent() -> SafeErrorAgent:
-    return SafeErrorAgent(name="portfolio_agent", graph=_noop_graph(), description="test")
+    return SafeErrorAgent(
+        name="portfolio_agent", graph=_noop_graph(), description="test"
+    )
 
 
 def _input() -> RunAgentInput:
