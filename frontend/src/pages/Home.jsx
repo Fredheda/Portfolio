@@ -11,8 +11,8 @@ export default function Home() {
       <Hero />
       <Experience />
       {/* Posts section hidden until the owner supplies posts: <Posts /> from ../components/home/Posts */}
-      <Projects />
       <FredbotPanel />
+      <Projects />
     </>
   );
 }
