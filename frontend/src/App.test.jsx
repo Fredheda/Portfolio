@@ -31,15 +31,17 @@ beforeEach(() => {
 });
 
 describe('App routes', () => {
-  it('home shows hero, experience, projects and fredbot in that order, with no posts', () => {
+  it('home shows hero, experience, fredbot and projects in that order, with no posts', () => {
     renderAt('/');
-    const order = ['experience', 'projects'].map((id) => document.getElementById(id));
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(profile.claim);
-    expect(order.every(Boolean)).toBe(true);
-    expect(document.getElementById('posts')).toBeNull();
+    const experience = document.getElementById('experience');
+    const projects = document.getElementById('projects');
     const fredbot = screen.getByText('fredbot stub');
-    expect(order[0].compareDocumentPosition(order[1]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(order[1].compareDocumentPosition(fredbot) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(profile.claim);
+    expect(experience).not.toBeNull();
+    expect(projects).not.toBeNull();
+    expect(document.getElementById('posts')).toBeNull();
+    expect(experience.compareDocumentPosition(fredbot) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(fredbot.compareDocumentPosition(projects) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it('about shows the name, the photo and every About paragraph', async () => {

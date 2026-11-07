@@ -34,6 +34,17 @@ describe('Header', () => {
     expect(nav.queryByRole('link', { name: 'Posts' })).toBeNull();
   });
 
+  it('lists the sections in page order', () => {
+    renderHeader();
+    const nav = within(screen.getByRole('navigation', { name: 'Main' }));
+    expect(nav.getAllByRole('link').map((link) => link.textContent)).toEqual([
+      'About',
+      'Experience',
+      'Ask fredbot',
+      'Projects',
+    ]);
+  });
+
   it('links to email, LinkedIn and GitHub from the content file', () => {
     renderHeader();
     expect(screen.getByLabelText('Email')).toHaveAttribute('href', profile.links.email);
