@@ -60,6 +60,7 @@ poetry run python main.py              # production server
 `content/site-content.json` is the one source for the page text (profile, About, experience, posts, hero graph labels, projects, fredbot's intro and suggestions), the link previews and fredbot's `get_profile`, `list_projects` and `get_project_details` tools. `frontend/content/` and `mcp-tools/content/` are git-ignored copies made by `npm run sync-content` and the deploy scripts. The schema is `frontend/src/lib/content.js`; `npm test` fails on a malformed edit.
 
 - LinkedIn posts: `posts` is empty and the Posts section is hidden (not rendered in `Home.jsx`, no header link). To show it again, add entries (date `YYYY-MM-DD`, the first 300 characters, the post URL, reaction and comment counts; at most six; sorted newest first), render `<Posts />` in `Home.jsx` and restore the header link.
+- About: the `/about` page is hidden. `/about` redirects to `/`, there is no header link or route metadata, and `get_profile` leaves `about` out; `pages/About.jsx` and `content.about` stay. To show it again, route `About` in `App.jsx`, add the header link and the `routeMeta.js` entry, and add `about` back to `get_profile` in `mcp-tools/function_app.py` (plus the `get_profile` line in `backend/agent/system_prompt.md`).
 - Each project's `caseStudy` has `problem` and `built` (Markdown) and an optional `architecture`: Mermaid source (`flowchart TB`, neutral site theme, no state colours), drawn by `Diagram.jsx` behind the page's "For engineers" toggle together with the tech line. Mermaid loads lazily, only then.
 - No `[draft]` marker ships: a test fails on one. Mark text still waiting for the owner only on a branch.
 - Deploying a content change: see [deployment/README.md](../deployment/README.md).
@@ -118,7 +119,7 @@ Projects:
 
 - `server`: each test spawns its own `server.js` at production settings (redirect, headers, both rate limits, per-route titles and link-preview tags, 404 for unknown paths).
 - `full-stack`: browser and AG-UI protocol tests, plus the pages: 360px phone width, hash links from other routes, fredbot's tool lines.
-- `a11y`: axe on `/`, `/about`, a project page and `/privacy-policy` with every rule on, once finite animations have finished. Fails on serious or critical issues.
+- `a11y`: axe on `/`, a project page and `/privacy-policy` with every rule on, once finite animations have finished. Fails on serious or critical issues.
 
 Tests run one at a time because they share the backend's call log. Two runs at once on one machine (two worktrees) must use different ports: set `E2E_WEB_PORT` (default 3210), `E2E_BACKEND_PORT` (8210) and `E2E_MCP_PORT` (8211) to three distinct values from 1024 to 65535, for example `E2E_WEB_PORT=3310 E2E_BACKEND_PORT=8310 E2E_MCP_PORT=8311 ./scripts/ci-local.sh`; on the same ports Playwright attaches to the other run's servers. Test rules (locators in `e2e/selectors.js`, why `e2e_backend/` sits outside `backend/`, no duplicate coverage): `CLAUDE.md`, "Commands".
 

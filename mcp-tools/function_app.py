@@ -69,16 +69,14 @@ def list_projects(context) -> str:
     arg_name="context",
     tool_name="get_profile",
     description=(
-        "Get Frederik's profile, About text, experience and recent LinkedIn posts, "
+        "Get Frederik's profile, experience and recent LinkedIn posts, "
         "exactly as the site shows them."
     ),
     tool_properties=_NO_PROPERTIES,
 )
 def get_profile(context) -> str:
     content = load_content()
-    return json.dumps(
-        {key: content[key] for key in ("profile", "about", "experience", "posts")}
-    )
+    return json.dumps({key: content[key] for key in ("profile", "experience", "posts")})
 
 
 @app.mcp_tool_trigger(

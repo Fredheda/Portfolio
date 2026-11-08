@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
 import { resetBackend, sendMessage, waitForPrompt } from '../helpers.js';
 
-const { projects } = JSON.parse(
+const { profile, projects } = JSON.parse(
   readFileSync(new URL('../../../content/site-content.json', import.meta.url), 'utf8'),
 );
 
@@ -16,7 +16,7 @@ test.beforeEach(async ({ request }) => {
 test.describe('on a 360px phone', () => {
   test.use({ viewport: PHONE });
 
-  for (const path of ['/about', `/projects/${projects[0].id}`]) {
+  for (const path of ['/privacy-policy', `/projects/${projects[0].id}`]) {
     test(`${path} does not scroll sideways`, async ({ page }) => {
       await page.goto(path);
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
@@ -38,8 +38,15 @@ test('the fredbot panel boots without scrolling the page', async ({ page }) => {
   expect(await page.evaluate(() => window.scrollY)).toBe(0);
 });
 
-test('a section link in the header works from another page', async ({ page }) => {
+test('the hidden /about page lands on the home page', async ({ page }) => {
   await page.goto('/about');
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(profile.claim);
+  await expect(page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'About' })).toHaveCount(0);
+});
+
+test('a section link in the header works from another page', async ({ page }) => {
+  await page.goto('/privacy-policy');
   await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Experience' }).click();
   await expect(page).toHaveURL(/\/#experience$/);
   await expect(page.getByRole('heading', { level: 2, name: 'Experience' })).toBeInViewport();

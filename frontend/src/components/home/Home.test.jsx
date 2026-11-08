@@ -34,14 +34,15 @@ describe('Hero', () => {
 });
 
 describe('Experience', () => {
-  it('shows role, sector, years and impact for each entry', () => {
+  it('shows the role, the sector line on its own, and the impact for each entry', () => {
     render(<Experience />);
     const section = screen.getByRole('region', { name: 'Experience' });
     expect(section).toHaveAttribute('id', 'experience');
     for (const entry of experience) {
       const card = within(section).getByRole('heading', { name: entry.role }).closest('article');
-      expect(card).toHaveTextContent(entry.sector);
-      expect(card).toHaveTextContent(`${entry.start} to ${entry.end ?? 'now'}`);
+      // getByText matches a whole element text: the line is exactly the sector.
+      expect(within(card).getByText(entry.sector)).toBeInTheDocument();
+      expect(card).not.toHaveTextContent(/\d{4} to /);
       expect(card).toHaveTextContent(entry.impact);
     }
   });

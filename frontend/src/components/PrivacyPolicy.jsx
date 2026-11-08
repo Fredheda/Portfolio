@@ -8,7 +8,7 @@ function PrivacyPolicy() {
   return (
     <div className="flex justify-center py-10 px-4">
       <div className="max-w-3xl w-full bg-white rounded-xl p-6 md:p-12 border border-line">
-        <h1 className="text-4xl font-bold mb-6 text-center text-ink font-serif">Privacy Policy</h1>
+        <h1 className="text-4xl font-bold mb-6 text-center text-ink font-heading">Privacy Policy</h1>
           <p className="text-center text-muted mb-6">Last updated: April 4, 2026</p>
         <div className="space-y-6 text-ink">
           <p>This Privacy Policy describes Our policies and procedures on the collection, use and disclosure of Your information when You use the Service and tells You about Your privacy rights and how the law protects You.</p>

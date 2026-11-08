@@ -12,7 +12,6 @@ export function buildRouteMeta(content) {
   const { profile, projects } = content;
   const meta = {
     '/': { title: profile.name, description: profile.claim },
-    '/about': { title: `About ${profile.name}`, description: profile.claim },
     '/privacy-policy': {
       title: `Privacy policy · ${profile.name}`,
       description: `How ${profile.name}'s site handles your data.`,

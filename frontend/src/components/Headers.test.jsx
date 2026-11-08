@@ -23,7 +23,6 @@ describe('Header', () => {
     renderHeader();
     const nav = within(screen.getByRole('navigation', { name: 'Main' }));
     const expected = {
-      About: '/about',
       Experience: '/#experience',
       Projects: '/#projects',
       'Ask fredbot': '/#fredbot',
@@ -32,13 +31,13 @@ describe('Header', () => {
       expect(nav.getByRole('link', { name })).toHaveAttribute('href', href);
     }
     expect(nav.queryByRole('link', { name: 'Posts' })).toBeNull();
+    expect(nav.queryByRole('link', { name: 'About' })).toBeNull();
   });
 
   it('lists the sections in page order', () => {
     renderHeader();
     const nav = within(screen.getByRole('navigation', { name: 'Main' }));
     expect(nav.getAllByRole('link').map((link) => link.textContent)).toEqual([
-      'About',
       'Experience',
       'Ask fredbot',
       'Projects',
@@ -60,7 +59,9 @@ describe('Header', () => {
     fireEvent.click(toggle);
     expect(toggle).toHaveAttribute('aria-expanded', 'true');
     expect(document.body.style.overflow).toBe('hidden');
-    expect(within(screen.getByRole('navigation', { name: 'Mobile' })).getByRole('link', { name: 'About' })).toBeVisible();
+    const mobile = within(screen.getByRole('navigation', { name: 'Mobile' }));
+    expect(mobile.getByRole('link', { name: 'Experience' })).toBeVisible();
+    expect(mobile.queryByRole('link', { name: 'About' })).toBeNull();
 
     fireEvent.click(toggle);
     expect(toggle).toHaveAttribute('aria-expanded', 'false');

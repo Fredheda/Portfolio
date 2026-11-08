@@ -9,7 +9,7 @@ export default function Hero() {
     <section className="hero-wash">
       <div className="mx-auto grid max-w-page items-center gap-10 px-4 pb-12 pt-14 md:px-6 md:pt-20 lg:grid-cols-[1.25fr_1fr]">
         <div>
-          <h1 className="m-0 max-w-[16ch] font-serif text-[clamp(2.25rem,5vw,3.5rem)] font-semibold leading-[1.08] tracking-[-0.02em]">
+          <h1 className="m-0 max-w-[16ch] font-heading text-[clamp(2.25rem,5vw,3.5rem)] font-bold leading-[1.08] tracking-[-0.02em]">
             {profile.claim}
           </h1>
           <p className="mt-5 max-w-[60ch] text-lg leading-relaxed text-muted">{profile.now}</p>

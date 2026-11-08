@@ -47,9 +47,9 @@ def test_list_projects_returns_plain_english_fields():
         assert set(project) == {"id", "title", "plainEnglish", "techLine"}
 
 
-def test_get_profile_returns_page_content():
+def test_get_profile_returns_the_visible_page_content_without_the_hidden_about_text():
     result = json.loads(function_app.get_profile(context="{}"))
-    assert set(result) == {"profile", "about", "experience", "posts"}
+    assert set(result) == {"profile", "experience", "posts"}
     assert result["profile"]["name"] == "Frederik Heda"
 
 

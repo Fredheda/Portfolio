@@ -5,6 +5,53 @@ import HeroGraph from './HeroGraph';
 
 const LIVE_BLUE = '#1d4ed8';
 
+// Geometry guard: a label must not sit on an edge or leave the drawing. Text
+// width is estimated generously (5.4 units per character at font-size 10);
+// the box runs from 8 units above the baseline to 2 below it.
+const CHAR_WIDTH = 5.4;
+const VIEW = { width: 320, height: 190 };
+
+function labelBox(text) {
+  const x = Number(text.getAttribute('x'));
+  const y = Number(text.getAttribute('y'));
+  const width = text.textContent.length * CHAR_WIDTH;
+  const left = text.getAttribute('text-anchor') === 'start' ? x : x - width / 2;
+  return { left, right: left + width, top: y - 8, bottom: y + 2 };
+}
+
+function edgeCrossesBox(line, box) {
+  const [x1, y1, x2, y2] = ['x1', 'y1', 'x2', 'y2'].map((name) => Number(line.getAttribute(name)));
+  for (let t = 0; t <= 1; t += 0.005) {
+    const x = x1 + (x2 - x1) * t;
+    const y = y1 + (y2 - y1) * t;
+    if (x >= box.left && x <= box.right && y >= box.top && y <= box.bottom) return true;
+  }
+  return false;
+}
+
+describe('HeroGraph label placement', () => {
+  it('keeps every label off every edge', () => {
+    const { container } = render(<HeroGraph />);
+    const lines = [...container.querySelectorAll('line')];
+    for (const text of container.querySelectorAll('text')) {
+      const box = labelBox(text);
+      const crossed = lines.filter((line) => edgeCrossesBox(line, box));
+      expect(crossed, `"${text.textContent}" overlaps an edge`).toHaveLength(0);
+    }
+  });
+
+  it('keeps every label inside the drawing', () => {
+    const { container } = render(<HeroGraph />);
+    for (const text of container.querySelectorAll('text')) {
+      const box = labelBox(text);
+      expect(box.left, text.textContent).toBeGreaterThanOrEqual(0);
+      expect(box.right, text.textContent).toBeLessThanOrEqual(VIEW.width);
+      expect(box.top, text.textContent).toBeGreaterThanOrEqual(0);
+      expect(box.bottom, text.textContent).toBeLessThanOrEqual(VIEW.height);
+    }
+  });
+});
+
 describe('HeroGraph', () => {
   it('labels the four slots from the content file and fredbot', () => {
     render(<HeroGraph />);

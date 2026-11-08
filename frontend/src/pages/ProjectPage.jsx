@@ -11,7 +11,7 @@ const prose = 'break-words text-[1.05rem] leading-[1.7] [&_a]:text-royal [&_a]:u
 function Section({ title, children }) {
   return (
     <section className="mt-10">
-      <h2 className="m-0 font-serif text-2xl font-semibold tracking-[-0.01em]">{title}</h2>
+      <h2 className="m-0 font-heading text-2xl font-semibold tracking-[-0.01em]">{title}</h2>
       <div className="mt-3 space-y-3">{children}</div>
     </section>
   );
@@ -44,7 +44,7 @@ export default function ProjectPage() {
         <Link to="/#projects" className="text-sm font-semibold text-royal">
           All projects
         </Link>
-        <h1 className="mt-4 font-serif text-[clamp(2rem,4.5vw,3rem)] font-semibold leading-[1.1] tracking-[-0.02em]">
+        <h1 className="mt-4 font-heading text-[clamp(2rem,4.5vw,3rem)] font-bold leading-[1.1] tracking-[-0.02em]">
           {project.title}
         </h1>
         <p className="mt-4 max-w-[60ch] text-xl leading-relaxed">{project.plainEnglish}</p>

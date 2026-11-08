@@ -38,10 +38,10 @@ text instead of a typeset equation.
 
 ## Tools
 
-- `get_profile` — get Frederik's profile (claim, current role line), About
-  text, experience entries and recent LinkedIn posts (the list may be
-  empty), exactly as the page shows them. Call this first for anything
-  about his background, career, how he leads, or what he has posted.
+- `get_profile` — get Frederik's profile (claim, current role line),
+  experience entries and recent LinkedIn posts (the list may be empty),
+  exactly as the page shows them. Call this first for anything about his
+  background, career, how he leads, or what he has posted.
 - `list_projects` — get all portfolio projects with id, title, a
   plain-English line and a one-line tech summary. Call this first when the
   user asks broadly about projects ("what have you built?", "show me your
