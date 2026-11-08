@@ -8,7 +8,7 @@ const { labels } = content.heroGraph;
 const nodes = [
   { id: 'lead', x: 60, y: 60, r: 5, label: labels.lead, lx: 60, ly: 48 },
   { id: 'focus', x: 150, y: 40, r: 6, label: labels.focus, lx: 150, ly: 28 },
-  { id: 'openSource', x: 250, y: 70, r: 5, label: labels.openSource, lx: 250, ly: 46 },
+  { id: 'openSource', x: 250, y: 70, r: 5, label: labels.openSource, lx: 250, ly: 53 },
   { id: 'fredbot', x: 110, y: 130, r: 8, label: 'fredbot', lx: 122, ly: 120, live: true },
   { id: 'community', x: 210, y: 150, r: 5, label: labels.community, lx: 210, ly: 168 },
   { id: 'a', x: 40, y: 160, r: 4 },
