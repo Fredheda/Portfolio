@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { expect } from '@playwright/test';
-import { BACKEND_URL } from './env.js';
+import { BACKEND_URL, MCP_URL } from './env.js';
 import { terminalInput } from './selectors.js';
 
 // The test backend's routes (e2e_backend/backend_server.py).
@@ -20,10 +20,17 @@ export async function failNextModelCall(request) {
   expect((await request.post(`${BACKEND_URL}/__fail`)).ok()).toBe(true);
 }
 
+// The fake MCP server's route (e2e_backend/mcp_server.py): the next search
+// raises inside the real function_app.py handler.
+export async function failNextSearch(request) {
+  expect((await request.post(`${MCP_URL}/__fail_search`)).ok()).toBe(true);
+}
+
 // One AG-UI run posted straight to the backend, carrying only `text`, the
 // way a browser never does: earlier turns can only come from the
-// checkpointer.
-export async function runAgent(request, { threadId, text }) {
+// checkpointer. `expectError: true` accepts a run that ends with RUN_ERROR
+// instead of RUN_FINISHED (a failed run must still end with exactly one).
+export async function runAgent(request, { threadId, text, expectError = false }) {
   const response = await request.post(`${BACKEND_URL}/agent/portfolio_agent`, {
     headers: { accept: 'text/event-stream' },
     data: {
@@ -38,7 +45,7 @@ export async function runAgent(request, { threadId, text }) {
   });
   expect(response.status()).toBe(200);
   const body = await response.text();
-  expect(body).toContain('RUN_FINISHED');
+  expect(body).toContain(expectError ? 'RUN_ERROR' : 'RUN_FINISHED');
   return body;
 }
 
