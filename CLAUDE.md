@@ -94,7 +94,7 @@ Names only; what each does and where it goes: `docs/development.md`, "Environmen
 
 `.github/workflows/claude-review.yml` posts a comment-only AI review on every push to a ready (non-draft) PR: security first, a documentation check ("Docs: current" or findings) and advisory size and tests checks. The owner can request one with a `@claude` comment. Token expiry and renewal: `deployment/expirations.md`.
 
-- **Merging:** the owner merges, except Dependabot patch or minor bumps that touch nothing under `.github/`, and docs-only PRs (only `.md` files, `CLAUDE.md` included, and `docs/`; never `.claude/` or workflows). The coordinator merges those after review, once every CI check passed and, for docs PRs, the automated GitHub review passed. Rules: workspace `CLAUDE.md`, Git.
+- **Merging:** the owner merges, except the bot and docs classes in the workspace `CLAUDE.md` (Git), which the coordinator merges.
 
 ## Skills
 
