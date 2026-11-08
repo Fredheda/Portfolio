@@ -93,7 +93,7 @@ export default defineConfig({
   },
   test: {
     environment: 'jsdom',
-    include: ['src/**/*.test.{js,jsx}'],
+    include: ['src/**/*.test.{js,jsx}', 'e2e/env.test.js'],
     setupFiles: ['./vitest.setup.js'],
   },
 });
