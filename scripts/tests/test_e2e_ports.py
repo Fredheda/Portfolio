@@ -21,12 +21,14 @@ def js_default(name: str) -> int:
 
 def py_default(source: str, name: str) -> int:
     match = re.search(rf'os\.environ\.get\("{name}", "(\d+)"\)', source)
-    assert match, f"no os.environ.get(\"{name}\", \"<default>\")"
+    assert match, f'no os.environ.get("{name}", "<default>")'
     return int(match.group(1))
 
 
 def test_the_backend_server_default_matches_env_js() -> None:
-    assert py_default(BACKEND_SERVER, "E2E_BACKEND_PORT") == js_default("E2E_BACKEND_PORT")
+    assert py_default(BACKEND_SERVER, "E2E_BACKEND_PORT") == js_default(
+        "E2E_BACKEND_PORT"
+    )
 
 
 def test_both_python_servers_default_the_mcp_port_like_env_js() -> None:
