@@ -120,7 +120,7 @@ Projects:
 - `full-stack`: browser and AG-UI protocol tests, plus the pages: 360px phone width, hash links from other routes, fredbot's tool lines.
 - `a11y`: axe on `/`, `/about`, a project page and `/privacy-policy` with every rule on, once finite animations have finished. Fails on serious or critical issues.
 
-Tests run one at a time because they share the backend's call log. Test rules (locators in `e2e/selectors.js`, why `e2e_backend/` sits outside `backend/`, no duplicate coverage): `CLAUDE.md`, "Commands".
+Tests run one at a time because they share the backend's call log. Two runs at once on one machine (two worktrees) must use different ports: set `E2E_WEB_PORT` (default 3210), `E2E_BACKEND_PORT` (8210) and `E2E_MCP_PORT` (8211) to three distinct values from 1024 to 65535, for example `E2E_WEB_PORT=3310 E2E_BACKEND_PORT=8310 E2E_MCP_PORT=8311 ./scripts/ci-local.sh`; on the same ports Playwright attaches to the other run's servers. Test rules (locators in `e2e/selectors.js`, why `e2e_backend/` sits outside `backend/`, no duplicate coverage): `CLAUDE.md`, "Commands".
 
 ### CI
 

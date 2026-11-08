@@ -4,8 +4,10 @@
 # only the light CI jobs, so make this green first.
 #
 # Needs Poetry, Python 3, Node 24 and network access for installs. The e2e
-# suite itself runs offline. scripts/tests/test_ci_local.py fails when ci.yml
-# gains a command this script lacks.
+# suite itself runs offline on ports 3210, 8210 and 8211; set E2E_WEB_PORT,
+# E2E_BACKEND_PORT and E2E_MCP_PORT to run two copies at once.
+# scripts/tests/test_ci_local.py fails when ci.yml gains a command this script
+# lacks.
 #
 # Usage: ./scripts/ci-local.sh
 set -euo pipefail
