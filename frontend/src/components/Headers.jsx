@@ -8,7 +8,6 @@ const { profile } = content;
 // Section links point at the home page ("/#experience"), so they work from
 // every route; useHashScroll on the home page does the scrolling.
 export const navLinks = [
-  { label: 'About', to: '/about' },
   { label: 'Experience', to: '/#experience' },
   { label: 'Ask fredbot', to: '/#fredbot' },
   { label: 'Projects', to: '/#projects' },
