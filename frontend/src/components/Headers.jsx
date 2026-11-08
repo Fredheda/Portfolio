@@ -74,7 +74,7 @@ const Header = () => {
         <nav
           id="mobile-nav"
           aria-label="Mobile"
-          className="fixed inset-x-0 bottom-0 top-[57px] z-30 flex flex-col gap-1 overflow-y-auto border-t border-line bg-page px-4 py-6 md:hidden"
+          className="absolute inset-x-0 top-full z-30 h-[calc(100dvh-100%)] flex flex-col gap-1 overflow-y-auto border-t border-line bg-page px-4 py-6 md:hidden"
         >
           {navLinks.map((link) => (
             <Link
