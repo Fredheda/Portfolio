@@ -66,11 +66,11 @@ test('each route gets its own title and link-preview tags', async ({ prodServer 
   expect(metaContent(home, 'og:url')).toBe('https://frederikheda.com');
   expect(home).not.toContain('<!--route-meta-->');
 
-  const about = await prodServer.get('/about');
-  expect(about.status()).toBe(200);
-  const html = await about.text();
-  expect(html).toContain(`<title>About ${CONTENT.profile.name}</title>`);
-  expect(metaContent(html, 'og:description')).toBe(CONTENT.profile.claim);
+  const privacy = await prodServer.get('/privacy-policy');
+  expect(privacy.status()).toBe(200);
+  const html = await privacy.text();
+  expect(html).toContain(`<title>Privacy policy · ${CONTENT.profile.name}</title>`);
+  expect(metaContent(html, 'og:url')).toBe('https://frederikheda.com/privacy-policy');
 
   const project = CONTENT.projects[0];
   const projectHtml = await (await prodServer.get(`/projects/${project.id}`)).text();
@@ -78,7 +78,8 @@ test('each route gets its own title and link-preview tags', async ({ prodServer 
 });
 
 test('an unknown page or project answers 404 with the app shell', async ({ prodServer }) => {
-  for (const path of ['/projects/nope', '/nope']) {
+  // /about is hidden: the server sends the app shell with a 404, and the app redirects home.
+  for (const path of ['/projects/nope', '/nope', '/about']) {
     const response = await prodServer.get(path);
     expect(response.status()).toBe(404);
     expect(await response.text()).toContain('<div id="root"></div>');

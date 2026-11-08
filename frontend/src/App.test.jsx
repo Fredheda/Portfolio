@@ -44,15 +44,12 @@ describe('App routes', () => {
     expect(fredbot.compareDocumentPosition(projects) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it('about shows the name, the photo and every About paragraph', async () => {
+  it('/about is hidden: it lands on the home page and shows no About text', async () => {
     renderAt('/about');
-    expect(await screen.findByRole('heading', { level: 1, name: profile.name })).toBeInTheDocument();
-    const photo = screen.getByRole('img', { name: profile.photo.alt });
-    expect(photo).toHaveAttribute('loading', 'lazy');
-    expect(photo).toHaveAttribute('width', String(profile.photo.width));
-    expect(photo).toHaveAttribute('height', String(profile.photo.height));
+    expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent(profile.claim);
+    expect(window.location.pathname).toBe('/');
     for (const paragraph of about.paragraphs) {
-      expect(screen.getByText(paragraph)).toBeInTheDocument();
+      expect(screen.queryByText(paragraph)).toBeNull();
     }
   });
 

@@ -8,14 +8,14 @@ describe('buildRouteMeta', () => {
   it('names every route the server should answer with a 200', () => {
     const meta = buildRouteMeta(content);
     expect(Object.keys(meta).sort()).toEqual(
-      ['/', '/about', '/privacy-policy', ...projects.map((p) => `/projects/${p.id}`)].sort(),
+      ['/', '/privacy-policy', ...projects.map((p) => `/projects/${p.id}`)].sort(),
     );
   });
 
   it('gives each route its title and description', () => {
     const meta = buildRouteMeta(content);
     expect(meta['/']).toEqual({ title: profile.name, description: profile.claim });
-    expect(meta['/about']).toEqual({ title: `About ${profile.name}`, description: profile.claim });
+    expect(meta['/about']).toBeUndefined();
     expect(meta['/privacy-policy'].title).toBe(`Privacy policy · ${profile.name}`);
     expect(meta[`/projects/${projects[0].id}`]).toEqual({
       title: `${projects[0].title} · ${profile.name}`,
@@ -57,8 +57,10 @@ describe('renderHead', () => {
 describe('routeHeads', () => {
   it('pairs an escaped title with the head tags for each route, with absolute URLs', () => {
     const heads = routeHeads(content);
-    expect(heads['/about'].title).toBe(`About ${profile.name}`);
-    expect(heads['/about'].head).toContain('<meta property="og:url" content="https://frederikheda.com/about">');
+    expect(heads['/privacy-policy'].title).toBe(`Privacy policy · ${profile.name}`);
+    expect(heads['/privacy-policy'].head).toContain(
+      '<meta property="og:url" content="https://frederikheda.com/privacy-policy">',
+    );
     expect(heads['/'].head).toContain(
       `<meta property="og:image" content="https://frederikheda.com${profile.photo.srcLarge}">`,
     );

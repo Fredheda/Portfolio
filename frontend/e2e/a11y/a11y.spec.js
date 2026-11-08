@@ -36,7 +36,7 @@ test('a project page with "For engineers" on has no serious accessibility violat
 });
 
 // Opened directly, so these also cover server.js serving the SPA for a deep link.
-for (const path of ['/privacy-policy', '/about', '/projects/paper-podcasts']) {
+for (const path of ['/privacy-policy', '/projects/paper-podcasts']) {
   test(`${path} has no serious accessibility violations`, async ({ page }) => {
     await page.goto(path);
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
