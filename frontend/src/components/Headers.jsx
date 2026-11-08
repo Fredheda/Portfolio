@@ -29,7 +29,7 @@ const Header = () => {
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-page/90 backdrop-blur">
       <div className="mx-auto flex max-w-page items-center justify-between gap-4 px-4 py-3 md:px-6">
-        <Link to="/" onClick={close} className="font-serif text-lg font-semibold text-ink no-underline">
+        <Link to="/" onClick={close} className="font-heading text-lg font-semibold text-ink no-underline">
           {profile.name}
         </Link>
 
@@ -70,7 +70,7 @@ const Header = () => {
               key={link.label}
               to={link.to}
               onClick={close}
-              className="rounded-lg px-2 py-3 font-serif text-2xl font-semibold text-ink no-underline"
+              className="rounded-lg px-2 py-3 font-heading text-2xl font-semibold text-ink no-underline"
             >
               {link.label}
             </Link>

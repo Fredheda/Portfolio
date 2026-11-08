@@ -16,7 +16,7 @@ export default {
         toolLine: '#7dd3fc',
       },
       fontFamily: {
-        serif: ['Fraunces', 'Georgia', 'serif'],
+        heading: ['Inter', 'system-ui', 'sans-serif'],
         sans: ['Inter', 'system-ui', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
       },

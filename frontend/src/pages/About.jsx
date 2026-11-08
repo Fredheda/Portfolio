@@ -13,7 +13,7 @@ export default function About() {
     <article className="hero-wash">
       <div className="mx-auto grid max-w-page gap-10 px-4 py-14 md:px-6 md:py-20 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="max-w-[65ch]">
-          <h1 className="m-0 font-serif text-[clamp(2.25rem,5vw,3.5rem)] font-semibold leading-[1.08] tracking-[-0.02em]">
+          <h1 className="m-0 font-heading text-[clamp(2.25rem,5vw,3.5rem)] font-bold leading-[1.08] tracking-[-0.02em]">
             {profile.name}
           </h1>
           <p className="mt-4 text-lg text-muted">{profile.now}</p>
