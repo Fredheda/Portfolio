@@ -37,6 +37,15 @@ describe('site content', () => {
     expect(experience.map((entry) => entry.role)).toEqual(['AI & Engineering Lead']);
   });
 
+  it('words the first experience entry as the owner asked', () => {
+    const [first] = contentSchema.parse(raw).experience;
+    expect(first.role).toBe('AI & Engineering Lead');
+    expect(first.sector).toBe('Staff Data Scientist & Industry Advisory Board Member');
+    expect(first.impact).toBe(
+      'Leading 6 AI teams (around 40 engineers, product managers and delivery leads) to ship agentic AI applications for front-office users.',
+    );
+  });
+
   it('lists no posts while the Posts section is hidden', () => {
     expect(contentSchema.parse(raw).posts).toEqual([]);
   });
