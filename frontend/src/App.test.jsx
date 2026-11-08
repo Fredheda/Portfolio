@@ -4,13 +4,6 @@ import App from './App';
 import { AgentUIProvider } from './context/AgentUIContext';
 import { content } from './lib/content';
 
-// Lenis drives smooth scrolling via requestAnimationFrame; irrelevant here.
-vi.mock('lenis', () => ({
-  default: class {
-    raf() {}
-    destroy() {}
-  },
-}));
 vi.mock('./components/FredbotPanel', () => ({ default: () => <div>fredbot stub</div> }));
 vi.mock('./components/AgentTools', () => ({ default: () => null }));
 
@@ -26,8 +19,17 @@ const renderAt = (path) => {
 };
 
 beforeEach(() => {
-  vi.stubGlobal('requestAnimationFrame', vi.fn());
   Element.prototype.scrollIntoView.mockClear();
+});
+
+describe('App scrolling', () => {
+  it('uses native scrolling: no scroll-hijacking library, no animation-frame loop', () => {
+    const raf = vi.spyOn(window, 'requestAnimationFrame');
+    renderAt('/');
+    expect(document.documentElement.classList.contains('lenis')).toBe(false);
+    expect(raf).not.toHaveBeenCalled();
+    raf.mockRestore();
+  });
 });
 
 describe('App routes', () => {

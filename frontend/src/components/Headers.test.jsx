@@ -19,6 +19,24 @@ describe('Header', () => {
     expect(screen.getByRole('link', { name: profile.name })).toHaveAttribute('href', '/');
   });
 
+  it('scrolls to the top when the name is clicked on the home page', () => {
+    window.scrollTo.mockClear();
+    renderHeader();
+    fireEvent.click(screen.getByRole('link', { name: profile.name }));
+    expect(window.scrollTo).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' });
+  });
+
+  it('does not scroll by itself when the name is clicked on another route', () => {
+    window.scrollTo.mockClear();
+    render(
+      <MemoryRouter initialEntries={['/privacy-policy']}>
+        <Header />
+      </MemoryRouter>,
+    );
+    fireEvent.click(screen.getByRole('link', { name: profile.name }));
+    expect(window.scrollTo).not.toHaveBeenCalled();
+  });
+
   it('links each section, also from other routes', () => {
     renderHeader();
     const nav = within(screen.getByRole('navigation', { name: 'Main' }));

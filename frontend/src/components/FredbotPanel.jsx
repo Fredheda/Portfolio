@@ -219,7 +219,6 @@ const FredbotPanel = () => {
         <div
           ref={logRef}
           onClick={focusInput}
-          data-lenis-prevent
           className="h-[420px] cursor-text overflow-y-auto px-4 py-4 md:px-5"
         >
           {!booted ? (

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { content } from '../lib/content';
 import ContactLinks from './ContactLinks';
 
@@ -23,12 +23,24 @@ const Header = () => {
     };
   }, [mobileOpen]);
 
+  const { pathname } = useLocation();
   const close = () => setMobileOpen(false);
 
+  // A link to the page you are already on does not scroll by itself.
+  const goHome = () => {
+    close();
+    if (pathname !== '/') return;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+  };
+
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-page/90 backdrop-blur">
+    // Solid background, no backdrop-filter: a filter makes the header the
+    // containing block of the fixed mobile panel (it collapses to a strip) and
+    // repaints behind the header on every scroll frame.
+    <header className="sticky top-0 z-40 border-b border-line bg-page">
       <div className="mx-auto flex max-w-page items-center justify-between gap-4 px-4 py-3 md:px-6">
-        <Link to="/" onClick={close} className="font-heading text-lg font-semibold text-ink no-underline">
+        <Link to="/" onClick={goHome} className="font-heading text-lg font-semibold text-ink no-underline">
           {profile.name}
         </Link>
 
