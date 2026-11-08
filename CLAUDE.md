@@ -1,8 +1,8 @@
 # CLAUDE.md
 
-Repo-specific facts for Claude Code. The workspace `CLAUDE.md` (`../CLAUDE.md`) owns everything else: response style, git and worktrees, ways of working (tickets and tiers, production deploys, PR size, test first, the PR loop), tooling, Jira, specs and plans. Keep this file true.
+Repo facts only. The workspace `CLAUDE.md` (`../CLAUDE.md`) owns the rest: style, git and worktrees, ways of working, tooling, Jira, specs and plans.
 
-PR titles and descriptions never mention Claude Code. `./scripts/ci-local.sh` is this repo's local CI script: green before `gh pr ready`.
+PR titles and descriptions never mention Claude Code. `./scripts/ci-local.sh` runs every CI check locally; green before `gh pr ready`.
 
 ## Project overview
 
@@ -26,15 +26,15 @@ cd backend && poetry run pytest -v && poetry run pyright
 cd data && poetry run python populate_index.py
 ```
 
-- `backend/` and `data/` are separate Poetry projects (Python 3.13, `.python-version`) that never share one environment; `mcp-tools/` tests run in their own venv. Why and how: `docs/development.md`.
-- CI (`.github/workflows/ci.yml`) runs on pull requests only, never on a push to `main`, and is draft-first: a draft PR runs only the light jobs (`changes`, `backend`, `mcp-tools-test`, `deploy-scripts-test`, `data`, `frontend` without its build); `e2e`, the frontend build and the AI review run once the PR is ready. The `changes` job (`scripts/changed-areas.sh`) skips the heavy jobs for a docs-only PR (root Markdown files, `docs/`, `deployment/`; not `backend/agent/system_prompt.md`, which is runtime input). The `data` job (the offline `data/` tests) runs only when a PR touches `data/`, a workflow or a script (the script's `data=` line). The `main-protect` ruleset requires these checks on `main`: `backend`, `mcp-tools-test`, `deploy-scripts-test`, `frontend`, `e2e`, `gitleaks`, `bandit`, `workflow-lint` (a skipped job counts as passing; `pip-audit`, `npm-audit` and `codeql` are not required). Changing a job id needs the ruleset updated in the same change. Let the draft run finish before `gh pr ready`: `ready` cancels a run still in flight, and its cancelled required checks keep the PR BLOCKED until you `gh run rerun` it. Images are built by the **Deploy apps** workflow, not by CI.
+- `backend/` and `data/` are separate Poetry projects (Python 3.13, `.python-version`) that never share one environment; `mcp-tools/` tests run in their own venv (`docs/development.md`).
+- CI (`.github/workflows/ci.yml`): pull requests only, never a push to `main`. A draft PR runs the light jobs (`changes`, `backend`, `mcp-tools-test`, `deploy-scripts-test`, `data`, `frontend` without its build); `e2e`, the frontend build and the AI review wait for ready. `scripts/changed-areas.sh` (job `changes`) skips the heavy jobs for a docs-only PR (root Markdown, `docs/`, `deployment/`; not `backend/agent/system_prompt.md`, which is runtime input) and sets `data=true`, the only trigger of the `data` job (the offline `data/` tests), when a PR touches `data/`, a workflow or a script. Required checks on `main` (ruleset `main-protect`): `backend`, `mcp-tools-test`, `deploy-scripts-test`, `frontend`, `e2e`, `gitleaks`, `bandit`, `workflow-lint`; a skipped job passes; `pip-audit`, `npm-audit` and `codeql` are not required. A job-id change needs a ruleset update in the same change. Let the draft run finish before `gh pr ready`: `ready` cancels a run in flight, and its cancelled required checks keep the PR BLOCKED until `gh run rerun`. **Deploy apps** builds images, not CI.
 - A new test must catch a bug that no other test (vitest, pytest or e2e) catches. `e2e_backend/` sits outside `backend/` because the backend image copies all of `backend/`. In Playwright specs, CSS locators live in `e2e/selectors.js`; ESLint rejects `.locator(` in spec files.
 
 ## Deployment
 
-Three independent targets; run only the one matching what changed: `./scripts/ship.sh` (frontend/backend), `./scripts/deploy-mcp-tools.sh` (`mcp-tools/`; a `content/site-content.json` change needs both this and `ship.sh`), `./infra/deploy.sh` (Bicep or a `.env` secret). Each has a manual GitHub workflow (**Deploy apps**, **Deploy functions**; `main` only, rollback = an older SHA) and the script is the laptop fallback. A merge runs nothing; **Deploy apps** builds a commit's images the first time it is deployed. `infra/deploy.sh` defaults its image tag to local `HEAD`: pass the deployed SHA. See `deployment/`.
+Three independent targets; run the one that matches the change: `./scripts/ship.sh` (frontend/backend), `./scripts/deploy-mcp-tools.sh` (`mcp-tools/`; a `content/site-content.json` change needs this and `ship.sh`), `./infra/deploy.sh` (Bicep or a `.env` secret). Each has a manual GitHub workflow (**Deploy apps**, **Deploy functions**; `main` only; rollback = an older SHA); the script is the laptop fallback. A merge runs nothing; **Deploy apps** builds a commit's images on its first deploy. `infra/deploy.sh` defaults its image tag to local `HEAD`: pass the deployed SHA. See `deployment/`.
 
-Every workflow run waits in GitHub for the owner's approval (`production` requires him as reviewer; `gh run watch` keeps polling until his click). Rule: workspace `CLAUDE.md`, "Production deploys".
+Every workflow run waits for the owner's approval in GitHub (`production` requires the owner as reviewer; `gh run watch` polls until then). Rule: workspace `CLAUDE.md`, "Production deploys".
 
 ## Architecture contracts
 
@@ -48,7 +48,7 @@ Every workflow run waits in GitHub for the owner's approval (`production` requir
 - Replies and user messages render through `react-markdown` with `remark-math`/`rehype-katex`, so LaTeX renders as equations.
 
 ### Backend (request flow)
-`main.py` exposes a LangGraph agent over CopilotKit's AG-UI protocol at `/agent/portfolio_agent` (`add_langgraph_fastapi_endpoint` + `SafeErrorAgent`, a `LangGraphAGUIAgent` subclass in `agent/safe_errors.py`), not a custom REST endpoint. Also serves `/health`. A failed run ends with one `RUN_ERROR` carrying the fixed `GENERIC_RUN_ERROR` text and no `rawEvent`; the real error is logged with key, org, request id, URL and header values replaced (`redact`). Reason: a provider error's text can carry a key prefix, an organisation name or a request id, and ag-ui-langgraph above 0.0.42 would send `str(exc)` to the browser; 0.0.42 aborted the stream instead. `SafeErrorAgent` is what makes that bump safe.
+`main.py` exposes a LangGraph agent over CopilotKit's AG-UI protocol at `/agent/portfolio_agent` (`add_langgraph_fastapi_endpoint` + `SafeErrorAgent`, a `LangGraphAGUIAgent` subclass in `agent/safe_errors.py`), not a custom REST endpoint. Also serves `/health`. A failed run ends with one `RUN_ERROR` carrying the fixed `GENERIC_RUN_ERROR` text and no `rawEvent`; the real error is logged redacted (`redact`: key, org, request id, URL and header values replaced). Provider error text can carry such values, and ag-ui-langgraph above 0.0.42 sends `str(exc)` to the browser; `SafeErrorAgent` makes that bump safe.
 1. `ContentSafetyMiddleware` screens the latest user message with OpenAI's moderation API (`omni-moderation-latest`, not Azure Content Safety) before the model runs; a flagged message gets a refusal and skips the model.
 2. `CopilotKitMiddleware` bridges AG-UI and merges the frontend's registered tools into the model's tool set.
 3. The agent (`create_agent` in `agent/agent.py`) uses `gpt-5.6-luna` via `ChatOpenAI` with `reasoning_effort="none"` — the model 400s on tool calls without it. Checkpointer is `MemorySaver`.
@@ -56,8 +56,6 @@ Every workflow run waits in GitHub for the owner's approval (`production` requir
 5. `LoggingMiddleware` logs the user message and reply to Azure SQL via `services/database_client.py` (fire-and-forget background thread, one retry after 10 s on error 40613 when the free-tier database is paused) after the agent finishes. It never logs tool messages and does not run when the graph raises, so no tool or provider error text reaches the database.
 
 `agent/system_prompt.md` is the model's real instruction source, including the description of every backend and frontend tool. Edit it whenever a tool is added, renamed or changes behavior; a frontend tool's own `description` field is not what the model reads its instructions from.
-
-There is no `backend/LLM/`, `PromptManager`, `OpenAIClient` or `ToolOrchestrator`; an earlier implementation shaped that way was replaced by the LangGraph agent.
 
 ### Data pipeline
 `data/DocumentProcessor` chunks `.txt`, `.docx` and `.pdf` (Markdown-header split first, recursive split at 5000 tokens / 500 overlap as fallback); `IndexCreator` builds the index; `populate_index.py` reads source documents from a `cw/` directory. It runs at import time (no `__main__` guard): importing it, or any test that does, re-embeds every chunk and upserts the live index.
@@ -90,11 +88,13 @@ Names only; what each does and where it goes: `docs/development.md`, "Environmen
 
 ## Dependabot
 
-`.github/dependabot.yml`: monthly version updates, one grouped PR per ecosystem (pip for `backend/`, `data/`, `mcp-tools/`; npm for `frontend/`; GitHub Actions; Docker for both Dockerfiles), label `dependencies`, 14-day cooldown. Major bumps are ignored for pip, npm and Docker and done by hand. Security-update PRs are separate: not grouped, no cooldown. Dependabot PRs get no secrets, so the AI review skips them; CI and `security.yml` run as usual. The owner merges them; agents never do.
+`.github/dependabot.yml`: monthly version updates, one grouped PR per ecosystem (pip for `backend/`, `data/`, `mcp-tools/`; npm for `frontend/`; GitHub Actions; Docker for both Dockerfiles), label `dependencies`, 14-day cooldown. Major bumps are ignored for pip, npm and Docker and done by hand. Security-update PRs are separate: not grouped, no cooldown. Dependabot PRs get no secrets, so the AI review skips them; CI and `security.yml` run as usual. Who merges them: "Merging" under "PR review".
 
 ## PR review
 
 `.github/workflows/claude-review.yml` posts a comment-only AI review on every push to a ready (non-draft) PR: security first, a documentation check ("Docs: current" or findings) and advisory size and tests checks. The owner can request one with a `@claude` comment. Token expiry and renewal: `deployment/expirations.md`.
+
+- **Merging:** the owner merges, except Dependabot patch or minor bumps that touch nothing under `.github/`, and docs-only PRs (only `.md` files, `CLAUDE.md` included, and `docs/`; never `.claude/` or workflows). The coordinator merges those after review, once every CI check passed and, for docs PRs, the automated GitHub review passed. Rules: workspace `CLAUDE.md`, Git.
 
 ## Skills
 
