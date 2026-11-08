@@ -14,6 +14,7 @@ DIFFERENT_LOCALLY = {
     'pipx install "poetry>=2.0,<3.0"': None,  # the developer has Poetry
     "pip install pytest==9.1.1": None,  # the developer has pytest
     'changed-areas.sh "origin/${{ github.base_ref }}"': None,  # PR-only plumbing
+    "npm install -g npm@": None,  # a global install would change the developer's npm
     "npx playwright install --with-deps chromium": "npx playwright install chromium",
 }
 
