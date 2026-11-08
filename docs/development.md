@@ -5,7 +5,7 @@ How to run Portfolio locally and check a change. For deploying, see [deployment/
 ## Prerequisites
 
 - Python 3.13 and [Poetry](https://python-poetry.org/) (the version is pinned by `.python-version`)
-- Node.js and npm
+- Node.js 24 (24.15 or newer) and npm 12; CI and the Docker image pin npm 12.2.2
 - [Azure Functions Core Tools](https://learn.microsoft.com/azure/azure-functions/functions-run-local) (`func`) and Azurite, to run `mcp-tools/` locally
 - [honcho](https://github.com/nickstenning/honcho) to start everything at once: `pipx install honcho` (one-time; installed globally because there is no repo-root Python project to add it to)
 - `az login`, because Azure SQL access uses Microsoft Entra ID instead of a password
