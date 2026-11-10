@@ -26,6 +26,21 @@ export async function failNextSearch(request) {
   expect((await request.post(`${MCP_URL}/__fail_search`)).ok()).toBe(true);
 }
 
+// The fake blog read API's routes (e2e_backend/blog_api.py), served by the
+// fake MCP server's process.
+export async function resetBlog(request) {
+  expect((await request.post(`${MCP_URL}/__blog_reset`)).ok()).toBe(true);
+}
+
+export async function blogCalls(request) {
+  return (await request.get(`${MCP_URL}/__blog_calls`)).json();
+}
+
+// The next `count` requests to the fake read API answer 500.
+export async function failBlog(request, count) {
+  expect((await request.post(`${MCP_URL}/__blog_fail?count=${count}`)).ok()).toBe(true);
+}
+
 // One AG-UI run posted straight to the backend, carrying only `text`, the
 // way a browser never does: earlier turns can only come from the
 // checkpointer. `expectError: true` accepts a run that ends with RUN_ERROR
