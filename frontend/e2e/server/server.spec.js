@@ -86,6 +86,27 @@ test('an unknown page or project answers 404 with the app shell', async ({ prodS
   }
 });
 
+test('the blog list and any slug-shaped post path get the blog tags with a 200', async ({ prodServer }) => {
+  const list = await prodServer.get('/blog');
+  expect(list.status()).toBe(200);
+  const listHtml = await list.text();
+  expect(listHtml).toContain(`<title>Blog · ${CONTENT.profile.name}</title>`);
+  expect(metaContent(listHtml, 'og:url')).toBe('https://frederikheda.com/blog');
+
+  // The server cannot know which posts exist: the page shows not-found itself.
+  const post = await prodServer.get('/blog/some-post/');
+  expect(post.status()).toBe(200);
+  const postHtml = await post.text();
+  expect(postHtml).toContain(`<title>Blog · ${CONTENT.profile.name}</title>`);
+  expect(metaContent(postHtml, 'og:url')).toBe('https://frederikheda.com/blog/some-post');
+});
+
+test('blog paths that are not a list or a slug answer 404', async ({ prodServer }) => {
+  for (const path of ['/blog/Some_Post', '/blog/a/b', '/blog/' + 'a'.repeat(101)]) {
+    expect((await prodServer.get(path)).status(), path).toBe(404);
+  }
+});
+
 test('warmup allows ten calls a minute', async ({ prodServer }) => {
   for (let i = 0; i < 10; i++) {
     expect((await prodServer.get('/api/warmup')).status()).toBe(204);

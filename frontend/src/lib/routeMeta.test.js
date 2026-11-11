@@ -8,7 +8,7 @@ describe('buildRouteMeta', () => {
   it('names every route the server should answer with a 200', () => {
     const meta = buildRouteMeta(content);
     expect(Object.keys(meta).sort()).toEqual(
-      ['/', '/privacy-policy', ...projects.map((p) => `/projects/${p.id}`)].sort(),
+      ['/', '/blog', '/privacy-policy', ...projects.map((p) => `/projects/${p.id}`)].sort(),
     );
   });
 
@@ -20,6 +20,13 @@ describe('buildRouteMeta', () => {
     expect(meta[`/projects/${projects[0].id}`]).toEqual({
       title: `${projects[0].title} · ${profile.name}`,
       description: projects[0].plainEnglish,
+    });
+  });
+
+  it('titles the blog route', () => {
+    expect(buildRouteMeta(content)['/blog']).toEqual({
+      title: `Blog · ${profile.name}`,
+      description: `Long-form technical posts by ${profile.name}.`,
     });
   });
 });
