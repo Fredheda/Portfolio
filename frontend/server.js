@@ -193,6 +193,11 @@ const routeMeta = JSON.parse(readFileSync(path.join(__dirname, 'dist', 'route-me
 // not-found page and a noindex tag for a slug that has no post.
 const BLOG_POST_PATH = /^\/blog\/[a-z0-9-]{1,100}$/;
 
+// The path is already limited to [a-z0-9/-] by the pattern above; escaping it
+// for the attribute is the second line of defence.
+const ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+const escapeAttribute = (value) => value.replace(/[&<>"']/g, (ch) => ESCAPES[ch]);
+
 app.get('*', (req, res) => {
   const pathname = req.path.length > 1 ? req.path.replace(/\/+$/, '') : req.path;
   const isPost = BLOG_POST_PATH.test(pathname);
@@ -201,7 +206,7 @@ app.get('*', (req, res) => {
   const head = isPost
     ? meta.head.replace(
         /(<meta property="og:url" content=")[^"]*/,
-        (_, tag) => `${tag}https://frederikheda.com${pathname}`,
+        (_, tag) => `${tag}https://frederikheda.com${escapeAttribute(pathname)}`,
       )
     : meta.head;
   // Replacer functions, not strings: a "$&" in content text stays literal.
