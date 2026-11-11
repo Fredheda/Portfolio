@@ -3,6 +3,7 @@ import express from 'express';
 import { readFileSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { Readable } from 'node:stream';
 import { CopilotRuntime } from '@copilotkit/runtime/v2';
 import { LangGraphHttpAgent } from '@copilotkit/runtime/langgraph';
 import { createCopilotExpressHandler } from '@copilotkit/runtime/v2/express';
@@ -90,6 +91,76 @@ const warmupLimiter = rateLimit({
 app.get('/api/warmup', warmupLimiter, (req, res) => {
   fetch(`${BACKEND_URL}/health`).catch(() => {});
   res.sendStatus(204);
+});
+
+// Blog read proxy: GET only, forwards to the backend's /blog routes. The
+// browser's headers never travel upstream except Range (media seeking), so a
+// visitor cannot inject credentials. Only the wait for response headers is
+// timed out: a long video or audio stream must not be cut at 30 s. A visitor
+// who leaves mid-stream aborts the upstream fetch too.
+// BLOG_RATE_LIMIT exists only so the browser tests can exceed the default.
+const blogLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: Number(process.env.BLOG_RATE_LIMIT) || 120,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { error: 'Rate limit exceeded' },
+});
+const BLOG_FORWARDED_HEADERS = [
+  'content-type',
+  'content-range',
+  'accept-ranges',
+  'cache-control',
+  'x-content-type-options',
+  'content-security-policy',
+  'cross-origin-resource-policy',
+];
+app.use('/api/blog', blogLimiter, async (req, res) => {
+  if (req.method !== 'GET') {
+    res.set('Allow', 'GET').status(405).json({ error: 'method_not_allowed' });
+    return;
+  }
+  const target = new URL(`/blog${req.url}`, BACKEND_URL);
+  if (!target.pathname.startsWith('/blog/')) {
+    res.status(404).json({ error: 'not_found' });
+    return;
+  }
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 30_000);
+  res.on('close', () => controller.abort());
+  try {
+    const headers = {};
+    if (req.headers.range) headers.range = req.headers.range;
+    const upstream = await fetch(target, {
+      headers,
+      redirect: 'manual',
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    res.status(upstream.status);
+    for (const name of BLOG_FORWARDED_HEADERS) {
+      const value = upstream.headers.get(name);
+      if (value) res.set(name, value);
+    }
+    const length = upstream.headers.get('content-length');
+    if (length && !upstream.headers.get('content-encoding')) {
+      res.set('content-length', length);
+    }
+    if (!upstream.body) {
+      res.end();
+      return;
+    }
+    Readable.fromWeb(upstream.body)
+      .on('error', () => res.destroy())
+      .pipe(res);
+  } catch {
+    clearTimeout(timer);
+    if (!res.headersSent) {
+      res.status(503).json({ error: 'blog_unavailable' });
+    } else {
+      res.destroy();
+    }
+  }
 });
 
 // Multi-route mode (the default): exposes POST /api/copilotkit/agent/:agentId/run
