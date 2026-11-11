@@ -63,6 +63,14 @@ test('unknown post is a 404 and an outage is a fixed 503', async ({ request }) =
   expect(await down.json()).toEqual({ error: 'blog_unavailable' });
 });
 
+test('paths outside the four blog routes never reach the backend', async ({ request }) => {
+  for (const path of ['/api/blog/health', '/api/blog/posts/a/b/c', '/api/blog/posts/..%2f..%2fhealth']) {
+    const response = await request.get(path);
+    expect(response.status()).toBe(404);
+    expect(await response.json()).toEqual({ error: 'not_found' });
+  }
+});
+
 test('only GET is accepted', async ({ request }) => {
   const response = await request.post('/api/blog/posts');
   expect(response.status()).toBe(405);

@@ -106,6 +106,8 @@ const blogLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: 'Rate limit exceeded' },
 });
+const BLOG_PATH =
+  /^\/posts(?:\/[a-z0-9-]{1,100}(?:\/media\/[A-Za-z0-9_-]{1,64}|\/audio)?)?$/;
 const BLOG_FORWARDED_HEADERS = [
   'content-type',
   'content-range',
@@ -120,11 +122,17 @@ app.use('/api/blog', blogLimiter, async (req, res) => {
     res.set('Allow', 'GET').status(405).json({ error: 'method_not_allowed' });
     return;
   }
-  const target = new URL(`/blog${req.url}`, BACKEND_URL);
-  if (!target.pathname.startsWith('/blog/')) {
+  // Only the four routes the backend serves; the request path never reaches
+  // the upstream URL unless it matches one of them.
+  if (!BLOG_PATH.test(req.path)) {
     res.status(404).json({ error: 'not_found' });
     return;
   }
+  const target = new URL(BACKEND_URL);
+  target.pathname = `/blog${req.path}`;
+  target.search = new URLSearchParams(
+    Object.entries(req.query).filter(([, v]) => typeof v === 'string'),
+  ).toString();
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 30_000);
   res.on('close', () => controller.abort());
