@@ -9,6 +9,7 @@
 # .env is gitignored and never leaves this machine; auth to Azure is the live
 # `az login` session. The registry + resource group already exist; this only
 # adds the environment, identity, and the two apps.
+# Optional .env values BLOG_API_URL and BLOG_API_AUDIENCE switch the blog routes on.
 #
 # Usage: ./infra/deploy.sh [image-tag]
 #   image-tag defaults to the current git HEAD SHA (the tag build-push.sh set).
@@ -40,6 +41,8 @@ az deployment group create \
     azureSqlServer="$AZURE_SQL_SERVER" \
     azureSqlDatabase="$AZURE_SQL_DATABASE" \
     functionMcpKey="${FUNCTION_MCP_KEY:-}" \
+    blogApiUrl="${BLOG_API_URL:-}" \
+    blogApiAudience="${BLOG_API_AUDIENCE:-}" \
   --query "properties.provisioningState" -o tsv
 
 FQDN=$(az containerapp show -n ca-portfolio-web -g "$RG" \
@@ -55,4 +58,12 @@ if [ -z "${FUNCTION_MCP_KEY:-}" ]; then
   echo "  3. az containerapp secret set -g $RG -n ca-portfolio-backend --secrets function-mcp-key=\"\$FUNCTION_MCP_KEY\""
   echo "  4. az containerapp update -g $RG -n ca-portfolio-backend --set-env-vars FUNCTION_MCP_KEY=secretref:function-mcp-key"
   echo "  5. Add FUNCTION_MCP_KEY=<value> to .env so future deploys don't need this again"
+fi
+
+echo ""
+echo "Blog read identity (approve it in the blog project before enabling the blog):"
+az identity show -g "$RG" -n id-portfolio-blogread \
+  --query "{clientId:clientId, principalId:principalId}" -o json
+if [ -z "${BLOG_API_URL:-}" ]; then
+  echo "BLOG_API_URL is unset: the backend serves no /blog routes."
 fi

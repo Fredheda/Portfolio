@@ -58,6 +58,15 @@ param functionStorageAccountName string = 'stportfoliomcp'
 @description('MCP extension system key for the Function App, fetched post-deploy (see infra/deploy.sh). Empty on first deploy.')
 param functionMcpKey string = ''
 
+@description('User-assigned managed identity the backend uses to call the blog read API. It holds no Azure role: the only grant is an app role assigned in the blog project (its approve-client script).')
+param blogReadIdentityName string = 'id-portfolio-blogread'
+
+@description('Blog read API base URL (https://...). Empty keeps the blog routes off.')
+param blogApiUrl string = ''
+
+@description('Blog read API audience, api://<application id>. Needed together with blogApiUrl.')
+param blogApiAudience string = ''
+
 // Built-in AcrPull role definition ID (constant across all tenants).
 var acrPullRoleId = '7f951dda-4ed3-4680-a7ca-43fe172d538d'
 var loginServer = '${acrName}.azurecr.io'
@@ -71,6 +80,19 @@ resource identity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' 
   name: identityName
   location: location
 }
+
+resource blogReadIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
+  name: blogReadIdentityName
+  location: location
+}
+
+// Blog settings reach the backend only once a URL is given. Without them the
+// backend mounts no /blog routes.
+var blogEnv = empty(blogApiUrl) ? [] : [
+  { name: 'BLOG_API_URL', value: blogApiUrl }
+  { name: 'BLOG_API_AUDIENCE', value: blogApiAudience }
+  { name: 'BLOG_READ_CLIENT_ID', value: blogReadIdentity.properties.clientId }
+]
 
 resource acrPull 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid(acr.id, identity.id, acrPullRoleId)
@@ -171,6 +193,7 @@ resource backend 'Microsoft.App/containerApps@2025-01-01' = {
     type: 'UserAssigned'
     userAssignedIdentities: {
       '${identity.id}': {}
+      '${blogReadIdentity.id}': {}
     }
   }
   dependsOn: [
@@ -209,7 +232,7 @@ resource backend 'Microsoft.App/containerApps@2025-01-01' = {
             cpu: json('0.25')
             memory: '0.5Gi'
           }
-          env: [
+          env: concat([
             { name: 'OPENAI_API_KEY', secretRef: 'openai-api-key' }
             { name: 'FUNCTION_APP_URL', value: 'https://${functionApp.properties.defaultHostName}' }
             { name: 'FUNCTION_MCP_KEY', secretRef: 'function-mcp-key' }
@@ -218,7 +241,7 @@ resource backend 'Microsoft.App/containerApps@2025-01-01' = {
             // Presence of this var is what makes database_client.py pick
             // ActiveDirectoryMSI auth (this identity) over ActiveDirectoryDefault.
             { name: 'AZURE_CLIENT_ID', value: identity.properties.clientId }
-          ]
+          ], blogEnv)
         }
       ]
       scale: {
@@ -304,4 +327,6 @@ resource frontend 'Microsoft.App/containerApps@2025-01-01' = {
 output frontendFqdn string = frontend.properties.configuration.ingress.fqdn
 output backendFqdn string = backend.properties.configuration.ingress.fqdn
 output identityName string = identity.name
+output blogReadIdentityClientId string = blogReadIdentity.properties.clientId
+output blogReadIdentityPrincipalId string = blogReadIdentity.properties.principalId
 output functionAppUrl string = 'https://${functionApp.properties.defaultHostName}'

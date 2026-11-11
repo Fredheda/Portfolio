@@ -21,6 +21,10 @@ Backend values go in `Portfolio/.env` (the repo root, not a file inside `backend
 | `FUNCTION_MCP_KEY` | backend | Optional locally; required once the Function App enforces its function key in Azure. |
 | `AZURE_SQL_SERVER`, `AZURE_SQL_DATABASE` | backend | Chat logging. No password: Microsoft Entra ID auth. |
 | `AZURE_CLIENT_ID` | backend, deployed only | The container app's user-assigned managed identity, used for the Azure SQL token. Not set locally (`az login` is used instead). |
+| `BLOG_API_URL` | backend | Blog read API base URL (https). Unset keeps the blog off; locally leave it unset (the browser suite uses its own fake read API). |
+| `BLOG_API_AUDIENCE` | backend | `api://<application id>` of the blog API's app registration. |
+| `BLOG_READ_CLIENT_ID` | backend, deployed only | Client id of `id-portfolio-blogread`, set by Bicep when `BLOG_API_URL` is given. |
+| `BLOG_MEDIA_HOSTS` | backend | Optional, comma separated blob hosts the media proxy may fetch. Default `fhstorageportfolio.blob.core.windows.net`. |
 | `azure_search_endpoint`, `azure_index_name`, `azure_search_api_key` | `mcp-tools/`, `data/` | Not backend variables. `mcp-tools/` uses them for the vector query behind `retrieve_information`, and `data/` uses them to build the index. |
 
 The frontend reads `BACKEND_URL` from `frontend/.env` (gitignored). `server.js` reads it at runtime, not the browser bundle. Set it to `http://localhost:8000` for local runs. When deployed, it defaults to `http://ca-portfolio-backend`, which Bicep sets.
@@ -113,6 +117,7 @@ From `frontend/`: `npm run e2e`. The first time, run `npx playwright install chr
 
 - `e2e_backend.mcp_server` on 8211: the real `mcp-tools/function_app.py` handlers behind a small `azure.functions` shim, over MCP streamable HTTP at `/runtime/webhooks/mcp`, requiring `x-functions-key`. Only Azure AI Search is stubbed.
 - `e2e_backend.backend_server` on 8210: the real `main.create_app` and `agent.build_graph` with a scripted model (`e2e_backend/model.py`, keyword script in `script.py`), a fake moderation client (flags `forbidden-topic`) and a recording SQL logger. Test-only routes: `GET /__model_calls`, `GET /__db_log`, `POST /__reset`, `POST /__fail` (next model call raises with a planted, secret-shaped message); on the fake MCP server, `POST /__fail_search` (next search raises inside the real `function_app.py` handler).
+- The fake blog read API (`e2e_backend/blog_api.py`) runs inside the fake MCP server; `frontend/e2e/full-stack/blog.spec.js` drives `/api/blog/*` against it.
 - `server.js` on 3210 with `BACKEND_URL` only (so its production `AGENT_URL` default is used) and raised rate limits.
 
 Projects:

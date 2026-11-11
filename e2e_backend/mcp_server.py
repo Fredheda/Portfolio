@@ -5,7 +5,8 @@ stands in for `azure.functions` (recording each `mcp_tool_trigger`), a stub
 replaces `search_client` (Azure AI Search), and the content loader is
 pointed at the repo's content file. Tool names, descriptions, parameters and
 handlers therefore come from production code. Like the Function App, the
-endpoint is /runtime/webhooks/mcp and needs the x-functions-key header.
+endpoint is /runtime/webhooks/mcp and needs the x-functions-key header. It
+also serves the fake blog read API (e2e_backend/blog_api.py) under /blog-api.
 
 Run from backend/: PYTHONPATH=.. poetry run python -m e2e_backend.mcp_server
 """
@@ -24,6 +25,8 @@ from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
 from starlette.applications import Starlette
 from starlette.responses import PlainTextResponse
 from starlette.routing import Route
+
+from e2e_backend import blog_api
 
 REPO = Path(__file__).resolve().parent.parent
 PORT = int(os.environ.get("E2E_MCP_PORT", "8211"))
@@ -146,6 +149,7 @@ def build_app() -> Starlette:
                 McpEndpoint(),
                 methods=["GET", "POST", "DELETE"],
             ),
+            *blog_api.routes(),
         ],
         lifespan=lifespan,
     )
