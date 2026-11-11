@@ -13,7 +13,10 @@ DEPLOY = (ROOT / "infra" / "deploy.sh").read_text()
 
 def test_the_blog_identity_exists_and_no_azure_role_names_it() -> None:
     assert "param blogReadIdentityName string = 'id-portfolio-blogread'" in BICEP
-    assert "resource blogReadIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities" in BICEP
+    assert (
+        "resource blogReadIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities"
+        in BICEP
+    )
     roles = re.findall(
         r"resource \w+ 'Microsoft\.Authorization/roleAssignments[^\n]*\{.*?\n\}",
         BICEP,
@@ -35,7 +38,10 @@ def test_the_backend_has_both_identities() -> None:
 
 def test_blog_settings_reach_the_backend_only_when_a_url_is_given() -> None:
     assert "empty(blogApiUrl) ? []" in BICEP
-    assert "{ name: 'BLOG_READ_CLIENT_ID', value: blogReadIdentity.properties.clientId }" in BICEP
+    assert (
+        "{ name: 'BLOG_READ_CLIENT_ID', value: blogReadIdentity.properties.clientId }"
+        in BICEP
+    )
     assert "{ name: 'BLOG_API_URL', value: blogApiUrl }" in BICEP
     assert "{ name: 'BLOG_API_AUDIENCE', value: blogApiAudience }" in BICEP
 
