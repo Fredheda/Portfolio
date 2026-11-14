@@ -12,7 +12,10 @@ const page = (count) => ({
   nextCursor: null,
 });
 
-beforeEach(() => vi.mocked(listPosts).mockReset());
+// Braces: a function returned from beforeEach would run as a teardown.
+beforeEach(() => {
+  vi.mocked(listPosts).mockReset();
+});
 
 describe('useBlogAvailable', () => {
   it('is true once the list holds a post, and asks for one post only', async () => {

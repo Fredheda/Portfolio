@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useBlogAvailable } from '../lib/useBlogAvailable';
@@ -13,7 +13,10 @@ const renderAt = (path = '/') =>
     </MemoryRouter>,
   );
 
-beforeEach(() => vi.mocked(useBlogAvailable).mockReset());
+// Braces: a function returned from beforeEach would run as a teardown.
+beforeEach(() => {
+  vi.mocked(useBlogAvailable).mockReset();
+});
 
 describe('Header Blog link', () => {
   it('is absent while the blog has no post', () => {
@@ -33,7 +36,7 @@ describe('Header Blog link', () => {
       'Blog',
     ]);
     expect(main.getByRole('link', { name: 'Blog' })).toHaveAttribute('href', '/blog');
-    screen.getByRole('button', { name: 'Menu' }).click();
+    fireEvent.click(screen.getByRole('button', { name: 'Menu' }));
     const mobile = within(screen.getByRole('navigation', { name: 'Mobile' }));
     expect(mobile.getByRole('link', { name: 'Blog' })).toHaveAttribute('href', '/blog');
   });
