@@ -59,6 +59,7 @@ describe('TypedMarkdown', () => {
     const { container } = render(<TypedMarkdown text="**bold** \(x\)" />);
     tick(1000);
     expect(container.querySelector('strong')).toHaveTextContent('bold');
-    expect(container.querySelector('.katex')).not.toBeNull();
+    expect(container.querySelector('math')).not.toBeNull();
+    expect(container.querySelector('.katex-html')).toBeNull();
   });
 });

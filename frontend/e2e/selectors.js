@@ -14,3 +14,6 @@ export const blogMath = (page) => page.locator('.blog-prose math');
 export const blogStringToken = (page) => page.locator('.blog-prose pre code .hljs-string');
 export const blogImages = (page) => page.locator('.blog-prose img');
 export const robotsMeta = (page) => page.locator('meta[name="robots"]');
+
+// Maths inside fredbot's answers (the section has the id used by the nav link).
+export const fredbotMath = (page) => page.locator('#fredbot math');
