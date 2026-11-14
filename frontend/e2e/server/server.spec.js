@@ -109,8 +109,9 @@ test('blog paths that are not a list or a slug answer 404', async ({ prodServer 
 
 test('the build ships no KaTeX font or stylesheet', async () => {
   // Maths is native MathML (no bundled fonts); a katex.min.css import would bring the fonts back.
+  // The KaTeX script chunk (katex-<hash>.js) is the renderer and is fine.
   const assets = readdirSync(new URL('../../dist/assets', import.meta.url));
-  expect(assets.filter((name) => /katex/i.test(name))).toEqual([]);
+  expect(assets.filter((name) => /^katex.*\.css$|^KaTeX_/i.test(name))).toEqual([]);
 });
 
 test('warmup allows ten calls a minute', async ({ prodServer }) => {

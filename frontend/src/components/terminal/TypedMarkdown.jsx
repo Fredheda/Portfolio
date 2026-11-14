@@ -2,9 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
-import 'katex/dist/katex.min.css';
-import { normalizeMathDelimiters } from '../../lib/markdown';
+import { mathRehypePlugins, normalizeMathDelimiters } from '../../lib/markdown';
 
 // Reveals text a word at a time instead of snapping straight to whatever the
 // backend just delivered -- makes even a fast or non-streaming response
@@ -78,7 +76,7 @@ export default function TypedMarkdown({ text, className, isFinal, onSettled, scr
 
   return (
     <div className={className}>
-      <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+      <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={mathRehypePlugins}>
         {normalizeMathDelimiters(tokens.slice(0, revealed).join(''))}
       </ReactMarkdown>
       {revealed < tokens.length && <span className="terminal-cursor" />}

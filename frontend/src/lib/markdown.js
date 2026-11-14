@@ -1,3 +1,9 @@
+import rehypeKatex from 'rehype-katex';
+
+// The one maths setup for chat text: rehype-katex emitting MathML only, so
+// no KaTeX stylesheet and no maths font is needed (system fonts only).
+export const mathRehypePlugins = [[rehypeKatex, { output: 'mathml' }]];
+
 // The agent is instructed (see backend/agent/system_prompt.md) to write math
 // using `$...$` / `$$...$$`, since that's all `rehype-katex` recognizes --
 // but LLMs sometimes fall back to LaTeX's `\( ... \)` / `\[ ... \]` bracket
