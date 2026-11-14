@@ -8,3 +8,9 @@ export const diagramSvg = (page) => page.locator('figure[aria-label="Architectur
 
 // Projects.jsx marks a highlighted card with a ring.
 export const highlightedCards = (page) => page.locator('#projects a.ring-2');
+
+// Blog pages (BlogBody.jsx renders inside .blog-prose).
+export const blogMath = (page) => page.locator('.blog-prose math');
+export const blogStringToken = (page) => page.locator('.blog-prose pre code .hljs-string');
+export const blogImages = (page) => page.locator('.blog-prose img');
+export const robotsMeta = (page) => page.locator('meta[name="robots"]');

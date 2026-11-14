@@ -16,6 +16,10 @@ export function buildRouteMeta(content) {
       title: `Privacy policy · ${profile.name}`,
       description: `How ${profile.name}'s site handles your data.`,
     },
+    '/blog': {
+      title: `Blog · ${profile.name}`,
+      description: `Long-form technical posts by ${profile.name}.`,
+    },
   };
   for (const project of projects) {
     meta[`/projects/${project.id}`] = {

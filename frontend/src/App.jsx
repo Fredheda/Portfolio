@@ -6,6 +6,8 @@ import AgentTools from './components/AgentTools';
 import Home from './pages/Home';
 
 const ProjectPage = React.lazy(() => import('./pages/ProjectPage'));
+const BlogIndex = React.lazy(() => import('./pages/BlogIndex'));
+const BlogPost = React.lazy(() => import('./pages/BlogPost'));
 const NotFound = React.lazy(() => import('./pages/NotFound'));
 const PrivacyPolicy = React.lazy(() => import('./components/PrivacyPolicy'));
 
@@ -26,6 +28,8 @@ function App() {
             {/* About page hidden: pages/About.jsx and content.about stay. To show it again, route it here, add the nav link and the routeMeta entry. */}
             <Route path="/about" element={<Navigate to="/" replace />} />
             <Route path="/projects/:slug" element={lazy(<ProjectPage />)} />
+            <Route path="/blog" element={lazy(<BlogIndex />)} />
+            <Route path="/blog/:slug" element={lazy(<BlogPost />)} />
             <Route path="/privacy-policy" element={lazy(<PrivacyPolicy />)} />
             <Route path="*" element={lazy(<NotFound />)} />
           </Routes>
