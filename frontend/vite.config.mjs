@@ -3,6 +3,13 @@ import react from '@vitejs/plugin-react';
 import { content } from './src/lib/content.js';
 import { routeHeads } from './src/lib/routeMeta.js';
 
+// Two third-party stylesheet imports are stubbed to an empty module (a Vite
+// plugin for `vite build`, an esbuild plugin for dev pre-bundling): the
+// CopilotKit v2 `./index.css` (explained below) and the `katex.min.css` that
+// CopilotKit and streamdown import from node_modules (explained in the
+// plugin).
+const KATEX_CSS = 'katex/dist/katex.min.css';
+
 // @copilotkit/react-core/v2's own entry module does `import "./index.css"`
 // internally as a side effect (unconditionally, regardless of how this app
 // imports CopilotKit) -- that file is CopilotKit's pre-built Tailwind
@@ -24,12 +31,10 @@ import { routeHeads } from './src/lib/routeMeta.js';
 // So the package stays included in pre-bundling (interop stays intact),
 // and an equivalent esbuild plugin (below) does the same stub *during*
 // that pre-bundling pass instead of skipping it.
-const KATEX_CSS = 'katex/dist/katex.min.css';
-
-function stubCopilotKitV2Css() {
-  const virtualId = '\0copilotkit-v2-css-stub';
+function stubNodeModulesCss() {
+  const virtualId = '\0node-modules-css-stub';
   return {
-    name: 'stub-copilotkit-v2-css',
+    name: 'stub-node-modules-css',
     enforce: 'pre',
     resolveId(source, importer) {
       if (
@@ -56,21 +61,22 @@ function stubCopilotKitV2Css() {
   };
 }
 
-function stubCopilotKitV2CssEsbuildPlugin() {
+function stubNodeModulesCssEsbuildPlugin() {
   return {
-    name: 'stub-copilotkit-v2-css-esbuild',
+    name: 'stub-node-modules-css-esbuild',
     setup(build) {
       build.onResolve({ filter: /^\.\/index\.css$/ }, (args) => {
         if (args.importer.includes('@copilotkit/react-core/dist/v2/index.mjs')) {
-          return { path: args.path, namespace: 'copilotkit-v2-css-stub' };
+          return { path: args.path, namespace: 'node-modules-css-stub' };
         }
       });
+      // Same stub as the Vite plugin above, for dev pre-bundling.
       build.onResolve({ filter: /^katex\/dist\/katex\.min\.css$/ }, (args) => {
         if (args.importer.includes('/node_modules/')) {
-          return { path: args.path, namespace: 'copilotkit-v2-css-stub' };
+          return { path: args.path, namespace: 'node-modules-css-stub' };
         }
       });
-      build.onLoad({ filter: /.*/, namespace: 'copilotkit-v2-css-stub' }, () => ({
+      build.onLoad({ filter: /.*/, namespace: 'node-modules-css-stub' }, () => ({
         contents: '',
         loader: 'css',
       }));
@@ -95,13 +101,13 @@ function routeMetaFile() {
 }
 
 export default defineConfig({
-  plugins: [stubCopilotKitV2Css(), react(), routeMetaFile()],
+  plugins: [stubNodeModulesCss(), react(), routeMetaFile()],
   css: {
     postcss: './postcss.config.js',
   },
   optimizeDeps: {
     esbuildOptions: {
-      plugins: [stubCopilotKitV2CssEsbuildPlugin()],
+      plugins: [stubNodeModulesCssEsbuildPlugin()],
     },
   },
   server: {
