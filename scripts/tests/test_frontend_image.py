@@ -15,10 +15,14 @@ LOCAL_IMPORT = re.compile(r"""^import\s[^;]*?from\s+['"]\./([^'"]+)['"]""", re.M
 COPIED_FILE = re.compile(r"^COPY (?!--from)(\S+) \./\1$", re.M)
 
 
-def test_every_local_module_server_js_imports_is_copied_into_the_runtime_image() -> None:
+def test_every_local_module_server_js_imports_is_copied_into_the_runtime_image() -> (
+    None
+):
     imported = set(LOCAL_IMPORT.findall(SERVER))
     copied = set(COPIED_FILE.findall(RUNTIME_STAGE))
     assert "server.js" in copied, "the runtime stage should copy server.js"
     for module in imported:
-        assert (FRONTEND / module).is_file(), f"server.js imports a missing file: {module}"
+        assert (FRONTEND / module).is_file(), (
+            f"server.js imports a missing file: {module}"
+        )
     assert imported <= copied, f"not copied into the image: {sorted(imported - copied)}"
