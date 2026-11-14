@@ -14,6 +14,10 @@ test('scrolling is native: the wheel moves the page at once', async ({ page }) =
 
 test('clicking the name on a scrolled home page returns to the top', async ({ page }) => {
   await page.goto('/');
+  // Web fonts arrive after the load event and reflow the text above the
+  // viewport; Chrome's scroll anchoring then moves scrollY off 800 (855 or 740
+  // depending on the font metrics). Scroll only once the fonts have settled.
+  await page.evaluate(() => document.fonts.ready);
   await page.evaluate(() => window.scrollTo(0, 800));
   await expect.poll(() => scrollY(page)).toBe(800);
   await page.getByRole('link', { name: 'Frederik Heda' }).first().click();
