@@ -16,5 +16,6 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev --ignore-scripts
 COPY --from=builder /app/dist ./dist
 COPY server.js ./server.js
+COPY routeLookup.js ./routeLookup.js
 EXPOSE 3000
 CMD ["node", "server.js"]
