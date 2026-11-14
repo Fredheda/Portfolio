@@ -21,6 +21,8 @@ def test_every_local_module_server_js_imports_is_copied_into_the_runtime_image()
     imported = set(LOCAL_IMPORT.findall(SERVER))
     copied = set(COPIED_FILE.findall(RUNTIME_STAGE))
     assert "server.js" in copied, "the runtime stage should copy server.js"
+    # Guards against a regex that matches nothing, which would pass vacuously.
+    assert "routeLookup.js" in imported, "the import regex should see ./routeLookup.js"
     for module in imported:
         assert (FRONTEND / module).is_file(), (
             f"server.js imports a missing file: {module}"
