@@ -8,6 +8,7 @@ import { CopilotRuntime } from '@copilotkit/runtime/v2';
 import { LangGraphHttpAgent } from '@copilotkit/runtime/langgraph';
 import { createCopilotExpressHandler } from '@copilotkit/runtime/v2/express';
 import { rateLimit } from 'express-rate-limit';
+import { lookupRoute } from './routeLookup.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -201,8 +202,9 @@ const escapeAttribute = (value) => value.replace(/[&<>"']/g, (ch) => ESCAPES[ch]
 app.get('*', (req, res) => {
   const pathname = req.path.length > 1 ? req.path.replace(/\/+$/, '') : req.path;
   const isPost = BLOG_POST_PATH.test(pathname);
-  const known = Boolean(routeMeta[pathname]) || isPost;
-  const meta = routeMeta[pathname] ?? (isPost ? routeMeta['/blog'] : routeMeta['/']);
+  const route = lookupRoute(routeMeta, pathname);
+  const known = Boolean(route) || isPost;
+  const meta = route ?? (isPost ? routeMeta['/blog'] : routeMeta['/']);
   const head = isPost
     ? meta.head.replace(
         /(<meta property="og:url" content=")[^"]*/,
