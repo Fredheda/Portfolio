@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { fileURLToPath } from 'node:url';
 import { test as base, expect } from '@playwright/test';
@@ -105,6 +105,13 @@ test('blog paths that are not a list or a slug answer 404', async ({ prodServer 
   for (const path of ['/blog/Some_Post', '/blog/a/b', '/blog/' + 'a'.repeat(101)]) {
     expect((await prodServer.get(path)).status(), path).toBe(404);
   }
+});
+
+test('the build ships no KaTeX font or stylesheet', async () => {
+  // Maths is native MathML (no bundled fonts); a katex.min.css import would bring the fonts back.
+  // The KaTeX script chunk (katex-<hash>.js) is the renderer and is fine.
+  const assets = readdirSync(new URL('../../dist/assets', import.meta.url));
+  expect(assets.filter((name) => /^katex.*\.css$|^KaTeX_/i.test(name))).toEqual([]);
 });
 
 test('warmup allows ten calls a minute', async ({ prodServer }) => {

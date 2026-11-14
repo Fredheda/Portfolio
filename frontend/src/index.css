@@ -66,9 +66,8 @@
 }
 
 /* ---- blog posts ----
-   System font stacks only, no web fonts. Maths is native MathML; the global
-   KaTeX stylesheet (loaded for fredbot) would set a KaTeX font on .katex,
-   so blog maths resets it. */
+   System font stacks only, no web fonts. Maths is native MathML (no KaTeX
+   stylesheet is loaded anywhere). */
 .blog-prose {
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
   font-size: 1.0625rem;
@@ -113,7 +112,6 @@
 .blog-prose th { background: #eef3fb; }
 
 /* Maths: native MathML, system maths fonts. */
-.blog-prose span.katex { font: inherit; text-indent: 0; }
 .blog-prose math {
   font-family: math, 'Cambria Math', 'STIX Two Math', 'Noto Sans Math', serif;
   font-size: 1.1em;

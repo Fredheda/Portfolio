@@ -38,4 +38,8 @@ def plan_reply(messages: list[BaseMessage]) -> AIMessage:
         return _tool_call(
             "highlightProjects", {"ids": ["paper-podcasts", "tfl-mcp-server"]}
         )
+    if "formula" in text:
+        return AIMessage(
+            "Inline $a^2+b^2=c^2$ and a block:\n\n$$\n\\int_0^1 x\\,dx\n$$"
+        )
     return AIMessage(f"Reply to: {text}")

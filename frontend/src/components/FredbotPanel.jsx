@@ -3,12 +3,10 @@ import DOMPurify from 'dompurify';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
-import 'katex/dist/katex.min.css';
 import { useAgent, useCopilotKit } from '@copilotkit/react-core/v2';
 import { useChatThread } from '../context/ChatThreadContext';
 import { content } from '../lib/content';
-import { normalizeMathDelimiters } from '../lib/markdown';
+import { mathRehypePlugins, normalizeMathDelimiters } from '../lib/markdown';
 import { formatSeconds, groupTurns } from '../lib/turns';
 import { useToolTimings } from '../lib/useToolTimings';
 import Section from './home/Section';
@@ -233,7 +231,7 @@ const FredbotPanel = () => {
                         ❯
                       </span>
                       <div className={`${answerClassName} font-mono !text-[0.8rem] !text-panelMuted`}>
-                        <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+                        <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={mathRehypePlugins}>
                           {normalizeMathDelimiters(turn.content)}
                         </ReactMarkdown>
                       </div>
