@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { content } from '../lib/content';
+import { useBlogAvailable } from '../lib/useBlogAvailable';
 import ContactLinks from './ContactLinks';
 
 const { profile } = content;
@@ -13,6 +14,16 @@ export const navLinks = [
   { label: 'Projects', to: '/#projects' },
 ];
 
+const blogLink = { label: 'Blog', to: '/blog' };
+
+// The Blog link is the section's own page, not a home-page anchor: the page
+// is current on /blog, the section on any /blog/<slug>.
+const currentState = (link, pathname) => {
+  if (link.to !== '/blog') return undefined;
+  if (pathname === '/blog') return 'page';
+  return pathname.startsWith('/blog/') ? 'true' : undefined;
+};
+
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -24,6 +35,7 @@ const Header = () => {
   }, [mobileOpen]);
 
   const { pathname } = useLocation();
+  const links = useBlogAvailable() ? [...navLinks, blogLink] : navLinks;
   const close = () => setMobileOpen(false);
 
   // A link to the page you are already on does not scroll by itself.
@@ -45,10 +57,11 @@ const Header = () => {
         </Link>
 
         <nav aria-label="Main" className="hidden items-center gap-6 md:flex">
-          {navLinks.map((link) => (
+          {links.map((link) => (
             <Link
               key={link.label}
               to={link.to}
+              aria-current={currentState(link, pathname)}
               className="text-sm font-medium text-muted no-underline transition-colors hover:text-ink"
             >
               {link.label}
@@ -76,10 +89,11 @@ const Header = () => {
           aria-label="Mobile"
           className="absolute inset-x-0 top-full z-30 h-[calc(100dvh-100%)] flex flex-col gap-1 overflow-y-auto border-t border-line bg-page px-4 py-6 md:hidden"
         >
-          {navLinks.map((link) => (
+          {links.map((link) => (
             <Link
               key={link.label}
               to={link.to}
+              aria-current={currentState(link, pathname)}
               onClick={close}
               className="rounded-lg px-2 py-3 font-heading text-2xl font-semibold text-ink no-underline"
             >
