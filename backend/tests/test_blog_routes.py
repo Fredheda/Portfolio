@@ -18,7 +18,7 @@ def test_list_passes_its_parameters_and_never_returns_storage_paths():
     response = web.get("/blog/posts?limit=3&cursor=abc&tag=maths")
     assert response.status_code == 200
     assert client.calls == [("list", 3, "abc", "maths")]
-    assert response.headers["cache-control"] == "private, max-age=60"
+    assert response.headers["cache-control"] == "no-cache"
     assert response.json()["items"][0]["slug"] == "hello-world"
     assert "futureField" not in response.text
 
@@ -74,3 +74,20 @@ def test_audio_uses_the_audio_link():
     assert web.get("/blog/posts/hello-world/audio").status_code == 200
     assert client.calls == [("audio", "hello-world")]
     assert media.seen is not None
+
+
+def test_json_routes_send_an_etag_and_answer_a_matching_validator_with_304():
+    web, _, _ = make()
+    for path in ("/blog/posts", "/blog/posts/hello-world"):
+        first = web.get(path)
+        etag = first.headers["etag"]
+        assert first.headers["cache-control"] == "no-cache"
+        assert etag.startswith('"') and etag.endswith('"')
+        again = web.get(path, headers={"If-None-Match": etag})
+        assert again.status_code == 304
+        assert again.content == b""
+        assert again.headers["etag"] == etag
+        weak = web.get(path, headers={"If-None-Match": f'W/{etag}, "other"'})
+        assert weak.status_code == 304
+        other = web.get(path, headers={"If-None-Match": '"other"'})
+        assert other.status_code == 200 and other.headers["etag"] == etag

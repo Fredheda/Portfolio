@@ -15,11 +15,11 @@ class Entry:
 class ResponseCache:
     """In-memory, per process. A fresh entry is served as is; an older one is
     kept for revalidation (If-None-Match) and as the answer when the API is
-    down, until `stale_ttl` has passed. Bounded, oldest entry out first."""
+    down, until `stale_ttl` has passed or the entry is evicted. Bounded, oldest entry out first."""
 
     def __init__(
         self,
-        ttl: float = 60.0,
+        ttl: float = 15.0,
         stale_ttl: float = 900.0,
         max_entries: int = 256,
         clock: Callable[[], float] = time.monotonic,
@@ -50,3 +50,10 @@ class ResponseCache:
         entry = self._entries.get(key)
         if entry is not None:
             entry.stored_at = self._clock()
+
+    def evict(self, key: str) -> None:
+        self._entries.pop(key, None)
+
+    def evict_prefix(self, prefix: str) -> None:
+        for key in [key for key in self._entries if key.startswith(prefix)]:
+            del self._entries[key]

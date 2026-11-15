@@ -1,7 +1,8 @@
 import asyncio
 import logging
 import time
-from collections.abc import Callable
+from collections.abc import AsyncIterator, Callable
+from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from typing import Protocol, TypeVar
 from urllib.parse import urlencode
@@ -90,18 +91,39 @@ class HttpBlogClient:
 
     async def get_post(self, slug: str) -> Post:
         _check_slug(slug)
-        return await self._cached(Post, f"/posts/{slug}", {})
+        async with self._forgetting(slug):
+            return await self._cached(Post, f"/posts/{slug}", {})
 
     async def media_link(self, slug: str, media_id: str) -> MediaLink:
         _check_slug(slug)
         _check_media_id(media_id)
-        return await self._link(
-            MediaLink, f"/media/{media_id}", {"post": slug}, ("media", slug, media_id)
-        )
+        async with self._forgetting(slug):
+            return await self._link(
+                MediaLink,
+                f"/media/{media_id}",
+                {"post": slug},
+                ("media", slug, media_id),
+            )
 
     async def audio_link(self, slug: str) -> AudioLink:
         _check_slug(slug)
-        return await self._link(AudioLink, f"/posts/{slug}/audio", {}, ("audio", slug))
+        async with self._forgetting(slug):
+            return await self._link(
+                AudioLink, f"/posts/{slug}/audio", {}, ("audio", slug)
+            )
+
+    @asynccontextmanager
+    async def _forgetting(self, slug: str) -> AsyncIterator[None]:
+        """A 404 means the post (or its media) is gone: drop everything cached
+        for it, and the lists that name it, so no outage can bring it back."""
+        try:
+            yield
+        except BlogNotFound:
+            self._cache.evict(f"/posts/{slug}?")
+            self._cache.evict_prefix("/posts?")
+            for key in [key for key in self._links if key[1] == slug]:
+                del self._links[key]
+            raise
 
     async def _cached(self, model: type[T], path: str, params: dict[str, str]) -> T:
         key = f"{path}?{urlencode(sorted(params.items()))}"
@@ -111,6 +133,9 @@ class HttpBlogClient:
         headers = {"If-None-Match": entry.etag} if entry and entry.etag else {}
         try:
             response = await self._send(path, params, headers)
+        except BlogNotFound:
+            self._cache.evict(key)
+            raise
         except BlogUnavailable:
             if entry is not None:
                 logger.warning("blog api unavailable: serving the cached copy")

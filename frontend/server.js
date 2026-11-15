@@ -95,7 +95,8 @@ app.get('/api/warmup', warmupLimiter, (req, res) => {
 });
 
 // Blog read proxy: GET only, forwards to the backend's /blog routes. The
-// browser's headers never travel upstream except Range (media seeking), so a
+// browser's headers never travel upstream except Range (media seeking) and
+// If-None-Match (revalidation of the JSON routes), so a
 // visitor cannot inject credentials. Only the wait for response headers is
 // timed out: a long video or audio stream must not be cut at 30 s. A visitor
 // who leaves mid-stream aborts the upstream fetch too.
@@ -114,6 +115,7 @@ const BLOG_FORWARDED_HEADERS = [
   'content-range',
   'accept-ranges',
   'cache-control',
+  'etag',
   'x-content-type-options',
   'content-security-policy',
   'cross-origin-resource-policy',
@@ -140,6 +142,7 @@ app.use('/api/blog', blogLimiter, async (req, res) => {
   try {
     const headers = {};
     if (req.headers.range) headers.range = req.headers.range;
+    if (req.headers['if-none-match']) headers['if-none-match'] = req.headers['if-none-match'];
     const upstream = await fetch(target, {
       headers,
       redirect: 'manual',

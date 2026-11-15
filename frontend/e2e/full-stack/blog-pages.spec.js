@@ -46,6 +46,10 @@ test('an unknown post is a not-found page the search engines skip', async ({ pag
 });
 
 test('an outage shows fixed text and a retry that works', async ({ page, request }) => {
+  // The header asks for the list on every page load. Fill that backend cache
+  // entry first (fresh for 15 s) so the one planted failure reaches the post
+  // request, not the header's.
+  await request.get('/api/blog/posts?limit=1');
   await failBlog(request, 1);
   await page.goto('/blog/never-cached');
   await expect(page.getByRole('alert')).toHaveText(/can.t be loaded right now/);
