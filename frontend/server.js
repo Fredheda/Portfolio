@@ -96,10 +96,10 @@ app.get('/api/warmup', warmupLimiter, (req, res) => {
 
 // Blog read proxy: GET only, forwards to the backend's /blog routes. The
 // browser's headers never travel upstream except Range (media seeking) and
-// If-None-Match (revalidation of the JSON routes), so a
-// visitor cannot inject credentials. Only the wait for response headers is
-// timed out: a long video or audio stream must not be cut at 30 s. A visitor
-// who leaves mid-stream aborts the upstream fetch too.
+// If-None-Match (revalidation of the JSON routes), so a visitor cannot inject
+// credentials. Only the wait for response headers is timed out: a long video
+// or audio stream must not be cut at 30 s. A visitor who leaves mid-stream
+// aborts the upstream fetch too.
 // BLOG_RATE_LIMIT exists only so the browser tests can exceed the default.
 const blogLimiter = rateLimit({
   windowMs: 60 * 1000,
