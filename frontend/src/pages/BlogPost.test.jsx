@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { BlogError, getPost } from '../lib/blogApi';
@@ -49,13 +49,15 @@ describe('BlogPost', () => {
     // "## Section" in a body is demoted by one level.
     expect(screen.getByRole('heading', { level: 3, name: 'Section' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'All posts' })).toHaveAttribute('href', '/blog');
-    expect(document.title).toBe(`Hello world · ${content.profile.name}`);
+    // The title is set in an effect that can run just after the heading shows.
+    await waitFor(() => expect(document.title).toBe(`Hello world · ${content.profile.name}`));
   });
 
   it('puts the title back when the page goes away', async () => {
     vi.mocked(getPost).mockResolvedValue(post);
     const { unmount } = renderAt('hello-world');
-    await screen.findByRole('heading', { level: 1, name: 'Hello world' });
+    // Unmount only once the effect has set the title, or there is nothing to put back.
+    await waitFor(() => expect(document.title).toBe(`Hello world · ${content.profile.name}`));
     unmount();
     expect(document.title).toBe('before');
   });
@@ -64,7 +66,10 @@ describe('BlogPost', () => {
     vi.mocked(getPost).mockRejectedValue(new BlogError('not_found'));
     renderAt('missing');
     expect(await screen.findByRole('heading', { name: 'Page not found' })).toBeInTheDocument();
-    expect(document.head.querySelector('meta[name="robots"]')).toHaveAttribute('content', 'noindex');
+    // The robots tag is added in an effect that can run just after the heading shows.
+    await waitFor(() =>
+      expect(document.head.querySelector('meta[name="robots"]')).toHaveAttribute('content', 'noindex'),
+    );
   });
 
   it('makes no request for a slug that is not slug-shaped', () => {
