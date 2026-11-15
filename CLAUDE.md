@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Repo facts only. The workspace `CLAUDE.md` (`../CLAUDE.md`) owns the rest: style, git and worktrees, ways of working, tooling, Jira, specs and plans.
+Repo facts only, plus the Ownership note below. The workspace `CLAUDE.md` (`../CLAUDE.md`) owns the rest: style, git and worktrees, ways of working, tooling, Jira, specs and plans.
 
 PR titles and descriptions never mention Claude Code. `./scripts/ci-local.sh` runs every CI check locally; green before `gh pr ready`.
 
