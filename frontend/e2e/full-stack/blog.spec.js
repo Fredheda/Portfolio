@@ -75,3 +75,16 @@ test('only GET is accepted', async ({ request }) => {
   const response = await request.post('/api/blog/posts');
   expect(response.status()).toBe(405);
 });
+
+test('JSON is revalidated by ETag: no-cache, an ETag, and a 304 for a repeat', async ({ request }) => {
+  const first = await request.get('/api/blog/posts?limit=7');
+  expect(first.status()).toBe(200);
+  expect(first.headers()['cache-control']).toBe('no-cache');
+  const etag = first.headers()['etag'];
+  expect(etag).toMatch(/^"[0-9a-f]{32}"$/);
+  const again = await request.get('/api/blog/posts?limit=7', {
+    headers: { 'if-none-match': etag },
+  });
+  expect(again.status()).toBe(304);
+  expect(await again.body()).toHaveLength(0);
+});

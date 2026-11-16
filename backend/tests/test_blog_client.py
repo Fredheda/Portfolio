@@ -82,10 +82,10 @@ async def test_repeat_calls_come_from_memory_and_stale_ones_are_revalidated():
     first = await client.list_posts(20, None, None)
     assert await client.list_posts(20, None, None) is first
     assert sent == [None]
-    clock.now += 61
+    clock.now += 16
     assert await client.list_posts(20, None, None) is first  # 304: same object
     assert sent == [None, '"v1"']
-    clock.now += 30
+    clock.now += 10
     await client.list_posts(20, None, None)
     assert len(sent) == 2  # the 304 made it fresh again
 
@@ -244,3 +244,91 @@ async def test_audio_link_uses_the_post_audio_path():
     result = await client.audio_link("hello-world")
     assert sent[0].url.path == "/v1/posts/hello-world/audio"
     assert result.durationSec == 61.5
+
+
+@pytest.mark.asyncio
+async def test_a_404_after_a_cached_post_evicts_it_and_an_outage_cannot_bring_it_back():
+    state = {"status": 200}
+
+    def handler(request):
+        if state["status"] == 200:
+            return httpx.Response(200, json=POST)
+        return httpx.Response(state["status"], json={"title": "gone"})
+
+    client, clock = make(handler)
+    await client.get_post("hello-world")
+    clock.now += 16
+    state["status"] = 404
+    with pytest.raises(BlogNotFound):
+        await client.get_post("hello-world")
+    state["status"] = 503
+    with pytest.raises(BlogUnavailable):
+        await client.get_post("hello-world")
+
+
+@pytest.mark.asyncio
+async def test_a_post_404_drops_the_cached_lists_even_inside_their_fresh_window():
+    sent = []
+    state = {"post": 200}
+
+    def handler(request):
+        sent.append(request.url.path)
+        if request.url.path == "/v1/posts":
+            return httpx.Response(200, json=POST_LIST)
+        if state["post"] == 200:
+            return httpx.Response(200, json=POST)
+        return httpx.Response(404, json={"title": "gone"})
+
+    client, clock = make(handler)
+    await client.get_post("hello-world")  # t=0, stale after 15
+    clock.now += 10
+    await client.list_posts(20, None, None)  # fresh until t=25
+    clock.now += 7  # t=17: post stale, list fresh
+    state["post"] = 404
+    with pytest.raises(BlogNotFound):
+        await client.get_post("hello-world")
+    sent.clear()
+    await client.list_posts(20, None, None)
+    assert sent == ["/v1/posts"]  # not served from memory
+
+
+@pytest.mark.asyncio
+async def test_a_404_on_media_forgets_the_post_and_the_posts_links():
+    sent = []
+
+    def handler(request):
+        sent.append(request.url.path)
+        if request.url.path == "/v1/media/m2":
+            return httpx.Response(404, json={"title": "gone"})
+        if request.url.path == "/v1/media/m1":
+            return httpx.Response(200, json=link(clock, 600))
+        return httpx.Response(200, json=POST)
+
+    client, clock = make(handler)
+    await client.get_post("hello-world")
+    await client.media_link("hello-world", "m1")
+    with pytest.raises(BlogNotFound):
+        await client.media_link("hello-world", "m2")
+    sent.clear()
+    await client.get_post("hello-world")
+    await client.media_link("hello-world", "m1")
+    assert sent == ["/v1/posts/hello-world", "/v1/media/m1"]
+
+
+@pytest.mark.asyncio
+async def test_a_404_on_audio_forgets_the_post():
+    sent = []
+
+    def handler(request):
+        sent.append(request.url.path)
+        if request.url.path.endswith("/audio"):
+            return httpx.Response(404, json={"title": "gone"})
+        return httpx.Response(200, json=POST)
+
+    client, _ = make(handler)
+    await client.get_post("hello-world")
+    with pytest.raises(BlogNotFound):
+        await client.audio_link("hello-world")
+    sent.clear()
+    await client.get_post("hello-world")
+    assert sent == ["/v1/posts/hello-world"]
