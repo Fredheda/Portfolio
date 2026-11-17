@@ -139,7 +139,7 @@ def _app(model: BaseChatModel, tools: list) -> tuple[Any, RecordingDatabase]:
             return await build_graph(
                 model=model,
                 moderation_client=NeverFlags(),  # pyright: ignore[reportArgumentType]
-                db=db,  # pyright: ignore[reportArgumentType]
+                db=db,
             )
 
     return create_app(build=build), db

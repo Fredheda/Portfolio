@@ -52,7 +52,7 @@ app = create_app(
     build=lambda: build_graph(
         model=MODEL,
         moderation_client=FlaggingModeration(),  # pyright: ignore[reportArgumentType]
-        db=DB,  # pyright: ignore[reportArgumentType]
+        db=DB,
     ),
     blog=lambda: BLOG,
 )
