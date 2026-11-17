@@ -3,13 +3,13 @@ from typing import Any
 from langchain.agents.middleware import AgentMiddleware, AgentState
 from langchain.messages import AIMessage, HumanMessage
 from langgraph.runtime import Runtime
-from services.database_client import database_client
+from services.chat_logger import ChatLogger, chat_logger_from_env
 
 
 class LoggingMiddleware(AgentMiddleware):
-    def __init__(self, db: database_client | None = None):
+    def __init__(self, db: ChatLogger | None = None):
         super().__init__()
-        self._db = db or database_client()
+        self._db = db or chat_logger_from_env()
 
     def after_agent(self, state: AgentState, runtime: Runtime) -> dict[str, Any] | None:
         messages = state["messages"]

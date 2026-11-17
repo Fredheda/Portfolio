@@ -42,7 +42,9 @@ def test_only_the_exact_opt_in_value_counts(value):
 )
 def test_sql_logging_without_both_names_stays_off_and_says_so(env, capsys):
     assert isinstance(chat_logger_from_env(env), NoopChatLogger)
-    assert "AZURE_SQL_SERVER or AZURE_SQL_DATABASE is not set" in capsys.readouterr().out
+    assert (
+        "AZURE_SQL_SERVER or AZURE_SQL_DATABASE is not set" in capsys.readouterr().out
+    )
 
 
 def test_the_middleware_default_follows_the_environment(monkeypatch):
