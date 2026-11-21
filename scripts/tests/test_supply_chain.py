@@ -7,10 +7,14 @@
    14-day window in the image;
 3. every GitHub Action pinned by commit, with its release as a comment;
 4. no npx download;
-5. every Docker image (FROM and docker run) pinned by digest.
+5. every Docker image (FROM and docker run) pinned by digest;
+6. the Function App's requirements pinned with ==, generated under the
+   14-day window.
 
-To bump Poetry or pip: change the pin in .github/workflows/ci.yml,
+To bump Poetry: change the pin in .github/workflows/ci.yml,
 .github/workflows/security.yml and backend/Dockerfile together.
+To bump pip: change the pin in the compile script, backend/Dockerfile,
+.github/workflows/ci.yml and scripts/ci-local.sh together.
 To bump an image: resolve the new digest (docs/development.md,
 "Dependencies") and change it in the Dockerfile or security.yml.
 Text-based: the CI test env has no YAML or TOML library.
@@ -22,9 +26,21 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 
-# Installed from a requirements file without hashes until its own ticket
-# (PW-68) generates a hashed file. Any other unhashed -r file fails the test.
-UNHASHED_REQUIREMENTS = {"mcp-tools/requirements.txt"}
+# Installed with `-r` because it pins every package with `==` (checked line by
+# line below). It has no hashes on purpose: Azure's remote build installs it, and
+# exact pins under the 14-day window were chosen over hashes for this file
+# (owner decision). Any other `-r` file needs hashes.
+PINNED_REQUIREMENTS = {"mcp-tools/requirements.txt"}
+COMPILE_SCRIPT = "scripts/compile-mcp-tools-requirements.sh"
+PIP_SOURCES = (
+    COMPILE_SCRIPT,
+    "backend/Dockerfile",
+    ".github/workflows/ci.yml",
+    "scripts/ci-local.sh",
+)
+PIP_WINDOW = "PIP_UPLOADED_PRIOR_TO=P14D"
+PIP_PIN = re.compile(r"\bpip==([0-9][0-9.]*)")
+PINNED_LINE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*==[0-9][A-Za-z0-9.+!]*$")
 
 EXACT = re.compile(r"[A-Za-z0-9_.-]+==[0-9][0-9A-Za-z.]*")
 INSTALL = re.compile(r"\b(?:pip|pipx) (install|inject)\b(.*)")
@@ -126,7 +142,7 @@ def test_pip_and_pipx_installs_are_exact() -> None:
                 elif after_r:
                     after_r = False
                     if (
-                        arg not in UNHASHED_REQUIREMENTS
+                        arg not in PINNED_REQUIREMENTS
                         and "--hash" not in (ROOT / arg).read_text()
                     ):
                         offenders.append(f"{rel(path)}:{number}: unhashed -r {arg}")
@@ -235,3 +251,50 @@ def test_every_docker_image_is_pinned_by_digest() -> None:
                     offenders.append(f"{rel(path)}:{number}: {image}")
     assert seen >= 6, "too few image references found; the scan is stale"
     assert offenders == []
+
+
+def test_pinned_requirements_hold_only_exact_pins() -> None:
+    offenders = []
+    for name in sorted(PINNED_REQUIREMENTS):
+        entries = [
+            line.strip()
+            for line in (ROOT / name).read_text().splitlines()
+            if line.strip() and not line.lstrip().startswith("#")
+        ]
+        assert entries, f"{name} pins nothing"
+        offenders += [f"{name}: {e}" for e in entries if not PINNED_LINE.match(e)]
+    assert offenders == []
+
+
+def test_the_compile_script_applies_the_14_day_window() -> None:
+    script = ROOT / COMPILE_SCRIPT
+    assert script.exists(), f"{COMPILE_SCRIPT} is missing"
+    assert PIP_WINDOW in script.read_text()
+
+
+def test_the_compile_script_the_image_and_ci_pin_the_same_pip() -> None:
+    def pins(name: str) -> set[str]:
+        path = ROOT / name
+        return set(PIP_PIN.findall(path.read_text())) if path.exists() else set()
+
+    per_file = {name: pins(name) for name in PIP_SOURCES}
+    assert all(len(found) == 1 for found in per_file.values()), per_file
+    assert len(set().union(*per_file.values())) == 1, per_file
+
+
+def test_pytest_installs_apply_the_14_day_window() -> None:
+    offenders = [
+        f"{rel(path)}:{number}: {line.strip()}"
+        for path in install_sources()
+        for number, line in lines(path)
+        if "pytest==" in line and " install " in line and PIP_WINDOW not in line
+    ]
+    assert offenders == []
+
+
+def test_the_compile_script_keeps_the_committed_versions() -> None:
+    script = (ROOT / COMPILE_SCRIPT).read_text()
+    assert 'constraints="mcp-tools/requirements.txt"' in script
+    assert '--constraint "$constraints"' in script
+    direct = script.split("DIRECT=(", 1)[1].split(")", 1)[0]
+    assert "==" not in direct, "DIRECT holds floors; the committed file holds versions"
