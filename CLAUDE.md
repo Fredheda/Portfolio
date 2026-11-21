@@ -95,6 +95,8 @@ Names only; what each does and where it goes: `docs/development.md`, "Environmen
 
 `.github/dependabot.yml`: monthly version updates, one grouped PR per ecosystem (pip for `backend/`, `data/`, `mcp-tools/`; npm for `frontend/`; GitHub Actions; Docker for both Dockerfiles), label `dependencies`, 14-day cooldown. Major bumps are ignored for pip, npm and Docker and done by hand. Security-update PRs are separate: not grouped, no cooldown. Dependabot PRs get no secrets, so the AI review skips them; CI and `security.yml` run as usual. Who merges them: "Merging" under "PR review".
 
+Dependencies: 14-day install cooldown (`frontend/.npmrc`, `backend/poetry.toml`, `data/poetry.toml`), exact Poetry and pip pins (bump `ci.yml`, `security.yml` and `backend/Dockerfile` together), actions pinned by commit; `scripts/tests/test_supply_chain.py` guards all three (`docs/development.md`, "Dependencies").
+
 ## PR review
 
 `.github/workflows/claude-review.yml` posts a comment-only AI review on every push to a ready (non-draft) PR: security first, a documentation check ("Docs: current" or findings) and advisory size and tests checks. The owner can request one with a `@claude` comment. Token expiry and renewal: `deployment/expirations.md`.
