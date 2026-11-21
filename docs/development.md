@@ -24,11 +24,11 @@ Backend values go in `Portfolio/.env` (the repo root, not a file inside `backend
 | `BLOG_API_URL` | backend | Blog read API base URL (https). Unset keeps the blog off; locally leave it unset (the browser suite uses its own fake read API). |
 | `BLOG_API_AUDIENCE` | backend | `api://<application id>` of the blog API's app registration. |
 | `BLOG_READ_CLIENT_ID` | backend, deployed only | Client id of `id-portfolio-blogread`, set by Bicep when `BLOG_API_URL` is given. |
-| `HOST` | backend (`python main.py`), frontend (`server.js`) | Listen address. Default `127.0.0.1` (loopback only). The frontend image sets `0.0.0.0`; the backend image's `CMD` passes `--host 0.0.0.0`. |
 | `BLOG_MEDIA_HOSTS` | backend | Optional, comma separated blob hosts the media proxy may fetch. Default `fhstorageportfolio.blob.core.windows.net`. |
+| `HOST` | backend (`python main.py`), frontend (`server.js`) | Listen address. Default `127.0.0.1` (loopback only). The frontend image sets `0.0.0.0`; the backend image's `CMD` passes `--host 0.0.0.0`. |
 | `azure_search_endpoint`, `azure_index_name`, `azure_search_api_key` | `mcp-tools/`, `data/` | Not backend variables. `mcp-tools/` uses them for the vector query behind `retrieve_information`, and `data/` uses them to build the index. |
 
-The frontend reads `BACKEND_URL` from `frontend/.env` (gitignored). `server.js` reads it at runtime, not the browser bundle. Set it to `http://localhost:8000` for local runs. When deployed, it defaults to `http://ca-portfolio-backend`, which Bicep sets.
+The frontend reads `BACKEND_URL` from `frontend/.env` (gitignored). `server.js` reads it at runtime, not the browser bundle. Set it to `http://127.0.0.1:8000` for local runs (the backend listens on IPv4 loopback only). When deployed, it defaults to `http://ca-portfolio-backend`, which Bicep sets.
 
 ## Run everything
 
@@ -57,7 +57,7 @@ npm start            # serve the production build with Express
 # Backend (backend/)
 poetry install
 poetry run uvicorn main:app --reload   # port 8000
-poetry run python main.py              # production server
+poetry run python main.py              # local server, loopback only (the image runs uvicorn itself)
 ```
 
 `backend/` and `data/` are separate Poetry projects, each with its own `pyproject.toml` and `poetry.lock`. They cannot share one environment because they pin conflicting `tiktoken` versions. `mcp-tools/` uses a plain virtualenv and `requirements.txt`, as Azure Functions Core Tools expects.
