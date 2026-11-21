@@ -24,6 +24,7 @@ Backend values go in `Portfolio/.env` (the repo root, not a file inside `backend
 | `BLOG_API_URL` | backend | Blog read API base URL (https). Unset keeps the blog off; locally leave it unset (the browser suite uses its own fake read API). |
 | `BLOG_API_AUDIENCE` | backend | `api://<application id>` of the blog API's app registration. |
 | `BLOG_READ_CLIENT_ID` | backend, deployed only | Client id of `id-portfolio-blogread`, set by Bicep when `BLOG_API_URL` is given. |
+| `HOST` | backend (`python main.py`), frontend (`server.js`) | Listen address. Default `127.0.0.1` (loopback only). The frontend image sets `0.0.0.0`; the backend image's `CMD` passes `--host 0.0.0.0`. |
 | `BLOG_MEDIA_HOSTS` | backend | Optional, comma separated blob hosts the media proxy may fetch. Default `fhstorageportfolio.blob.core.windows.net`. |
 | `azure_search_endpoint`, `azure_index_name`, `azure_search_api_key` | `mcp-tools/`, `data/` | Not backend variables. `mcp-tools/` uses them for the vector query behind `retrieve_information`, and `data/` uses them to build the index. |
 
@@ -41,6 +42,8 @@ The `Procfile` starts Azurite, `mcp-tools` (`func start`), the backend and the f
 
 - It pins `PORT` explicitly on the `backend` and `frontend` lines. Otherwise honcho assigns its own `PORT` to each process (a Foreman convention), which collides with the defaults in `main.py` and `server.js`.
 - The `backend` line waits until `func start` has actually bound `:7071`, not just printed its banner, using a `curl` and `sleep` poll loop.
+
+The backend and frontend listen on `127.0.0.1` only, so nothing on the network can reach a local run. Set `HOST` to change that. The container images do: the frontend image sets `HOST=0.0.0.0` and the backend image's `CMD` passes `--host 0.0.0.0` to uvicorn (`scripts/tests/test_listen_hosts.py` pins both).
 
 ## Run one service
 
