@@ -110,7 +110,7 @@ npm run lint    # eslint
 npm run build
 ```
 
-`mcp-tools/` tests run in their own virtualenv, from `mcp-tools/`: copy `content/site-content.json` to `mcp-tools/content/`, create the virtualenv with Python 3.13 (`scripts/ci-local.sh` uses the backend's Poetry interpreter) and run the install lines of `scripts/ci-local.sh` (pip 26.2.2, the pinned requirements with `--no-deps --only-binary=:all:`, `pip check`, pytest under the 14-day window), then `python -m pytest tests -v`.
+`mcp-tools/` tests run in their own virtualenv, from `mcp-tools/`: copy `content/site-content.json` to `mcp-tools/content/`, create the virtualenv with Python 3.13 and run the install lines in the "mcp-tools tests" step of `scripts/ci-local.sh` (it uses the backend's Poetry interpreter), then `python -m pytest tests -v`.
 
 The deploy scripts have tests too: `python -m pytest scripts/tests -v` (needs only pytest).
 
