@@ -43,7 +43,7 @@ The `Procfile` starts Azurite, `mcp-tools` (`func start`), the backend and the f
 - It pins `PORT` explicitly on the `backend` and `frontend` lines. Otherwise honcho assigns its own `PORT` to each process (a Foreman convention), which collides with the defaults in `main.py` and `server.js`.
 - The `backend` line waits until `func start` has actually bound `:7071`, not just printed its banner, using a `curl` and `sleep` poll loop.
 
-The backend and frontend listen on `127.0.0.1` only (`HOST`, table above); `scripts/tests/test_listen_hosts.py` pins that and the images' `0.0.0.0`.
+The backend and frontend listen on `127.0.0.1` only (`HOST`, table above); `backend/tests/test_listen_address.py` and the `server` e2e project check that, and `scripts/tests/test_listen_hosts.py` pins the images' `0.0.0.0`.
 
 ## Run one service
 
@@ -125,7 +125,7 @@ From `frontend/`: `npm run e2e`. The first time, run `npx playwright install chr
 
 Projects:
 
-- `server`: each test spawns its own `server.js` at production settings (redirect, headers, both rate limits, per-route titles and link-preview tags, 404 for unknown paths).
+- `server`: each test spawns its own `server.js` at production settings (redirect, headers, both rate limits, per-route titles and link-preview tags, 404 for unknown paths, and that it listens on loopback only: a connection to the machine's LAN address is refused).
 - `full-stack`: browser and AG-UI protocol tests, plus the pages: 360px phone width, hash links from other routes, fredbot's tool lines.
 - `full-stack` also drives the blog pages (`blog-pages.spec.js`, and `blog-nav.spec.js` for the header Blog link) against the fake blog read API.
 - `a11y`: axe on `/`, a project page, `/privacy-policy`, the blog list and a blog post with every rule on, once finite animations have finished. Fails on serious or critical issues.

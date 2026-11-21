@@ -1,27 +1,14 @@
-"""Local servers listen on loopback; the containers listen on all interfaces.
-`python main.py` and `node server.js` read HOST (default 127.0.0.1). The
-frontend image sets HOST=0.0.0.0 and the backend image passes --host 0.0.0.0
-to uvicorn, so Container Apps ingress and probes can reach them. If an image
-lost that setting the app would answer only inside its own container.
-Text-based: no Docker or server runs here."""
+"""The container images listen on all interfaces. Local servers listen on
+loopback by default (tests: backend/tests/test_listen_address.py and the
+`server` e2e project); the frontend image sets HOST=0.0.0.0 and the backend
+image passes --host 0.0.0.0 to uvicorn, so Container Apps ingress and probes
+can reach them. If an image lost that setting the app would answer only inside
+its own container. Text-based: no Docker or server runs here."""
 
 import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-
-
-def test_server_js_listens_on_host_defaulting_to_loopback() -> None:
-    source = (ROOT / "frontend" / "server.js").read_text()
-    assert "const HOST = process.env.HOST || '127.0.0.1';" in source
-    assert "app.listen(PORT, HOST," in source
-
-
-def test_main_py_has_no_hard_coded_all_interfaces_address() -> None:
-    source = (ROOT / "backend" / "main.py").read_text()
-    assert 'host="0.0.0.0"' not in source
-    assert 'env.get("HOST") or "127.0.0.1"' in source
-    assert "uvicorn.run(app, host=host, port=port)" in source
 
 
 def test_the_frontend_image_listens_on_all_interfaces() -> None:
