@@ -61,7 +61,7 @@ Before it logs in to Azure it checks that the SHA is a full lowercase SHA, is on
 
 ### Rollback
 
-Press the button with an older SHA. Rollback rebuilds the dependencies from the old commit's `mcp-tools/requirements.txt` (pinned exactly, so an old SHA gets the same versions again). Flex Consumption has no deployment slots, so a bad deploy is fixed by deploying the previous SHA.
+Press the button with an older SHA. Rollback rebuilds the dependencies from the old commit's `mcp-tools/requirements.txt` (still version ranges, so a rebuild can pick newer versions until its hashed requirements land). Flex Consumption has no deployment slots, so a bad deploy is fixed by deploying the previous SHA.
 
 ### One-time setup
 
