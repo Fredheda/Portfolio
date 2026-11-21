@@ -31,7 +31,9 @@ step "backend: tests, lint, types"
 step "mcp-tools tests (isolated venv)"
 mkdir -p mcp-tools/content && cp content/site-content.json mcp-tools/content/site-content.json
 rm -rf mcp-tools/.venv
-python -m venv mcp-tools/.venv
+# Python 3.13 like CI and the Function App (the pinned azure-functions needs it):
+# the backend's Poetry interpreter, not whatever `python` is on the PATH.
+(cd backend && poetry run python -m venv ../mcp-tools/.venv)
 mcp-tools/.venv/bin/pip install pip==26.2.2
 mcp-tools/.venv/bin/pip install --no-deps --only-binary=:all: -r mcp-tools/requirements.txt
 mcp-tools/.venv/bin/pip check

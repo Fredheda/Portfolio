@@ -12,6 +12,7 @@ CI_LOCAL = ROOT / "scripts" / "ci-local.sh"
 # instead (None = CI-only plumbing with no local equivalent).
 DIFFERENT_LOCALLY = {
     "pipx install poetry==": None,  # the developer has Poetry
+    "python -m venv mcp-tools/.venv": "poetry run python -m venv ../mcp-tools/.venv",
     "python -m pip install pip==26.2.2": None,  # the developer's own pip
     "python -m pip install pytest==9.1.1": None,  # the developer has pytest
     'changed-areas.sh "origin/${{ github.base_ref }}"': None,  # PR-only plumbing
