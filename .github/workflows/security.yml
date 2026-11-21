@@ -86,8 +86,8 @@ jobs:
         run: |
           poetry -C data export --without-hashes -o "$RUNNER_TEMP/data.txt"
           pipx run pip-audit==2.10.1 -r "$RUNNER_TEMP/data.txt" --no-deps --disable-pip
-      # mcp-tools/requirements.txt has version ranges, so pip-audit resolves
-      # it in its own temporary venv.
+      # mcp-tools/requirements.txt pins every package, so this audits the set
+      # Azure installs (pip-audit resolves it in its own temporary venv).
       - name: Audit mcp-tools requirements
         run: pipx run pip-audit==2.10.1 -r mcp-tools/requirements.txt
 
