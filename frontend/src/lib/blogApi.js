@@ -26,11 +26,14 @@ const Post = Summary.extend({ body: z.string(), media: z.array(Media).default([]
 const PostList = z.object({ items: z.array(Summary), nextCursor: z.string().nullable().optional() });
 
 // kind 'not_found': no such post. kind 'unavailable': anything else, shown
-// with fixed text; the cause (status, body) never reaches the page.
+// with fixed text; the cause (status, body) never reaches the page. `off` is
+// true when the blog is switched off (the list route answers 404): retrying
+// cannot help then.
 export class BlogError extends Error {
-  constructor(kind) {
+  constructor(kind, off = false) {
     super(kind);
     this.kind = kind;
+    this.off = off;
   }
 }
 
@@ -65,7 +68,7 @@ export async function listPosts({ limit = 20, cursor, tag, signal } = {}) {
     return await getJson(`/api/blog/posts?${query}`, PostList, signal);
   } catch (error) {
     // The list route does not exist while the blog is switched off.
-    if (error instanceof BlogError && error.kind === 'not_found') throw new BlogError('unavailable');
+    if (error instanceof BlogError && error.kind === 'not_found') throw new BlogError('unavailable', true);
     throw error;
   }
 }

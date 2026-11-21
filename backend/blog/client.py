@@ -17,8 +17,11 @@ from blog.token import TokenProvider
 
 logger = logging.getLogger("blog.client")
 
-# Generous: ca-blogapi scales to zero and a cold start takes several seconds.
-TIMEOUT = httpx.Timeout(30.0, connect=10.0)
+# ca-blogapi scales to zero and a cold start takes about 30 s. The first
+# attempt may time out while it wakes and the retry then lands on a warm one;
+# two attempts and the pause stay inside the web server's 60 s wait for
+# headers (scripts/tests/test_blog_timeouts.py).
+TIMEOUT = httpx.Timeout(25.0, connect=10.0)
 MAX_BODY_BYTES = 2_000_000
 RETRY_STATUS = {429, 502, 503, 504}
 LINK_MARGIN_SECONDS = 60

@@ -98,8 +98,9 @@ app.get('/api/warmup', warmupLimiter, (req, res) => {
 // browser's headers never travel upstream except Range (media seeking) and
 // If-None-Match (revalidation of the JSON routes), so a visitor cannot inject
 // credentials. Only the wait for response headers is timed out: a long video
-// or audio stream must not be cut at 30 s. A visitor who leaves mid-stream
-// aborts the upstream fetch too.
+// or audio stream must not be cut. The 60 s wait covers a cold read API (about
+// 30 s) behind the backend's two attempts (scripts/tests/test_blog_timeouts.py).
+// A visitor who leaves mid-stream aborts the upstream fetch too.
 // BLOG_RATE_LIMIT exists only so the browser tests can exceed the default.
 const blogLimiter = rateLimit({
   windowMs: 60 * 1000,
@@ -137,7 +138,7 @@ app.use('/api/blog', blogLimiter, async (req, res) => {
     Object.entries(req.query).filter(([, v]) => typeof v === 'string'),
   ).toString();
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 30_000);
+  const timer = setTimeout(() => controller.abort(), 60_000);
   res.on('close', () => controller.abort());
   try {
     const headers = {};
