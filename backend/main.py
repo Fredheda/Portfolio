@@ -1,5 +1,5 @@
 import os
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Mapping
 from contextlib import asynccontextmanager
 from typing import Any
 
@@ -63,8 +63,14 @@ def create_app(
 app = create_app()
 
 
+def listen_address(env: Mapping[str, str]) -> tuple[str, int]:
+    """Where `python main.py` listens: loopback unless HOST says otherwise.
+    The image does not use this: its CMD starts uvicorn on 0.0.0.0 itself."""
+    return env.get("HOST") or "127.0.0.1", int(env.get("PORT") or 8000)
+
+
 if __name__ == "__main__":
     import uvicorn
 
-    port = int(os.environ.get("PORT", 8000))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    host, port = listen_address(os.environ)
+    uvicorn.run(app, host=host, port=port)

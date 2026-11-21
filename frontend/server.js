@@ -15,6 +15,9 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+// Loopback unless HOST says otherwise: a local run must not be reachable from
+// the network. The image sets HOST=0.0.0.0 (frontend/Dockerfile).
+const HOST = process.env.HOST || '127.0.0.1';
 const BACKEND_URL = process.env.BACKEND_URL || 'http://ca-portfolio-backend';
 
 // www.frederikheda.com -> frederikheda.com
@@ -222,6 +225,6 @@ app.get('*', (req, res) => {
   res.status(known ? 200 : 404).type('html').send(html);
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+app.listen(PORT, HOST, () => {
+  console.log(`Server is running on ${HOST}:${PORT}`);
 });
