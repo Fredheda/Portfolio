@@ -6,7 +6,8 @@
 version: 2
 updates:
   # backend/ and data/ are Poetry projects (the `pip` ecosystem reads
-  # pyproject.toml and poetry.lock); mcp-tools/ uses requirements.txt.
+  # pyproject.toml and poetry.lock); mcp-tools/ uses a fully pinned requirements.txt
+  # (scripts/compile-mcp-tools-requirements.sh; Dependabot bumps single pins).
   - package-ecosystem: pip
     directories:
       - /backend

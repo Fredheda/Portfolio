@@ -96,7 +96,7 @@ Names only; what each does and where it goes: `docs/development.md`, "Environmen
 
 `.github/dependabot.yml`: monthly version updates, one grouped PR per ecosystem (pip for `backend/`, `data/`, `mcp-tools/`; npm for `frontend/`; GitHub Actions; Docker for both Dockerfiles), label `dependencies`, 14-day cooldown. Major bumps are ignored for pip, npm and Docker and done by hand. Security-update PRs are separate: not grouped, no cooldown. Dependabot PRs get no secrets, so the AI review skips them; CI and `security.yml` run as usual. Who merges them: "Merging" under "PR review".
 
-Dependencies: 14-day install cooldown (`frontend/.npmrc`, `backend/poetry.toml`, `data/poetry.toml`), exact Poetry and pip pins (bump `ci.yml`, `security.yml` and `backend/Dockerfile` together), actions pinned by commit; every Docker image also carries its digest. `scripts/tests/test_supply_chain.py` guards all of it (`docs/development.md`, "Dependencies").
+Dependencies: 14-day install cooldown (`frontend/.npmrc`, `backend/poetry.toml`, `data/poetry.toml`), exact Poetry and pip pins, actions pinned by commit, every Docker image also carrying its digest, and a fully pinned `mcp-tools/requirements.txt` (no hashes; `scripts/compile-mcp-tools-requirements.sh`). `scripts/tests/test_supply_chain.py` guards all of it (`docs/development.md`, "Dependencies").
 
 ## PR review
 

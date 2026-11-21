@@ -84,7 +84,10 @@ jobs:
       # in at deploy time, and the tests need it.
       - run: mkdir -p mcp-tools/content && cp content/site-content.json mcp-tools/content/site-content.json
       - run: python -m venv mcp-tools/.venv
-      - run: mcp-tools/.venv/bin/pip install -r mcp-tools/requirements.txt pytest==9.1.1
+      - run: mcp-tools/.venv/bin/pip install pip==26.2.2
+      - run: mcp-tools/.venv/bin/pip install --no-deps --only-binary=":all:" -r mcp-tools/requirements.txt
+      - run: mcp-tools/.venv/bin/pip check
+      - run: PIP_UPLOADED_PRIOR_TO=P14D mcp-tools/.venv/bin/pip install pytest==9.1.1
       - name: Run mcp-tools tests
         working-directory: mcp-tools
         run: .venv/bin/python -m pytest tests -v
@@ -132,7 +135,8 @@ jobs:
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version-file: backend/.python-version
-      - run: pip install pytest==9.1.1
+      - run: python -m pip install pip==26.2.2
+      - run: PIP_UPLOADED_PRIOR_TO=P14D python -m pip install pytest==9.1.1
       - run: python -m pytest scripts/tests -v
 
   # Vitest, eslint and the production build share one install.
