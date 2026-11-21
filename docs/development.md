@@ -25,9 +25,10 @@ Backend values go in `Portfolio/.env` (the repo root, not a file inside `backend
 | `BLOG_API_AUDIENCE` | backend | `api://<application id>` of the blog API's app registration. |
 | `BLOG_READ_CLIENT_ID` | backend, deployed only | Client id of `id-portfolio-blogread`, set by Bicep when `BLOG_API_URL` is given. |
 | `BLOG_MEDIA_HOSTS` | backend | Optional, comma separated blob hosts the media proxy may fetch. Default `fhstorageportfolio.blob.core.windows.net`. |
+| `HOST` | backend (`python main.py`), frontend (`server.js`) | Listen address. Default `127.0.0.1` (loopback only). The frontend image sets `0.0.0.0`; the backend image's `CMD` passes `--host 0.0.0.0`. |
 | `azure_search_endpoint`, `azure_index_name`, `azure_search_api_key` | `mcp-tools/`, `data/` | Not backend variables. `mcp-tools/` uses them for the vector query behind `retrieve_information`, and `data/` uses them to build the index. |
 
-The frontend reads `BACKEND_URL` from `frontend/.env` (gitignored). `server.js` reads it at runtime, not the browser bundle. Set it to `http://localhost:8000` for local runs. When deployed, it defaults to `http://ca-portfolio-backend`, which Bicep sets.
+The frontend reads `BACKEND_URL` from `frontend/.env` (gitignored). `server.js` reads it at runtime, not the browser bundle. Set it to `http://127.0.0.1:8000` for local runs (the backend listens on IPv4 loopback only). When deployed, it defaults to `http://ca-portfolio-backend`, which Bicep sets.
 
 ## Run everything
 
@@ -42,6 +43,8 @@ The `Procfile` starts Azurite, `mcp-tools` (`func start`), the backend and the f
 - It pins `PORT` explicitly on the `backend` and `frontend` lines. Otherwise honcho assigns its own `PORT` to each process (a Foreman convention), which collides with the defaults in `main.py` and `server.js`.
 - The `backend` line waits until `func start` has actually bound `:7071`, not just printed its banner, using a `curl` and `sleep` poll loop.
 
+The backend and frontend listen on `127.0.0.1` only (`HOST`, table above); `backend/tests/test_listen_address.py` and the `server` e2e project check that, and `scripts/tests/test_listen_hosts.py` pins the images' `0.0.0.0`.
+
 ## Run one service
 
 ```bash
@@ -54,7 +57,7 @@ npm start            # serve the production build with Express
 # Backend (backend/)
 poetry install
 poetry run uvicorn main:app --reload   # port 8000
-poetry run python main.py              # production server
+poetry run python main.py              # local server, loopback only (the image runs uvicorn itself)
 ```
 
 `backend/` and `data/` are separate Poetry projects, each with its own `pyproject.toml` and `poetry.lock`. They cannot share one environment because they pin conflicting `tiktoken` versions. `mcp-tools/` uses a plain virtualenv and `requirements.txt`, as Azure Functions Core Tools expects.
@@ -122,7 +125,7 @@ From `frontend/`: `npm run e2e`. The first time, run `npx playwright install chr
 
 Projects:
 
-- `server`: each test spawns its own `server.js` at production settings (redirect, headers, both rate limits, per-route titles and link-preview tags, 404 for unknown paths).
+- `server`: each test spawns its own `server.js` at production settings (redirect, headers, both rate limits, per-route titles and link-preview tags, 404 for unknown paths, and that it listens on loopback only: a connection to the machine's LAN address is refused).
 - `full-stack`: browser and AG-UI protocol tests, plus the pages: 360px phone width, hash links from other routes, fredbot's tool lines.
 - `full-stack` also drives the blog pages (`blog-pages.spec.js`, and `blog-nav.spec.js` for the header Blog link) against the fake blog read API.
 - `a11y`: axe on `/`, a project page, `/privacy-policy`, the blog list and a blog post with every rule on, once finite animations have finished. Fails on serious or critical issues.
