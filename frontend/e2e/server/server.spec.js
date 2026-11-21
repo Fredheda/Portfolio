@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process';
 import { readdirSync, readFileSync } from 'node:fs';
-import { createServer } from 'node:net';
+import { connect, createServer } from 'node:net';
+import { networkInterfaces } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { test as base, expect } from '@playwright/test';
 
@@ -17,26 +18,66 @@ function freePort() {
 
 // Each test gets its own server.js at production settings: a fresh process
 // means a fresh rate-limit window, so repeated runs never see each other's
-// requests. The rate-limit overrides are removed from the child's env.
+// requests. The rate-limit overrides and HOST are removed from the child's
+// env, so the default binding is what runs.
+async function startServer() {
+  const port = await freePort();
+  const env = { ...process.env, PORT: String(port), BACKEND_URL: 'http://127.0.0.1:9' };
+  delete env.RUN_RATE_LIMIT;
+  delete env.WARMUP_RATE_LIMIT;
+  delete env.AGENT_URL;
+  delete env.HOST;
+  const child = spawn('node', ['server.js'], { cwd: FRONTEND_DIR, env });
+  await new Promise((resolve, reject) => {
+    child.stdout.on('data', (chunk) => {
+      if (chunk.toString().includes('Server is running')) resolve();
+    });
+    child.on('exit', (code) => reject(new Error(`server.js exited with ${code}`)));
+  });
+  return { port, stop: () => child.kill() };
+}
+
 const test = base.extend({
   prodServer: async ({ playwright }, use) => {
-    const port = await freePort();
-    const env = { ...process.env, PORT: String(port), BACKEND_URL: 'http://127.0.0.1:9' };
-    delete env.RUN_RATE_LIMIT;
-    delete env.WARMUP_RATE_LIMIT;
-    delete env.AGENT_URL;
-    const child = spawn('node', ['server.js'], { cwd: FRONTEND_DIR, env });
-    await new Promise((resolve, reject) => {
-      child.stdout.on('data', (chunk) => {
-        if (chunk.toString().includes('Server is running')) resolve();
-      });
-      child.on('exit', (code) => reject(new Error(`server.js exited with ${code}`)));
-    });
+    const { port, stop } = await startServer();
     const request = await playwright.request.newContext({ baseURL: `http://127.0.0.1:${port}` });
     await use(request);
     await request.dispose();
-    child.kill();
+    stop();
   },
+});
+
+const lanAddresses = Object.values(networkInterfaces())
+  .flat()
+  .filter((entry) => entry && entry.family === 'IPv4' && !entry.internal)
+  .map((entry) => entry.address);
+
+function canConnect(host, port) {
+  return new Promise((resolve) => {
+    const socket = connect({ host, port, timeout: 2000 });
+    socket.on('connect', () => {
+      socket.destroy();
+      resolve(true);
+    });
+    socket.on('timeout', () => {
+      socket.destroy();
+      resolve(false);
+    });
+    socket.on('error', () => resolve(false));
+  });
+}
+
+test('listens on loopback only by default', async () => {
+  test.skip(lanAddresses.length === 0, 'this machine has no non-loopback IPv4 address');
+  const { port, stop } = await startServer();
+  try {
+    expect(await canConnect('127.0.0.1', port)).toBe(true);
+    for (const address of lanAddresses) {
+      expect(await canConnect(address, port), `reachable on ${address}`).toBe(false);
+    }
+  } finally {
+    stop();
+  }
 });
 
 test('www host redirects to the apex domain with path and query', async ({ prodServer }) => {
