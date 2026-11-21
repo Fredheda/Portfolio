@@ -35,7 +35,7 @@ rm -rf mcp-tools/.venv
 # the backend's Poetry interpreter, not whatever `python` is on the PATH.
 (cd backend && poetry run python -m venv ../mcp-tools/.venv)
 mcp-tools/.venv/bin/pip install pip==26.2.2
-mcp-tools/.venv/bin/pip install --no-deps --only-binary=:all: -r mcp-tools/requirements.txt
+mcp-tools/.venv/bin/pip install --no-deps --only-binary=":all:" -r mcp-tools/requirements.txt
 mcp-tools/.venv/bin/pip check
 PIP_UPLOADED_PRIOR_TO=P14D mcp-tools/.venv/bin/pip install pytest==9.1.1
 (

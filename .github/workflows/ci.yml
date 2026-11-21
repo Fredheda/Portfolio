@@ -85,7 +85,7 @@ jobs:
       - run: mkdir -p mcp-tools/content && cp content/site-content.json mcp-tools/content/site-content.json
       - run: python -m venv mcp-tools/.venv
       - run: mcp-tools/.venv/bin/pip install pip==26.2.2
-      - run: mcp-tools/.venv/bin/pip install --no-deps --only-binary=:all: -r mcp-tools/requirements.txt
+      - run: mcp-tools/.venv/bin/pip install --no-deps --only-binary=":all:" -r mcp-tools/requirements.txt
       - run: mcp-tools/.venv/bin/pip check
       - run: PIP_UPLOADED_PRIOR_TO=P14D mcp-tools/.venv/bin/pip install pytest==9.1.1
       - name: Run mcp-tools tests
