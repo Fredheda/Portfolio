@@ -32,7 +32,9 @@ describe('listPosts', () => {
 
   it('treats a 404 as unavailable: the list route only exists while the blog is on', async () => {
     vi.stubGlobal('fetch', reply(404, { detail: 'Not Found' }));
-    await expect(listPosts()).rejects.toMatchObject({ kind: 'unavailable' });
+    await expect(listPosts()).rejects.toMatchObject({ kind: 'unavailable', off: true });
+    vi.stubGlobal('fetch', reply(503, { error: 'blog_unavailable' }));
+    await expect(listPosts()).rejects.toMatchObject({ kind: 'unavailable', off: false });
   });
 });
 

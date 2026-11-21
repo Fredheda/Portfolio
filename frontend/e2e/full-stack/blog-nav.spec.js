@@ -46,6 +46,19 @@ test('a list request that never answers does not hold up or break the header', a
   expect(errors).toEqual([]);
 });
 
+test('a failed first list request is retried and the link then appears without a reload', async ({ page }) => {
+  let calls = 0;
+  await page.route(LIST, (route) =>
+    ++calls === 1 ? route.fulfill({ status: 503, json: { error: 'blog_unavailable' } }) : route.fallback(),
+  );
+  await page.goto('/privacy-policy');
+  const link = mainNav(page).getByRole('link', { name: 'Blog' });
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+  await expect(link).toHaveCount(0);
+  await expect(link).toBeVisible({ timeout: 10_000 }); // the retry comes after 5 s
+  expect(calls).toBe(2);
+});
+
 test.describe('on a phone', () => {
   test.use({ viewport: { width: 360, height: 740 } });
 

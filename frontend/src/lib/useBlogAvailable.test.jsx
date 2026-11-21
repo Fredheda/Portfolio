@@ -1,6 +1,6 @@
-import { render, renderHook, screen, waitFor, within } from '@testing-library/react';
+import { act, render, renderHook, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Header from '../components/Headers';
 import { BlogError, listPosts } from './blogApi';
 import { useBlogAvailable } from './useBlogAvailable';
@@ -34,12 +34,75 @@ describe('useBlogAvailable', () => {
     expect(result.current).toBe(false);
   });
 
-  it('stays false when the blog is off or down, without an unhandled rejection', async () => {
+  it('stays false when the blog is down, without an unhandled rejection', async () => {
     vi.mocked(listPosts).mockRejectedValue(new BlogError('unavailable'));
     const { result } = renderHook(() => useBlogAvailable());
     await waitFor(() => expect(listPosts).toHaveBeenCalled());
     await Promise.resolve();
     expect(result.current).toBe(false);
+  });
+
+  describe('after a failure', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('asks again after 5 s and then 15 s, and turns true when the API has woken up', async () => {
+      vi.mocked(listPosts)
+        .mockRejectedValueOnce(new BlogError('unavailable'))
+        .mockRejectedValueOnce(new BlogError('unavailable'))
+        .mockResolvedValueOnce(page(1));
+      const { result } = renderHook(() => useBlogAvailable());
+      await vi.advanceTimersByTimeAsync(0);
+      expect(listPosts).toHaveBeenCalledTimes(1);
+      await vi.advanceTimersByTimeAsync(4_999);
+      expect(listPosts).toHaveBeenCalledTimes(1);
+      await vi.advanceTimersByTimeAsync(1);
+      expect(listPosts).toHaveBeenCalledTimes(2);
+      await vi.advanceTimersByTimeAsync(14_999);
+      expect(listPosts).toHaveBeenCalledTimes(2);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1);
+      });
+      expect(listPosts).toHaveBeenCalledTimes(3);
+      expect(result.current).toBe(true);
+    });
+
+    it('gives up after the 30 s retry: four requests in all', async () => {
+      vi.mocked(listPosts).mockRejectedValue(new BlogError('unavailable'));
+      const { result } = renderHook(() => useBlogAvailable());
+      await vi.advanceTimersByTimeAsync(5_000 + 15_000 + 30_000);
+      expect(listPosts).toHaveBeenCalledTimes(4);
+      await vi.advanceTimersByTimeAsync(120_000);
+      expect(listPosts).toHaveBeenCalledTimes(4);
+      expect(result.current).toBe(false);
+    });
+
+    it('does not ask again for an empty list', async () => {
+      vi.mocked(listPosts).mockResolvedValue(page(0));
+      renderHook(() => useBlogAvailable());
+      await vi.advanceTimersByTimeAsync(120_000);
+      expect(listPosts).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not ask again when the blog is switched off', async () => {
+      vi.mocked(listPosts).mockRejectedValue(new BlogError('unavailable', true));
+      renderHook(() => useBlogAvailable());
+      await vi.advanceTimersByTimeAsync(120_000);
+      expect(listPosts).toHaveBeenCalledTimes(1);
+    });
+
+    it('cancels the pending retry when the header goes away', async () => {
+      vi.mocked(listPosts).mockRejectedValue(new BlogError('unavailable'));
+      const { unmount } = renderHook(() => useBlogAvailable());
+      await vi.advanceTimersByTimeAsync(0);
+      unmount();
+      await vi.advanceTimersByTimeAsync(120_000);
+      expect(listPosts).toHaveBeenCalledTimes(1);
+    });
   });
 
   it('aborts the request when the header goes away', async () => {
