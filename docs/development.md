@@ -43,7 +43,7 @@ The `Procfile` starts Azurite, `mcp-tools` (`func start`), the backend and the f
 - It pins `PORT` explicitly on the `backend` and `frontend` lines. Otherwise honcho assigns its own `PORT` to each process (a Foreman convention), which collides with the defaults in `main.py` and `server.js`.
 - The `backend` line waits until `func start` has actually bound `:7071`, not just printed its banner, using a `curl` and `sleep` poll loop.
 
-The backend and frontend listen on `127.0.0.1` only, so nothing on the network can reach a local run. Set `HOST` to change that. The container images do: the frontend image sets `HOST=0.0.0.0` and the backend image's `CMD` passes `--host 0.0.0.0` to uvicorn (`scripts/tests/test_listen_hosts.py` pins both).
+The backend and frontend listen on `127.0.0.1` only (`HOST`, table above); `scripts/tests/test_listen_hosts.py` pins that and the images' `0.0.0.0`.
 
 ## Run one service
 

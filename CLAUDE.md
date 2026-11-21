@@ -72,7 +72,7 @@ Names only; what each does and where it goes: `docs/development.md`, "Environmen
 - Backend (repo-root `.env` locally; Container Apps env vars set by `infra/deploy.sh`): `OPENAI_API_KEY`, `FUNCTION_APP_URL`, `FUNCTION_MCP_KEY`, `AZURE_SQL_SERVER`, `AZURE_SQL_DATABASE`, and when deployed `AZURE_CLIENT_ID` (the app's managed identity for Azure SQL); `BLOG_API_URL`, `BLOG_API_AUDIENCE`, `BLOG_READ_CLIENT_ID`, optional `BLOG_MEDIA_HOSTS` (blog off when `BLOG_API_URL` is unset).
 - `azure_search_endpoint`, `azure_index_name`, `azure_search_api_key`: `mcp-tools/` and `data/`, not backend variables.
 - Frontend: `BACKEND_URL`, read by `server.js` at runtime (`frontend/.env` locally).
-- Local servers: `HOST` (default `127.0.0.1`) and `PORT` for `server.js` and `python main.py`. The frontend image sets `HOST=0.0.0.0` and the backend image's `CMD` passes `--host 0.0.0.0`, so only a local run is loopback-only (`scripts/tests/test_listen_hosts.py`).
+- Local servers: `HOST` (default `127.0.0.1`) and `PORT` for `server.js` and `python main.py`; the images listen on all interfaces (`docs/development.md`, "Environment variables").
 - Test seams (production sets none): `build_graph(model, moderation_client, db)` and `create_app(build, blog)` in the backend; `RUN_RATE_LIMIT`, `WARMUP_RATE_LIMIT` and `BLOG_RATE_LIMIT` in `server.js` (defaults 5, 10 and 120 per minute).
 
 ## Security checks
