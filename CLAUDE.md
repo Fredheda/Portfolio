@@ -80,8 +80,8 @@ Names only; what each does and where it goes: `docs/development.md`, "Environmen
 
 | Job | Blocks PR? | Run locally |
 |---|---|---|
-| `gitleaks` | yes | `docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.30.1 git /repo --redact --no-banner` |
-| `workflow-lint` | yes | `docker run --rm -v "$PWD:/repo" --workdir /repo rhysd/actionlint:1.7.12` |
+| `gitleaks` | yes | `docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f git /repo --redact --no-banner` |
+| `workflow-lint` | yes | `docker run --rm -v "$PWD:/repo" --workdir /repo rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667` |
 | `bandit` (HIGH only) | yes | `uvx bandit@1.9.4 -r backend data mcp-tools scripts e2e_backend -lll -x backend/tests,mcp-tools/tests,scripts/tests,.venv` |
 | `pip-audit` | advisory on PRs, fails weekly | `poetry -C backend export --without-hashes -o /tmp/b.txt && uvx pip-audit@2.10.1 -r /tmp/b.txt --no-deps --disable-pip` (same for `data`); `uvx pip-audit@2.10.1 -r mcp-tools/requirements.txt` |
 | `npm-audit` | advisory on PRs, fails weekly | `cd frontend && npm audit --omit=dev --audit-level=high` |
@@ -95,7 +95,7 @@ Names only; what each does and where it goes: `docs/development.md`, "Environmen
 
 `.github/dependabot.yml`: monthly version updates, one grouped PR per ecosystem (pip for `backend/`, `data/`, `mcp-tools/`; npm for `frontend/`; GitHub Actions; Docker for both Dockerfiles), label `dependencies`, 14-day cooldown. Major bumps are ignored for pip, npm and Docker and done by hand. Security-update PRs are separate: not grouped, no cooldown. Dependabot PRs get no secrets, so the AI review skips them; CI and `security.yml` run as usual. Who merges them: "Merging" under "PR review".
 
-Dependencies: 14-day install cooldown (`frontend/.npmrc`, `backend/poetry.toml`, `data/poetry.toml`), exact Poetry and pip pins (bump `ci.yml`, `security.yml` and `backend/Dockerfile` together), actions pinned by commit; `scripts/tests/test_supply_chain.py` guards all three (`docs/development.md`, "Dependencies").
+Dependencies: 14-day install cooldown (`frontend/.npmrc`, `backend/poetry.toml`, `data/poetry.toml`), exact Poetry and pip pins (bump `ci.yml`, `security.yml` and `backend/Dockerfile` together), actions pinned by commit; every Docker image also carries its digest. `scripts/tests/test_supply_chain.py` guards all of it (`docs/development.md`, "Dependencies").
 
 ## PR review
 
