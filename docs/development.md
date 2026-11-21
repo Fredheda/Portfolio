@@ -4,10 +4,10 @@ How to run Portfolio locally and check a change. For deploying, see [deployment/
 
 ## Prerequisites
 
-- Python 3.13 and [Poetry](https://python-poetry.org/) (the version is pinned by `.python-version`)
+- Python 3.13 (pinned by `.python-version`) and [Poetry](https://python-poetry.org/) (CI and the backend image pin one version; see "Dependencies")
 - Node.js 24 (24.15 or newer) and npm 12; CI and the Docker image pin npm 12.2.2
 - [Azure Functions Core Tools](https://learn.microsoft.com/azure/azure-functions/functions-run-local) (`func`) and Azurite, to run `mcp-tools/` locally
-- [honcho](https://github.com/nickstenning/honcho) to start everything at once: `pipx install honcho` (one-time; installed globally because there is no repo-root Python project to add it to)
+- [honcho](https://github.com/nickstenning/honcho) to start everything at once: `pipx install honcho==2.0.0` (one-time; installed globally because there is no repo-root Python project to add it to)
 - `az login`, because Azure SQL access uses Microsoft Entra ID instead of a password
 
 ## Environment variables
@@ -134,6 +134,13 @@ Tests run one at a time because they share the backend's call log. Two runs at o
 `.github/workflows/ci.yml` runs all of the above on every pull request, and on nothing else (a push to `main` runs no CI). Job ids, the draft-first rule, the docs-only skip and the checks the `main` ruleset requires: `CLAUDE.md`, "Commands". `./scripts/ci-local.sh` runs every check CI runs, in the same order; get it green before `gh pr ready`. Images are built by the **Deploy apps** workflow, not by CI (see [deployment/github.md](../deployment/github.md)).
 
 Security scans live in `.github/workflows/security.yml`; jobs, what blocks and local commands: `CLAUDE.md`, "Security checks".
+
+## Dependencies
+
+- **Cooldown:** `frontend/.npmrc`, `backend/poetry.toml` and `data/poetry.toml` make npm and Poetry resolve only versions that are at least 14 days old, the same window as Dependabot. `npm ci` and `poetry install` are not affected: they install what the lockfiles name.
+- **A security fix younger than 14 days** is taken only on the owner's yes for that package and version, with a one-off command and no committed exclusion: `npm install <package>@<version> --min-release-age-exclude=<package>` or `POETRY_SOLVER_MIN_RELEASE_AGE_EXCLUDE=<package> poetry update <package>`.
+- **Exact pins:** Poetry and pip are pinned in `.github/workflows/ci.yml`, `.github/workflows/security.yml` and `backend/Dockerfile`; bump them together. GitHub Actions are pinned by commit with the release as a comment; Dependabot updates them. Only the image applies the 14-day window to Poetry's own dependencies (`PIP_UPLOADED_PRIOR_TO`); the CI `pipx install` does not. `mcp-tools/requirements.txt` is the one requirements file without hashes, and it still has version ranges, until its own ticket (PW-68).
+- `scripts/tests/test_supply_chain.py` fails the PR when one of these rules is broken.
 
 ## Making a change
 

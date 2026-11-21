@@ -11,7 +11,7 @@ CI_LOCAL = ROOT / "scripts" / "ci-local.sh"
 # ci.yml commands that run differently on a laptop, with what the script runs
 # instead (None = CI-only plumbing with no local equivalent).
 DIFFERENT_LOCALLY = {
-    'pipx install "poetry>=2.0,<3.0"': None,  # the developer has Poetry
+    "pipx install poetry==": None,  # the developer has Poetry
     "pip install pytest==9.1.1": None,  # the developer has pytest
     'changed-areas.sh "origin/${{ github.base_ref }}"': None,  # PR-only plumbing
     "npm install -g npm@": None,  # a global install would change the developer's npm
