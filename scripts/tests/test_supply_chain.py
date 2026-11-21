@@ -6,10 +6,13 @@
    the backend image, and Poetry's own dependencies taken inside the same
    14-day window in the image;
 3. every GitHub Action pinned by commit, with its release as a comment;
-4. no npx download.
+4. no npx download;
+5. every Docker image (FROM and docker run) pinned by digest.
 
 To bump Poetry or pip: change the pin in .github/workflows/ci.yml,
 .github/workflows/security.yml and backend/Dockerfile together.
+To bump an image: resolve the new digest (docs/development.md,
+"Dependencies") and change it in the Dockerfile or security.yml.
 Text-based: the CI test env has no YAML or TOML library.
 """
 
@@ -177,3 +180,58 @@ def test_the_scan_covers_the_known_install_files() -> None:
         "backend/Dockerfile",
         "frontend/Dockerfile",
     } <= names
+
+
+DIGEST = re.compile(r"@sha256:[0-9a-f]{64}")
+VALUE_FLAGS = {
+    "-v",
+    "--volume",
+    "-w",
+    "--workdir",
+    "-e",
+    "--env",
+    "--name",
+    "-u",
+    "--user",
+}
+FROM = re.compile(r"\s*FROM\s+(\S+)(?:\s+AS\s+(\S+))?", re.IGNORECASE)
+
+
+def docker_run_image(line: str) -> str | None:
+    """The image of a `docker run` line: the first argument that is neither a
+    flag nor the value of one."""
+    match = re.search(r"\bdocker run\b(.*)", line)
+    if not match:
+        return None
+    skip = False
+    for arg in match[1].replace("\\", " ").split():
+        if skip:
+            skip = False
+        elif arg in VALUE_FLAGS:
+            skip = True
+        elif not arg.startswith("-"):
+            return arg
+    return None
+
+
+def test_every_docker_image_is_pinned_by_digest() -> None:
+    seen = 0
+    offenders = []
+    for path in [*tracked("**/Dockerfile"), *workflows(), *tracked("scripts/*.sh")]:
+        stages: set[str] = set()
+        for number, line in lines(path):
+            images = []
+            if match := FROM.match(line):
+                image, stage = match.groups()
+                if image not in stages:  # FROM <earlier stage> needs no digest
+                    images.append(image)
+                if stage:
+                    stages.add(stage)
+            if image := docker_run_image(line):
+                images.append(image)
+            for image in images:
+                seen += 1
+                if not DIGEST.search(image):
+                    offenders.append(f"{rel(path)}:{number}: {image}")
+    assert seen >= 6, "too few image references found; the scan is stale"
+    assert offenders == []
