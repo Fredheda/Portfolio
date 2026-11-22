@@ -45,7 +45,6 @@ param azureSearchApiKey string
 param azureSearchEndpoint string
 param azureIndexName string
 
-
 @description('Azure Function App name (MCP tools server).')
 param functionAppName string = 'func-portfolio-mcp-tools'
 
