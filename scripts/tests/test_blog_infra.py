@@ -1,7 +1,4 @@
-"""Text checks on the blog read identity. Bicep has no other test, and a role
-assignment added to this identity by mistake would give the site Azure rights it
-must not have: the only grant it needs is an app role in the blog project,
-made by that project's approve-client script, never here."""
+"""The blog read identity must hold no Azure role: its only grant is an app role made in the blog project."""
 
 import re
 from pathlib import Path

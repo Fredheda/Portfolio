@@ -1,8 +1,3 @@
-"""The real backend app with a scripted model and fake moderation.
-
-Run from backend/: PYTHONPATH=.. poetry run python -m e2e_backend.backend_server
-"""
-
 import os
 
 PORT = int(os.environ.get("E2E_BACKEND_PORT", "8210"))
