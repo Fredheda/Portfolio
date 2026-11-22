@@ -18,8 +18,8 @@ const SYSTEM_PROMPT = readFileSync(
 );
 
 // Secret-shaped strings planted by e2e_backend/model.py (model failure) and
-// e2e_backend/mcp_server.py (search failure). None may reach the stream, the
-// model calls or the SQL rows.
+// e2e_backend/mcp_server.py (search failure). None may reach the stream or the
+// model calls.
 const PLANTED = [
   'sk-proj-PLANTEDKEY1234',
   'org-PLANTEDORG',

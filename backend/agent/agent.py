@@ -25,8 +25,6 @@ async def build_graph(
     model: BaseChatModel | None = None,
     moderation_client: OpenAI | None = None,
 ):
-    # The arguments exist for the browser tests; production passes none and
-    # gets _MODEL and each middleware's own default client.
     tools = await load_mcp_tools()
     return create_agent(  # pyright: ignore[reportCallIssue]
         model=model or _MODEL,

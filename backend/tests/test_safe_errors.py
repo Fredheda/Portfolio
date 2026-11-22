@@ -26,12 +26,10 @@ from main import create_app
 
 AGENT_PATH = "/agent/portfolio_agent"
 
-# Shaped like the text an OpenAI auth or rate-limit error carries.
 PLANTED_OPENAI = (
     "Error code: 401 - Incorrect API key provided (sk-proj-PLANTEDKEY1234). "
     "organization org-PLANTEDORG request req_PLANTEDREQ"
 )
-# Shaped like an httpx error from the Function App (transport failure).
 PLANTED_FUNC = (
     "Client error '401 Unauthorized' for url "
     "'https://planted-func.azurewebsites.net/runtime/webhooks/mcp' "
@@ -258,9 +256,6 @@ async def test_no_second_terminal_event_when_upstream_raises_after_run_error(
         events = await _collect(_safe_agent())
     assert [e.type for e in events] == [EventType.RUN_STARTED, EventType.RUN_ERROR]
     assert "planted-func.azurewebsites.net" not in caplog.text
-
-
-# describe
 
 
 class RateLimited(Exception):

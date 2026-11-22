@@ -3,7 +3,6 @@ import { expect } from '@playwright/test';
 import { BACKEND_URL, MCP_URL } from './env.js';
 import { terminalInput } from './selectors.js';
 
-// The test backend's routes (e2e_backend/backend_server.py).
 export async function resetBackend(request) {
   expect((await request.post(`${BACKEND_URL}/__reset`)).ok()).toBe(true);
 }
@@ -32,7 +31,6 @@ export async function blogCalls(request) {
   return (await request.get(`${MCP_URL}/__blog_calls`)).json();
 }
 
-// The next `count` requests to the fake read API answer 500.
 export async function failBlog(request, count) {
   expect((await request.post(`${MCP_URL}/__blog_fail?count=${count}`)).ok()).toBe(true);
 }

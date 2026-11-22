@@ -1,4 +1,4 @@
-"""The real backend app with a scripted model and fake moderation and logging.
+"""The real backend app with a scripted model and fake moderation.
 
 Uses main.create_app and agent.build_graph, so the agent path, the agent
 name, the middleware order and the MCP client are production code. Adds

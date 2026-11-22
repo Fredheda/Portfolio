@@ -2,10 +2,7 @@
 # Provision (or update) the Container Apps environment + both apps from
 # infra/main.bicep. Idempotent — re-run to roll config changes.
 #
-# Sources the repo-root .env for all secrets (OpenAI key, Azure Search key —
-# too many for copilot-kit-exp's one-secret interactive-prompt pattern to
-# still be the best UX). Azure SQL access is passwordless (Microsoft Entra
-# ID via the identity Bicep creates), so there's no SQL secret to source.
+# Sources the repo-root .env for all secrets (OpenAI key, Azure Search key).
 # .env is gitignored and never leaves this machine; auth to Azure is the live
 # `az login` session. The registry + resource group already exist; this only
 # adds the environment, identity, and the two apps.
