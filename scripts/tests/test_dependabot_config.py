@@ -64,8 +64,6 @@ def test_docker_ignores_python_minor_and_major_bumps() -> None:
 
 
 def test_pip_npm_and_docker_ignore_major_bumps() -> None:
-    # Majors (azure-functions 2 needs Python 3.13, openai 3, ...) are done by
-    # hand: offline tests cannot prove they work.
     for ecosystem in ("pip", "npm", "docker"):
         block = entry(ecosystem)
         assert 'dependency-name: "*"' in block, ecosystem
