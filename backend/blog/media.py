@@ -46,6 +46,7 @@ class MediaStreamer(Protocol):
     async def stream(self, url: str, range_header: str | None) -> Response: ...
 
 
+# The signed URL comes from another service: check it anyway and never follow redirects.
 class MediaProxy:
     def __init__(
         self,
