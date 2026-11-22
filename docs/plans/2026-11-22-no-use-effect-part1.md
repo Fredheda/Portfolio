@@ -17,7 +17,7 @@ Status: draft, awaiting specialist approval
 - Edit files with Edit and Write only. `git mv` and `git commit` are the only shell file operations.
 - Run every npm command from `frontend/`.
 - The worktree has no `node_modules`. Before Task 1, run `npm ci` in `frontend/` (its `postinstall` builds the site).
-- Branch `pw80-no-use-effect`, in worktree `../.worktrees/Portfolio-pw80-no-use-effect`, created from the merged `main` before Task 0: `git -C <main checkout> worktree add ../.worktrees/Portfolio-pw80-no-use-effect -b pw80-no-use-effect origin/main`. Never work in the main checkout.
+- Branch `pw80-no-use-effect`, in its own worktree, created from the merged `main` before Task 0: `git worktree add <worktree path> -b pw80-no-use-effect origin/main`. Never work in the main checkout.
 - Commits: the feature commit (Tasks 1 to 10), the cleanup commit (Task 11), then the status commit (Task 12 Step 5). Messages are 2 lines max with no trailer.
 - Changed files: 25 including docs. Do not add a file outside the list in Task 12.
 
@@ -186,6 +186,11 @@ describe('effects rule', () => {
     expect(messages.length).toBeGreaterThan(0);
   });
 
+  it.each(Object.entries(reexports))('flags %s outside src/lib/effects', async (_, code) => {
+    const messages = await bannedMessages(code, join(SRC, 'components', 'Snippet.jsx'));
+    expect(messages.length).toBeGreaterThan(0);
+  });
+
   it('lists exactly the files that still call an effect hook', () => {
     const withHook = sourceFiles
       .filter((path) => HOOK.test(readFileSync(path, 'utf8')))
@@ -211,7 +216,7 @@ From `frontend/`:
 npm test -- src/lint/noEffects.test.js
 ```
 
-Expected output: `Test Files  1 failed`, and the `lists exactly the files that still call an effect hook` case fails because `effectBaseline` is undefined. Observed in the dry run with the rule in place and the export removed: `Tests  1 failed | 16 passed (17)`. Run it from `frontend/`: the test reads the frontend root from `process.cwd()`.
+Expected output (observed on untouched `origin/main` with the test file and no rule and no export): `Test Files  1 failed (1)` and `Tests  13 failed | 7 passed (20)`. The test file loads; it does not fail at import. The 6 `flags %s outside src/lib/effects` cases, the 3 `flags %s inside src/lib/effects` cases and the 3 `flags %s outside src/lib/effects` re-export cases fail with `AssertionError: expected 0 to be greater than 0`. The `lists exactly the files that still call an effect hook` case fails with `TypeError: effectBaseline is not iterable`. The 6 `allows` cases and the eslint-disable case pass. Run it from `frontend/`: the test reads the frontend root from `process.cwd()`.
 
 - [ ] **Step 3: Add the rule, the folder exemption and the baseline to the config**
 
@@ -229,6 +234,12 @@ new_string:
 import { defineConfig } from 'eslint/config';
 
 const EFFECTS = ["useEffect", "useLayoutEffect", "useInsertionEffect"];
+const NO_REEXPORT = "No re-export of react or of an effect hook.";
+const noReexports = [
+  { selector: 'ExportNamedDeclaration[source.value="react"]', message: NO_REEXPORT },
+  { selector: 'ExportAllDeclaration[source.value="react"]', message: NO_REEXPORT },
+  { selector: "ExportSpecifier[local.name=/^use(Layout|Insertion)?Effect$/]", message: NO_REEXPORT },
+];
 const noEffects = {
   files: ["**/*.{js,jsx}"],
   rules: {
@@ -241,15 +252,10 @@ const noEffects = {
       { selector: "MemberExpression[property.value=/^use(Layout|Insertion)?Effect$/]", message: "No effects in components." },
       { selector: "ObjectPattern > Property[key.name=/^use(Layout|Insertion)?Effect$/]", message: "No effects in components." },
       { selector: "ObjectPattern > Property[key.value=/^use(Layout|Insertion)?Effect$/]", message: "No effects in components." },
+      ...noReexports,
     ],
   },
 };
-const NO_REEXPORT = "No re-export of react or of an effect hook.";
-const noReexports = [
-  { selector: 'ExportNamedDeclaration[source.value="react"]', message: NO_REEXPORT },
-  { selector: 'ExportAllDeclaration[source.value="react"]', message: NO_REEXPORT },
-  { selector: "ExportSpecifier[local.name=/^use(Layout|Insertion)?Effect$/]", message: NO_REEXPORT },
-];
 const effectsFolder = { files: ["src/lib/effects/**"], rules: { "no-restricted-imports": "off", "no-restricted-syntax": ["error", ...noReexports] } };
 const effectBaseline = [
   'src/components/Diagram.jsx',
@@ -303,7 +309,7 @@ new_string:
 npm test -- src/lint/noEffects.test.js
 ```
 
-Expected output (observed): `Tests  17 passed (17)`. The 6 `flags` cases, the 6 `allows` cases, the 3 `flags ... inside src/lib/effects` re-export cases, the baseline case (15 names match the grep in Task 0) and the eslint-disable case.
+Expected output (observed): `Tests  20 passed (20)`. The 6 `flags` cases, the 6 `allows` cases, the 3 `flags ... inside src/lib/effects` re-export cases, the 3 `flags ... outside src/lib/effects` re-export cases, the baseline case (15 names match the grep in Task 0) and the eslint-disable case.
 
 - [ ] **Step 5: Lint the project**
 
@@ -690,7 +696,7 @@ new_string: empty (delete the line). Use Edit with old_string `  'src/lib/useDoc
 npm test -- src/lib/effects src/pages/BlogPost.test.jsx src/pages/BlogIndex.test.jsx src/lint
 ```
 
-Expected output (observed): `Test Files  7 passed (7)` and `Tests  40 passed (40)` for the listed files. `src/lint` reports 17 tests, with the baseline now 14 entries; the consistency test passes because `useDocumentHead.js` no longer exists under `src/lib`.
+Expected output (observed): `Test Files  7 passed (7)` and `Tests  43 passed (43)` for the listed files. `src/lint` reports 20 tests, with the baseline now 14 entries; the consistency test passes because `useDocumentHead.js` no longer exists under `src/lib`.
 
 Commit is deferred to Task 10.
 
@@ -761,7 +767,7 @@ new_string: empty. Use old_string `  'src/components/Diagram.jsx',\n  'src/compo
 npm test -- src/components/Footer.test.jsx src/lint
 ```
 
-Expected output (observed): `Test Files  2 passed (2)`, `Tests  21 passed (21)`: `Footer.test.jsx` 4 passed and `src/lint` 17 passed.
+Expected output (observed): `Test Files  2 passed (2)`, `Tests  24 passed (24)`: `Footer.test.jsx` 4 passed and `src/lint` 20 passed.
 
 - [ ] **Step 5: Owner-runnable gate (manual)**
 
@@ -847,7 +853,7 @@ Note: the baseline also still lists `Footer` only if Task 4 was skipped; it was 
 npm test -- src/components/Headers src/lint
 ```
 
-Expected output (observed): the same Headers counts as Step 1 (11 tests); with `src/lint` (17) the run reports `Tests  28 passed (28)`.
+Expected output (observed): the same Headers counts as Step 1 (11 tests); with `src/lint` (20) the run reports `Tests  31 passed (31)`.
 
 - [ ] **Step 5: Owner-runnable gate (manual)**
 
@@ -1096,7 +1102,7 @@ new_string:
 npm test -- src/pages/About.test.jsx src/components/PrivacyPolicy.test.jsx src/pages/ProjectPage.test.jsx src/lint
 ```
 
-Expected output (observed): `Test Files  4 passed (4)` and `Tests  27 passed (27)`: About 1, PrivacyPolicy 2, ProjectPage 7, `src/lint` 17.
+Expected output (observed): `Test Files  4 passed (4)` and `Tests  30 passed (30)`: About 1, PrivacyPolicy 2, ProjectPage 7, `src/lint` 20.
 
 - [ ] **Step 8: Owner-runnable gate (manual)**
 
@@ -1275,7 +1281,7 @@ Expected output: the same 9 files (prefixed `frontend/`), no others.
 npm run lint && npm test
 ```
 
-Expected output (observed): lint exits 0 with no output; `Test Files  37 passed (37)` and `Tests  200 passed (200)`. Record the counts for the PR description.
+Expected output (observed): lint exits 0 with no output; `Test Files  37 passed (37)` and `Tests  203 passed (203)`, `src/lint` 20 of them. Record the counts for the PR description.
 
 ## Task 10: Docs and the feature commit
 
@@ -1325,7 +1331,7 @@ git add docs/development.md frontend/eslint.config.js frontend/src
 git commit -m "PW-80: ban effect hooks outside src/lib/effects, baseline 15 to 9 files" -m "Convert 9 call sites with non-effect means and named hooks."
 ```
 
-Expected output: one commit line `[pw80-no-use-effect <sha>] PW-80: ban effect hooks ...` and `23 files changed, 397 insertions(+), 114 deletions(-)` (observed in the dry run; the cleanup commit adds none). The message is 2 lines (subject plus one body line).
+Expected output: one commit line `[pw80-no-use-effect <sha>] PW-80: ban effect hooks ...`. The dry run measured the feature and cleanup edits together: `23 files changed, 403 insertions(+), 114 deletions(-)` against `origin/main` (the feature commit alone was not measured separately). The message is 2 lines (subject plus one body line).
 
 ## Task 11: Cleanup commit (comments in touched files)
 
@@ -1453,7 +1459,7 @@ git add frontend/src/components/Headers.jsx frontend/src/components/terminal/Typ
 git commit -m "PW-80: remove comments in touched files" -m "Keep only constraint and workaround comments."
 ```
 
-Expected output (observed): one commit line and `4 files changed, 1 insertion(+), 53 deletions(-)`. The `git diff origin/main -- frontend/src | grep '^+' | grep -E '^\+\s*(//|/\*)'` check printed nothing, and no `-  it(` line was removed.
+Expected output: one commit line. The dry run did not commit the cleanup separately, so its own stat was not measured (the combined stat is in Task 10 Step 2). The `git diff origin/main -- frontend/src | grep '^+' | grep -E '^\+\s*(//|/\*)'` check printed nothing, and no `-  it(` line was removed.
 
 ## Task 12: Acceptance and PR
 
@@ -1467,7 +1473,7 @@ From `frontend/`:
 npm run lint && npm test && npm run e2e
 ```
 
-Expected output (observed in the dry run): lint exit 0; `Tests  200 passed (200)` in 37 files; Playwright `67 passed`, exit 0 (the e2e run builds first). The e2e run needs `npx playwright install chromium` once and `poetry install` in `backend/` (see `docs/development.md`, "Browser tests"). Two runs at once need distinct ports.
+Expected output (observed in the dry run): lint exit 0; `Tests  203 passed (203)` in 37 files; Playwright `67 passed (1.6m)`, exit 0 (the e2e run builds first). The e2e run needs `npx playwright install chromium` once and `poetry install` in `backend/` (see `docs/development.md`, "Browser tests"). Two runs at once need distinct ports.
 
 - [ ] **Step 2: Count changed files and lines**
 
@@ -1477,7 +1483,7 @@ From the repo root:
 git diff --stat origin/main | tail -1
 ```
 
-Expected (observed in the dry run, code commits only): `23 files changed, 397 insertions(+), 114 deletions(-)`. Step 5 adds 2 files (the spec and the plan), so the PR changes 25 files: the limit. Changed lines: 511, well under 5000.
+Expected (observed in the dry run, code changes only): `23 files changed, 403 insertions(+), 114 deletions(-)`. Step 5 adds 2 files (the spec and the plan), so the PR changes 25 files: the limit. Changed lines: 517, well under 5000.
 
 - [ ] **Step 3: Before and after list for the PR description**
 
