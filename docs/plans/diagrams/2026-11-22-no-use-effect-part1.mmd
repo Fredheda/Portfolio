@@ -1,0 +1,33 @@
+flowchart TB
+  subgraph browser[Browser]
+    pages[Pages and components]:::changed
+    effects[src/lib/effects named hooks]:::new
+    scrollref[src/lib/useScrollToTopRef ref callback]:::new
+    baseline[Baseline files still calling effects]:::unchanged
+  end
+  subgraph build[Frontend build]
+    vite[Vite build and sync-content]:::unchanged
+  end
+  subgraph lint[Lint]
+    cfg[frontend/eslint.config.js rules and effectBaseline]:::changed
+    rules[no-restricted-imports and no-restricted-syntax]:::new
+  end
+  subgraph tests[Tests]
+    unit[Hook and page unit tests]:::changed
+    fixture[src/lint/noEffects.test.js fixture test]:::new
+  end
+  pages -->|calls| effects
+  pages -->|calls| scrollref
+  pages -->|still calls effects| baseline
+  cfg --> rules
+  rules -.->|exempt folder| effects
+  rules -->|errors outside folder and baseline| pages
+  fixture -->|lints snippets with| cfg
+  fixture -->|compares baseline with src grep| baseline
+  unit --> effects
+  unit --> pages
+  vite --> pages
+  legend[Legend: green new, amber changed, grey unchanged]:::unchanged
+  classDef new fill:#dcfce7,stroke:#15803d,color:#14532d
+  classDef changed fill:#fef3c7,stroke:#b45309,color:#451a03
+  classDef unchanged fill:#e5e7eb,stroke:#6b7280,color:#1f2937
