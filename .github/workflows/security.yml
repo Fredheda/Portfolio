@@ -1,14 +1,9 @@
 name: Security
 
-# Pull requests and a weekly run; a merge to main starts nothing. gitleaks and
-# workflow-lint run on every push to a PR, draft or not. The other jobs run
-# when the PR is marked ready and on the weekly schedule, which also scans the
-# full git history. Run each tool locally: see CLAUDE.md, "Security checks".
+# PRs and a weekly run (full-history scan); gitleaks and workflow-lint also run on drafts. Locally: CLAUDE.md, "Security checks".
 on:
   pull_request:
     types: [opened, reopened, synchronize, ready_for_review]
-  # Advisories appear without any code change, so the dependency audits also
-  # run weekly.
   schedule:
     - cron: "23 5 * * 1"
 
@@ -22,8 +17,7 @@ permissions:
   contents: read
 
 jobs:
-  # Blocks the PR. Runs the pinned gitleaks image directly: the gitleaks
-  # action needs a license key for organization repos.
+  # Runs the pinned gitleaks image: the gitleaks action needs a license key for org repos.
   gitleaks:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -32,8 +26,6 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      # A PR scans only the commits it adds; the weekly run scans the whole
-      # history.
       - name: Scan for secrets
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
@@ -46,8 +38,6 @@ jobs:
           docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f \
             git /repo --redact --no-banner --verbose "${log_opts[@]}"
 
-  # Blocks the PR. The actionlint image is pinned; the repo allows only
-  # GitHub-owned actions, so it runs as a container.
   workflow-lint:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -58,10 +48,8 @@ jobs:
       - name: Lint workflows
         run: docker run --rm -v "$PWD:/repo" --workdir /repo rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667 -color
 
-  # Advisory on PRs (a new advisory against an old dependency must not fail an
-  # unrelated PR); the weekly run fails visibly. backend/ and data/ are
-  # audited from their locked sets (`poetry export`) rather than installed:
-  # data/ pulls heavy ML packages, and the locked versions are what ships.
+  # Advisory on PRs so a new advisory cannot fail an unrelated PR; the weekly run fails.
+  # backend/ and data/ are audited from locked sets (poetry export), not installed: data/ pulls heavy ML packages.
   pip-audit:
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
@@ -86,12 +74,9 @@ jobs:
         run: |
           poetry -C data export --without-hashes -o "$RUNNER_TEMP/data.txt"
           pipx run pip-audit==2.10.1 -r "$RUNNER_TEMP/data.txt" --no-deps --disable-pip
-      # mcp-tools/requirements.txt pins every package, so this audits the set
-      # Azure installs (pip-audit resolves it in its own temporary venv).
       - name: Audit mcp-tools requirements
         run: pipx run pip-audit==2.10.1 -r mcp-tools/requirements.txt
 
-  # Advisory on PRs, failing weekly, like pip-audit.
   npm-audit:
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
@@ -109,8 +94,7 @@ jobs:
         working-directory: frontend
         run: npm audit --omit=dev --audit-level=high
 
-  # Blocks the PR. HIGH severity only: bandit's lower levels are mostly noise
-  # for this code.
+  # HIGH only: lower bandit levels are mostly noise here.
   bandit:
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
@@ -124,7 +108,6 @@ jobs:
           python-version-file: backend/.python-version
       - run: pipx run bandit==1.9.4 -r backend data mcp-tools scripts e2e_backend -lll -x backend/tests,mcp-tools/tests,scripts/tests,.venv
 
-  # Findings appear in the repo's Security tab, not as a failing check.
   codeql:
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-latest

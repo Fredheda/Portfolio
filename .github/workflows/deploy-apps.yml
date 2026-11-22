@@ -1,14 +1,6 @@
 name: Deploy apps
 
-# Manual only. Builds the two images for a commit on main if they do not exist
-# yet (scripts/build-push.sh skips existing ones), then rolls the two container
-# apps (ca-portfolio-backend and ca-portfolio-web) to that commit. CI never
-# builds: a commit is built the first time it is deployed.
-# Run it from the Actions tab or: gh workflow run deploy-apps.yml --ref main
-# The run waits in the production environment until the repo owner approves it.
-# Rollback is the same button with an older commit SHA; its images already
-# exist, so nothing is rebuilt. The MCP tools Function App has its own button
-# (Deploy functions).
+# Manual, owner-approved in production. Builds a commit's images on first deploy; rollback reuses them.
 on:
   workflow_dispatch:
     inputs:
@@ -17,7 +9,6 @@ on:
         required: false
         default: ""
 
-# One deploy at a time; a second click waits instead of racing the first.
 concurrency:
   group: deploy-apps
   cancel-in-progress: false
@@ -38,11 +29,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-          # The history is fetched here; later steps only read it locally, so
-          # keep the job's git token off disk while the Azure session is open.
+          # Keeps the git token off disk while the Azure session is open.
           persist-credentials: false
 
-      # Everything that can be checked without Azure is checked before logging in.
       - name: Resolve and validate the commit
         env:
           INPUT_SHA: ${{ inputs.sha }}
@@ -50,13 +39,10 @@ jobs:
           sha="$(./scripts/resolve-image-sha.sh "$INPUT_SHA")"
           echo "SHA=$sha" >> "$GITHUB_ENV"
 
-      # OIDC login with the Azure CLI (the repo only allows a short list of
-      # third-party actions, so azure/login is not used). The build and the
-      # deploy use separate identities, so the job logs in twice.
+      # Azure CLI OIDC login: azure/login is not allowed. Build and deploy log in separately.
       - name: Log in to Azure to build
         env:
-          # Secrets, not variables: the run logs of this public repo are
-          # public, and a secret's value is masked there.
+          # Secrets, not variables: public run logs.
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           CLIENT_ID: ${{ secrets.AZURE_BUILD_CLIENT_ID }}

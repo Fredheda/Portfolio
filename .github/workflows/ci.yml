@@ -1,18 +1,10 @@
 name: CI
 
-# Pull requests only: a push to main runs no CI, because the PR that landed it
-# already did. Images are not built here either; the manual Deploy apps
-# workflow builds a commit the first time it is deployed.
-#
-# Draft-first: a push to a draft PR runs only the light jobs. The heavy ones
-# (e2e, the frontend production build) and the AI review run once the PR is
-# marked ready (`gh pr ready`). Run ./scripts/ci-local.sh, which mirrors this
-# file, and get it green before marking a PR ready.
+# Pull requests only. Draft runs stay light; run ./scripts/ci-local.sh (mirrors this file) before ready.
 on:
   pull_request:
     types: [opened, reopened, synchronize, ready_for_review]
 
-# A new push to the same PR cancels the run that is still going.
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -21,11 +13,7 @@ permissions:
   contents: read
 
 jobs:
-  # Decides whether the PR changes anything but documentation (scripts/
-  # changed-areas.sh). A docs-only PR skips the jobs below. They are skipped
-  # by their own `if`, not by a workflow-level path filter, because a required
-  # check (e2e) that never reports blocks the PR for good. If this job fails,
-  # `code` is empty, which is not 'false', so everything still runs.
+  # Docs-only PRs skip jobs via their own `if` (a never-reporting required check blocks); empty `code` runs all.
   changes:
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -40,9 +28,6 @@ jobs:
       - id: areas
         run: ./scripts/changed-areas.sh "origin/${{ github.base_ref }}" >> "$GITHUB_OUTPUT"
 
-  # Tests, ruff (backend/, data/, mcp-tools/, scripts/ and e2e_backend/;
-  # config: ruff.toml at the repo root) and pyright (backend/ only) share one
-  # Poetry install.
   backend:
     needs: changes
     if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
@@ -66,8 +51,7 @@ jobs:
       - run: poetry run ruff format --check ../backend ../data ../mcp-tools ../scripts ../e2e_backend
       - run: poetry run pyright
 
-  # mcp-tools is an Azure Function with its own requirements.txt; test it in
-  # an isolated venv, never in the backend's Poetry environment.
+  # mcp-tools: isolated venv, never the backend's Poetry environment.
   mcp-tools-test:
     needs: changes
     if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
@@ -80,8 +64,6 @@ jobs:
           python-version-file: backend/.python-version
           cache: pip
           cache-dependency-path: mcp-tools/requirements.txt
-      # mcp-tools/content/ is gitignored; deploy-mcp-tools.sh copies the file
-      # in at deploy time, and the tests need it.
       - run: mkdir -p mcp-tools/content && cp content/site-content.json mcp-tools/content/site-content.json
       - run: python -m venv mcp-tools/.venv
       - run: mcp-tools/.venv/bin/pip install pip==26.2.2
@@ -92,11 +74,7 @@ jobs:
         working-directory: mcp-tools
         run: .venv/bin/python -m pytest tests -v
 
-  # The offline DocumentProcessor tests of data/ (the index builder's own
-  # Poetry project). Runs when the PR touches data/, a workflow or a script.
-  # No secrets, and never populate_index.py or IndexCreator.py: those write the
-  # live search index and call the paid embeddings API. The tests download
-  # tiktoken's gpt2 file on first use, so that folder is cached.
+  # Offline data/ tests only: never populate_index.py or IndexCreator.py (live index writes, paid embeddings).
   data:
     needs: changes
     if: ${{ !cancelled() && needs.changes.outputs.data != 'false' }}
@@ -123,8 +101,6 @@ jobs:
       - run: poetry install --no-root --no-interaction
       - run: poetry run pytest -v
 
-  # The deploy and CI scripts are plain bash, tested against a fake `az`; they
-  # need only pytest, so no project environment is installed.
   deploy-scripts-test:
     needs: changes
     if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
@@ -139,7 +115,6 @@ jobs:
       - run: PIP_UPLOADED_PRIOR_TO=P14D python -m pip install pytest==9.1.1
       - run: python -m pytest scripts/tests -v
 
-  # Vitest, eslint and the production build share one install.
   frontend:
     needs: changes
     if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
@@ -157,21 +132,15 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       # Pinned like frontend/Dockerfile (scripts/tests/test_npm_pin.py checks both).
       - run: npm install -g npm@12.2.2 && npm --version
-      # Same flags as frontend/Dockerfile: plain `npm ci` would run postinstall,
-      # which runs a build.
+      # Same flags as frontend/Dockerfile: plain npm ci would run postinstall.
       - run: npm ci --ignore-scripts
-      # `pretest` syncs content/site-content.json into frontend/content/.
       - run: npm test
       - run: npm run lint
-      # `prebuild` syncs content, then vite builds. Heavy: ready PRs only.
       - name: Production build
         if: ${{ github.event.pull_request.draft == false }}
         run: npm run build
 
-  # Playwright against the production build, the real backend (scripted
-  # model, fake moderation and logging) and the real mcp-tools handlers.
-  # Offline; see frontend/playwright.config.js. The `main-protect` ruleset
-  # requires this job by name, so keep the id.
+  # The main-protect ruleset requires this job by name: keep the id.
   e2e:
     needs: changes
     if: ${{ !cancelled() && needs.changes.outputs.code != 'false' && github.event.pull_request.draft == false }}
