@@ -1,10 +1,5 @@
 name: Claude Review
 
-# Reviews a ready (non-draft) PR when it opens or is marked ready, and on
-# every push to it, and again whenever the repo owner comments `@claude` on it
-# (also on a draft). Each run draws on the Claude
-# subscription usage limit; the per-PR concurrency group cancels a review that
-# a newer push has made stale.
 
 on:
   pull_request:
@@ -12,17 +7,13 @@ on:
   issue_comment:
     types: [created]
 
-# Each job declares its own permissions below. GITHUB_TOKEN is passed to the
-# action as `github_token`, so Claude's GitHub access is capped at exactly
-# those permissions and no OIDC token (id-token) is needed.
+# No id-token: Claude's GitHub access is capped by each job's permissions.
 permissions:
   contents: read
 
 jobs:
   review:
-    # Fork and bot-authored PRs get no repo secrets, so skip them instead of
-    # failing on authentication. Draft PRs are skipped too: the review runs
-    # once the PR is marked ready (`ready_for_review`).
+    # Forks and bot PRs have no secrets; drafts wait for ready_for_review.
     if: >-
       github.event_name == 'pull_request' &&
       github.event.pull_request.draft == false &&
@@ -31,8 +22,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-    # Set per job, not per workflow: Claude's own PR comments fire issue_comment
-    # runs, and a workflow-level group lets those skipped runs cancel this one.
+    # Per job, not per workflow: Claude's own comments would cancel this run.
     concurrency:
       group: claude-review-${{ github.event.pull_request.number }}
       cancel-in-progress: true
