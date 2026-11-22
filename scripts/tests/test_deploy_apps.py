@@ -269,7 +269,7 @@ class MiniRepo:
 
 @pytest.fixture
 def mini_repo(tmp_path: Path) -> MiniRepo:
-    """CI clones one commit, so the tests cannot rely on this checkout's history."""
+    """Most CI checkouts are shallow, so the tests cannot rely on this checkout's history."""
     root = tmp_path / "repo"
     (root / "scripts" / "lib").mkdir(parents=True)
     for name in ("scripts/build-push.sh", "scripts/lib/images.sh"):
