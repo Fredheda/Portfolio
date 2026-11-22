@@ -28,11 +28,10 @@ from blog.token import StaticTokenProvider  # noqa: E402
 from main import create_app  # noqa: E402
 
 from e2e_backend import blog_api  # noqa: E402
-from e2e_backend.fakes import FlaggingModeration, RecordingDatabase  # noqa: E402
+from e2e_backend.fakes import FlaggingModeration  # noqa: E402
 from e2e_backend.model import ScriptedChatModel  # noqa: E402
 
 MODEL = ScriptedChatModel()
-DB = RecordingDatabase()
 
 # The real client, routes and media proxy against the fake read API; only the
 # token provider and the plain-http loopback allowance are test seams.
@@ -52,7 +51,6 @@ app = create_app(
     build=lambda: build_graph(
         model=MODEL,
         moderation_client=FlaggingModeration(),  # pyright: ignore[reportArgumentType]
-        db=DB,  # pyright: ignore[reportArgumentType]
     ),
     blog=lambda: BLOG,
 )
@@ -63,16 +61,10 @@ def model_calls() -> list[dict]:
     return MODEL.calls
 
 
-@app.get("/__db_log")
-def db_log() -> list[list]:
-    return DB.rows
-
-
 @app.post("/__reset")
 def reset() -> dict:
     MODEL.calls.clear()
     MODEL.fail_next = False
-    DB.rows.clear()
     return {"ok": True}
 
 

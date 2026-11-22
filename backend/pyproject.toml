@@ -10,7 +10,6 @@ dependencies = [
     "openai (>=2.26.0,<3.0.0)",
     "python-dotenv (==1.2.2)",
     "uvicorn==0.32.0",
-    "mssql-python==1.12.0",
     "langchain (==1.4.9)",
     "langgraph (==1.2.20)",
     "langgraph-prebuilt (==1.1.1)",
@@ -38,7 +37,7 @@ dev = [
 ]
 
 [tool.pyright]
-include = ["agent", "blog", "services", "scripts", "tests", "main.py"]
+include = ["agent", "blog", "tests", "main.py"]
 exclude = ["**/.venv", "backup"]
 pythonVersion = "3.13"
 typeCheckingMode = "basic"

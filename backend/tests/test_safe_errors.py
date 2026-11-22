@@ -56,14 +56,6 @@ class NeverFlags:
         return SimpleNamespace(results=[SimpleNamespace(flagged=False)])
 
 
-class RecordingDatabase:
-    def __init__(self):
-        self.rows: list[list] = []
-
-    def log_chatbot_interaction(self, message: str, message_type: str, duration: int):
-        self.rows.append([message, message_type, duration])
-
-
 class FailingModel(BaseChatModel):
     @property
     def _llm_type(self) -> str:
@@ -131,18 +123,15 @@ def _events(body: str) -> list[dict]:
     ]
 
 
-def _app(model: BaseChatModel, tools: list) -> tuple[Any, RecordingDatabase]:
-    db = RecordingDatabase()
-
+def _app(model: BaseChatModel, tools: list) -> Any:
     async def build():
         with patch("agent.agent.load_mcp_tools", new=AsyncMock(return_value=tools)):
             return await build_graph(
                 model=model,
                 moderation_client=NeverFlags(),  # pyright: ignore[reportArgumentType]
-                db=db,  # pyright: ignore[reportArgumentType]
             )
 
-    return create_app(build=build), db
+    return create_app(build=build)
 
 
 def _post_run(app) -> str:
@@ -154,7 +143,7 @@ def _post_run(app) -> str:
     return response.text
 
 
-def _assert_safe_ending(body: str, caplog, db: RecordingDatabase) -> None:
+def _assert_safe_ending(body: str, caplog) -> None:
     events = _events(body)
     types = [e["type"] for e in events]
     assert "RUN_STARTED" in types
@@ -167,23 +156,22 @@ def _assert_safe_ending(body: str, caplog, db: RecordingDatabase) -> None:
     for planted in PLANTED_ALL:
         assert planted not in body
         assert planted not in caplog.text
-        assert all(planted not in row[0] for row in db.rows)
     assert "RuntimeError" in caplog.text
 
 
 def test_model_error_ends_the_run_with_a_fixed_run_error(caplog):
-    app, db = _app(FailingModel(), [])
+    app = _app(FailingModel(), [])
     with caplog.at_level(logging.ERROR):
         body = _post_run(app)
-    _assert_safe_ending(body, caplog, db)
+    _assert_safe_ending(body, caplog)
     assert "[redacted-key]" in caplog.text
 
 
 def test_tool_transport_error_ends_the_run_with_a_fixed_run_error(caplog):
-    app, db = _app(ToolCallingModel(), [_failing_tool()])
+    app = _app(ToolCallingModel(), [_failing_tool()])
     with caplog.at_level(logging.ERROR):
         body = _post_run(app)
-    _assert_safe_ending(body, caplog, db)
+    _assert_safe_ending(body, caplog)
     assert "[redacted-url]" in caplog.text
 
 

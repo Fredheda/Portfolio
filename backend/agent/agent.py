@@ -6,10 +6,8 @@ from langchain_core.language_models import BaseChatModel
 from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import MemorySaver
 from openai import OpenAI
-from services.database_client import database_client
 
 from agent.content_safety_middleware import ContentSafetyMiddleware
-from agent.logging_middleware import LoggingMiddleware
 from agent.mcp_tools import load_mcp_tools
 
 SYSTEM_PROMPT = (Path(__file__).parent / "system_prompt.md").read_text()
@@ -26,7 +24,6 @@ _MODEL = ChatOpenAI(model="gpt-5.6-luna", reasoning_effort="none")
 async def build_graph(
     model: BaseChatModel | None = None,
     moderation_client: OpenAI | None = None,
-    db: database_client | None = None,
 ):
     # The arguments exist for the browser tests; production passes none and
     # gets _MODEL and each middleware's own default client.
@@ -40,7 +37,6 @@ async def build_graph(
         middleware=[
             ContentSafetyMiddleware(client=moderation_client),
             CopilotKitMiddleware(),  # pyright: ignore[reportArgumentType]
-            LoggingMiddleware(db=db),
         ],
         checkpointer=MemorySaver(),
     )

@@ -12,10 +12,6 @@ export async function modelCalls(request) {
   return (await request.get(`${BACKEND_URL}/__model_calls`)).json();
 }
 
-export async function dbLog(request) {
-  return (await request.get(`${BACKEND_URL}/__db_log`)).json();
-}
-
 export async function failNextModelCall(request) {
   expect((await request.post(`${BACKEND_URL}/__fail`)).ok()).toBe(true);
 }
