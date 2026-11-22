@@ -2,7 +2,7 @@
 
 Repo facts only, plus the Ownership note below. The workspace `CLAUDE.md` (`../CLAUDE.md`) owns the rest: style, git and worktrees, ways of working, tooling, Jira, specs and plans.
 
-PR titles and descriptions never mention Claude Code. `./scripts/ci-local.sh` runs every CI check locally; green before `gh pr ready`.
+`./scripts/ci-local.sh` runs every CI check locally.
 
 ## Ownership
 
@@ -31,8 +31,8 @@ cd data && poetry run python populate_index.py
 ```
 
 - `backend/` and `data/` are separate Poetry projects (Python 3.13, `.python-version`) that never share one environment; `mcp-tools/` tests run in their own venv (`docs/development.md`).
-- CI (`.github/workflows/ci.yml`): pull requests only, never a push to `main`. A draft PR runs the light jobs (`changes`, `backend`, `mcp-tools-test`, `deploy-scripts-test`, `data`, `frontend` without its build); `e2e`, the frontend build and the AI review wait for ready. `scripts/changed-areas.sh` (job `changes`) skips the heavy jobs for a docs-only PR (root Markdown, `docs/`, `deployment/`; not `backend/agent/system_prompt.md`, which is runtime input) and sets `data=true`, the only trigger of the `data` job (the offline `data/` tests), when a PR touches `data/`, a workflow or a script. Required checks on `main` (ruleset `main-protect`): `backend`, `mcp-tools-test`, `deploy-scripts-test`, `frontend`, `e2e`, `gitleaks`, `bandit`, `workflow-lint`; a skipped job passes; `pip-audit`, `npm-audit` and `codeql` are not required. A job-id change needs a ruleset update in the same change. Let the draft run finish before `gh pr ready`: `ready` cancels a run in flight, and its cancelled required checks keep the PR BLOCKED until `gh run rerun`. **Deploy apps** builds images, not CI. npm is pinned (`npm install -g npm@12.2.2`) in both `frontend/Dockerfile` stages and the jobs `frontend`, `e2e` and `npm-audit`; bump all of them together (`scripts/tests/test_npm_pin.py` fails on a missing or differing pin; Dependabot does not bump it). `ci-local.sh` uses the installed npm.
-- A new test must catch a bug that no other test (vitest, pytest or e2e) catches. `e2e_backend/` sits outside `backend/` because the backend image copies all of `backend/`. In Playwright specs, CSS locators live in `e2e/selectors.js`; ESLint rejects `.locator(` in spec files. The e2e servers use ports 3210, 8210 and 8211; two concurrent runs need their own via `E2E_WEB_PORT`, `E2E_BACKEND_PORT`, `E2E_MCP_PORT` (`docs/development.md`, "Browser tests").
+- CI (`.github/workflows/ci.yml`): pull requests only, never a push to `main`. A draft PR runs the light jobs (`changes`, `backend`, `mcp-tools-test`, `deploy-scripts-test`, `data`, `frontend` without its build); `e2e`, the frontend build and the AI review wait for ready. `scripts/changed-areas.sh` (job `changes`) skips the heavy jobs for a docs-only PR (root Markdown, `docs/`, `deployment/`; not `backend/agent/system_prompt.md`, which is runtime input) and sets `data=true`, the only trigger of the `data` job (the offline `data/` tests), when a PR touches `data/`, a workflow or a script. Required checks on `main` (ruleset `main-protect`): `backend`, `mcp-tools-test`, `deploy-scripts-test`, `frontend`, `e2e`, `gitleaks`, `bandit`, `workflow-lint`; a skipped job passes; `pip-audit`, `npm-audit` and `codeql` are not required. A job-id change needs a ruleset update in the same change. `gh pr ready` cancels a run in flight; its cancelled required checks keep the PR BLOCKED until `gh run rerun`. **Deploy apps** builds images, not CI. npm is pinned (`npm install -g npm@12.2.2`) in both `frontend/Dockerfile` stages and the jobs `frontend`, `e2e` and `npm-audit`; bump all of them together (`scripts/tests/test_npm_pin.py` fails on a missing or differing pin; Dependabot does not bump it). `ci-local.sh` uses the installed npm.
+- `e2e_backend/` sits outside `backend/` because the backend image copies all of `backend/`. In Playwright specs, CSS locators live in `e2e/selectors.js`; ESLint rejects `.locator(` in spec files. The e2e servers use ports 3210, 8210 and 8211; two concurrent runs need their own via `E2E_WEB_PORT`, `E2E_BACKEND_PORT`, `E2E_MCP_PORT` (`docs/development.md`, "Browser tests").
 
 ## Deployment
 
@@ -94,15 +94,13 @@ Names only; what each does and where it goes: `docs/development.md`, "Environmen
 
 ## Dependabot
 
-`.github/dependabot.yml`: monthly version updates, one grouped PR per ecosystem (pip for `backend/`, `data/`, `mcp-tools/`; npm for `frontend/`; GitHub Actions; Docker for both Dockerfiles), label `dependencies`, 14-day cooldown. Major bumps are ignored for pip, npm and Docker and done by hand. Security-update PRs are separate: not grouped, no cooldown. Dependabot PRs get no secrets, so the AI review skips them; CI and `security.yml` run as usual. Who merges them: "Merging" under "PR review".
+`.github/dependabot.yml`: monthly version updates, one grouped PR per ecosystem (pip for `backend/`, `data/`, `mcp-tools/`; npm for `frontend/`; GitHub Actions; Docker for both Dockerfiles), label `dependencies`, 14-day cooldown. Major bumps are ignored for pip, npm and Docker and done by hand. Security-update PRs are separate: not grouped, no cooldown. Dependabot PRs get no secrets, so the AI review skips them; CI and `security.yml` run as usual.
 
 Dependencies: 14-day install cooldown (`frontend/.npmrc`, `backend/poetry.toml`, `data/poetry.toml`), exact Poetry and pip pins, actions pinned by commit, every Docker image also carrying its digest, and a fully pinned `mcp-tools/requirements.txt` (no hashes; `scripts/compile-mcp-tools-requirements.sh`). `scripts/tests/test_supply_chain.py` guards all of it (`docs/development.md`, "Dependencies").
 
 ## PR review
 
 `.github/workflows/claude-review.yml` posts a comment-only AI review on every push to a ready (non-draft) PR: security first, a documentation check ("Docs: current" or findings) and advisory size and tests checks, ending with an advisory `Verdict:` line (`ready to merge` or `changes requested (N open)`). The owner can request one with a `@claude` comment. Token expiry and renewal: `deployment/expirations.md`.
-
-- **Merging:** the owner merges, except the bot and docs classes in the workspace `CLAUDE.md` (Git), which the coordinator merges.
 
 ## Skills
 
