@@ -80,7 +80,7 @@ It creates the managed identity `id-portfolio-mcp-gh-deploy` with Website Contri
 
 ## Branch protection
 
-The `main-protect` ruleset (id 25783728) requires a PR and the checks listed in `CLAUDE.md`, and blocks deletion and force-push. Admins bypass in PR mode only. Change the check list with `gh api -X PUT repos/Fredheda/Portfolio/rulesets/25783728 --input <file>` after the owner agrees; fetch the current ruleset first and keep a copy for rollback. Renaming a job in `ci.yml` or `security.yml` needs this update in the same change.
+The `main-protect` ruleset (id 25783728) requires a PR and the checks listed in `AGENTS.md`, and blocks deletion and force-push. Admins bypass in PR mode only. Change the check list with `gh api -X PUT repos/Fredheda/Portfolio/rulesets/25783728 --input <file>` after the owner agrees; fetch the current ruleset first and keep a copy for rollback. Renaming a job in `ci.yml` or `security.yml` needs this update in the same change.
 
 ## PR review
 

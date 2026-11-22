@@ -129,7 +129,7 @@ Tests run one at a time because they share the backend's call log. Two runs at o
 
 `.github/workflows/ci.yml` runs all of the above on every pull request, and on nothing else (a push to `main` runs no CI). Job ids, the draft-first rule, the docs-only skip and the checks the `main` ruleset requires: `CLAUDE.md`, "Commands". `./scripts/ci-local.sh` runs every check CI runs, in the same order; get it green before `gh pr ready`. Images are built by the **Deploy apps** workflow, not by CI (see [deployment/github.md](../deployment/github.md)).
 
-Security scans live in `.github/workflows/security.yml`; jobs, what blocks and local commands: `CLAUDE.md`, "Security checks".
+Security scans live in `.github/workflows/security.yml`; jobs, what blocks and local commands: `AGENTS.md`, "Security checks".
 
 ## Dependencies
 
