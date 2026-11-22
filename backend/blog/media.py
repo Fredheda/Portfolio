@@ -26,7 +26,6 @@ ALLOWED_TYPES = frozenset(
     }
 )
 RANGE = re.compile(r"bytes=\d*-\d*\Z")
-# Per read between chunks, not for the whole transfer.
 BLOB_TIMEOUT = httpx.Timeout(30.0, connect=10.0)
 FORWARD = ("content-length", "content-range", "accept-ranges")
 SAFETY_HEADERS = {
@@ -44,17 +43,11 @@ def _fixed(status: int) -> Response:
 
 
 class MediaStreamer(Protocol):
-    """What the routes need from the proxy (the route tests pass a fake)."""
-
     async def stream(self, url: str, range_header: str | None) -> Response: ...
 
 
+# The signed URL comes from another service: check it anyway and never follow redirects.
 class MediaProxy:
-    """Streams a blob from a short-lived signed URL the read API handed us, so
-    the browser never sees the URL. The URL comes from another service: it is
-    still checked (https, exact host, default port, no userinfo) and not
-    redirected."""
-
     def __init__(
         self,
         http: httpx.AsyncClient,
@@ -63,8 +56,7 @@ class MediaProxy:
     ) -> None:
         self._http = http
         self._hosts = frozenset(host.lower() for host in allowed_hosts)
-        # Browser tests only: their fake blob store speaks plain http on a
-        # loopback port. Production never sets it.
+        # Browser tests only: their fake blob store speaks plain http.
         self._insecure = allow_insecure
 
     def _target(self, url: str) -> httpx.URL | None:
@@ -80,7 +72,7 @@ class MediaProxy:
             return None
         if target.port is not None and not self._insecure:
             return None
-        if target.host.lower() not in self._hosts:
+        if target.host not in self._hosts:
             return None
         return target
 

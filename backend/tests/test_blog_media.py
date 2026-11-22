@@ -98,6 +98,23 @@ async def test_urls_outside_the_allowlist_are_never_fetched(url):
     assert seen == []
 
 
+@pytest.mark.parametrize(
+    ("allowed", "url"),
+    [
+        ("ACCT.Blob.Core.Windows.NET", URL),
+        ("acct.blob.core.windows.net", URL.replace("acct.blob", "ACCT.Blob")),
+    ],
+)
+@pytest.mark.asyncio
+async def test_hosts_match_whatever_their_case(allowed, url):
+    def handler(request):
+        return httpx.Response(200, content=b"x", headers={"content-type": "image/png"})
+
+    http = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    response = await MediaProxy(http, {allowed}).stream(url, None)
+    assert response.status_code == 200
+
+
 @pytest.mark.asyncio
 async def test_a_type_that_could_run_script_is_refused():
     def handler(request):
