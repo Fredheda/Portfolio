@@ -25,7 +25,7 @@ set -a
 source .env
 set +a
 
-for var in OPENAI_API_KEY azure_search_api_key azure_search_endpoint azure_index_name AZURE_SQL_SERVER AZURE_SQL_DATABASE; do
+for var in OPENAI_API_KEY azure_search_api_key azure_search_endpoint azure_index_name; do
   [ -n "${!var:-}" ] || { echo "ERROR: $var is empty in .env" >&2; exit 1; }
 done
 
@@ -38,8 +38,6 @@ az deployment group create \
     azureSearchApiKey="$azure_search_api_key" \
     azureSearchEndpoint="$azure_search_endpoint" \
     azureIndexName="$azure_index_name" \
-    azureSqlServer="$AZURE_SQL_SERVER" \
-    azureSqlDatabase="$AZURE_SQL_DATABASE" \
     functionMcpKey="${FUNCTION_MCP_KEY:-}" \
     blogApiUrl="${BLOG_API_URL:-}" \
     blogApiAudience="${BLOG_API_AUDIENCE:-}" \

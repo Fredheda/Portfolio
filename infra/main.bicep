@@ -45,8 +45,6 @@ param azureSearchApiKey string
 param azureSearchEndpoint string
 param azureIndexName string
 
-param azureSqlServer string
-param azureSqlDatabase string
 
 @description('Azure Function App name (MCP tools server).')
 param functionAppName string = 'func-portfolio-mcp-tools'
@@ -236,11 +234,6 @@ resource backend 'Microsoft.App/containerApps@2025-01-01' = {
             { name: 'OPENAI_API_KEY', secretRef: 'openai-api-key' }
             { name: 'FUNCTION_APP_URL', value: 'https://${functionApp.properties.defaultHostName}' }
             { name: 'FUNCTION_MCP_KEY', secretRef: 'function-mcp-key' }
-            { name: 'AZURE_SQL_SERVER', value: azureSqlServer }
-            { name: 'AZURE_SQL_DATABASE', value: azureSqlDatabase }
-            // Presence of this var is what makes database_client.py pick
-            // ActiveDirectoryMSI auth (this identity) over ActiveDirectoryDefault.
-            { name: 'AZURE_CLIENT_ID', value: identity.properties.clientId }
           ], blogEnv)
         }
       ]

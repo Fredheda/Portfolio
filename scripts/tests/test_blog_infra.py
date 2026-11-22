@@ -26,8 +26,9 @@ def test_the_blog_identity_exists_and_no_azure_role_names_it() -> None:
     assert all("blogReadIdentity" not in block for block in roles)
 
 
-def test_sql_and_the_registry_keep_the_original_identity() -> None:
-    assert "{ name: 'AZURE_CLIENT_ID', value: identity.properties.clientId }" in BICEP
+def test_the_backend_env_carries_no_sql_or_original_identity_setting() -> None:
+    assert "AZURE_SQL" not in BICEP
+    assert "AZURE_CLIENT_ID" not in BICEP
 
 
 def test_the_backend_has_both_identities() -> None:
