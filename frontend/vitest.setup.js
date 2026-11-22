@@ -10,8 +10,7 @@ afterEach(() => {
   cleanup();
 });
 
-// jsdom lacks these browser APIs; framer-motion and the components under test
-// call them.
+// jsdom lacks these browser APIs; the components under test call them.
 class IntersectionObserverStub {
   observe() {}
   unobserve() {}
