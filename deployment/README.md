@@ -31,5 +31,3 @@ These are three independent deploy targets with their own tooling and their own 
 - [expirations.md](expirations.md): credentials that expire and how to renew them.
 
 For local development and running the checks, see [../docs/development.md](../docs/development.md).
-
-Full architecture and design rationale: `docs/Portfolio/specs/2026-08-09-azure-migration-design.md` and `docs/Portfolio/plans/2026-08-09-azure-migration.md` (workspace root).
