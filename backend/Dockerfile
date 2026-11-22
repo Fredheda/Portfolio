@@ -1,5 +1,5 @@
 # Build context: backend/  ->  docker build -t portfolio-backend backend
-FROM python:3.13-slim@sha256:e48f59cdba69a3cbd9ed2cf0f348d90d45a8d350d98134cf1070bc106ee9ed90 AS builder
+FROM python:3.15-slim@sha256:65a65fc7b30b06cb6df4930fd4650697cb23f4c2698ab81fc87e4b031bc36928 AS builder
 WORKDIR /app
 # Exact pins. PIP_UPLOADED_PRIOR_TO makes pip take Poetry's own dependencies
 # only from releases at least 14 days old (docs/development.md, "Dependencies").
@@ -10,7 +10,7 @@ COPY pyproject.toml poetry.lock ./
 RUN poetry install --only main --no-interaction --no-ansi
 COPY . .
 
-FROM python:3.13-slim@sha256:e48f59cdba69a3cbd9ed2cf0f348d90d45a8d350d98134cf1070bc106ee9ed90
+FROM python:3.15-slim@sha256:65a65fc7b30b06cb6df4930fd4650697cb23f4c2698ab81fc87e4b031bc36928
 WORKDIR /app
 
 # mssql-python bundles its own driver (DDBC) -- these three packages are the
