@@ -82,7 +82,8 @@ updates:
         patterns:
           - "*"
     # The runtimes are pinned on purpose (Node 24 LTS, Python 3.13 from
-    # .python-version), so major base-image bumps are done by hand.
+    # .python-version), so major base-image bumps and Python minors are done
+    # by hand.
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
