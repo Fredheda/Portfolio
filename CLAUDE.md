@@ -90,7 +90,7 @@ Names only; what each does and where it goes: `docs/development.md`, "Environmen
 
 `pip-audit` audits the locked sets of `backend/` and `data/` (no install). Fix a finding, or add a dated ignore with the reason next to the command.
 
-`frontend/package.json` `overrides.zod` forces zod 4 over CopilotKit's zod 3: no zod 3 release fixes GHSA-mrhx-c7xc-m3w5. The e2e chat flow is the gate; keep the override's range equal to the direct `zod` dependency (npm rejects a mismatch). `vite` is a dev dependency (build only, not in the runtime image).
+`frontend/package.json` `overrides.zod` forces zod 4 over CopilotKit's zod 3: no zod 3 release fixes GHSA-mrhx-c7xc-m3w5. The e2e chat flow is the gate; keep the override's range equal to the direct `zod` dependency (npm rejects a mismatch). `@copilotkit/*` 1.85 and later pull `@a2ui/web_core` 0.15, which needs zod 3 and crashes the provider at load under the override, so `dependabot.yml` ignores `>=1.85.0`; lift it when `@a2ui/web_core` supports zod 4. `vite` is a dev dependency (build only, not in the runtime image).
 
 ## Dependabot
 
