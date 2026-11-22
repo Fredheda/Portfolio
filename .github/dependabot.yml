@@ -49,6 +49,8 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
+      - dependency-name: "@copilotkit/*"
+        versions: [">=1.85.0"]
 
   - package-ecosystem: github-actions
     directory: /
