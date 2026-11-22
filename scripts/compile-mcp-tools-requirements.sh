@@ -1,27 +1,11 @@
 #!/usr/bin/env bash
-# Regenerate mcp-tools/requirements.txt: an exact pin for the Function App's
-# direct dependencies and everything they pull in. No hashes.
-#
-# pip itself resolves the set (`pip install --dry-run --report`, nothing is
-# installed), under a 14-day window (PIP_UPLOADED_PRIOR_TO) and for the Function
-# App's runtime: Linux x86-64 wheels, Python 3.13, whatever machine runs this.
-# The pip version is the backend image's (backend/Dockerfile); a guard test keeps
-# the two equal.
-#
-# The committed file is the source of versions: it is passed as a constraint, so
-# a pinned package keeps its version (also after a Dependabot bump), a new
-# dependency comes from the window and one no longer needed drops out. The
-# direct requirements below are floors only. `--upgrade` refreshes everything
-# under the window instead.
-#
-# Run it on purpose, review the diff, open a PR.
-#
-# Usage: ./scripts/compile-mcp-tools-requirements.sh [--upgrade]
+# The committed requirements.txt is passed as a constraint: pins survive, new dependencies
+# come from the 14-day window, `--upgrade` ignores it. The pip version must equal the backend
+# image's (a guard test checks).
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-# Direct dependencies of the Function App, as floors: the only place they live.
 DIRECT=(
   "azure-functions>=1.25.0"
   "azure-search-documents>=11.6.0"
@@ -29,7 +13,6 @@ DIRECT=(
   "openai>=2.54.0"
 )
 
-# Only files uploaded at least 14 days ago; the window is a constant, not an argument.
 export PIP_UPLOADED_PRIOR_TO=P14D
 
 # mktemp -d ignores TMPDIR on macOS, so the path is built by hand.

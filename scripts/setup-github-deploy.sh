@@ -1,30 +1,5 @@
 #!/usr/bin/env bash
-# One-time (idempotent) setup so the `Deploy functions` workflow can publish to
-# the Function App with no stored secrets, using OpenID Connect (workload
-# identity federation).
-#
-# What it does:
-#   1. Creates the user-assigned managed identity id-portfolio-mcp-gh-deploy in
-#      rg-chatbot.
-#   2. Grants it Website Contributor on the Function App
-#      func-portfolio-mcp-tools, and nothing else.
-#   3. Adds one federated credential: only the job that runs in the
-#      `production` environment of this repo can use the identity.
-#   4. Creates the `production` GitHub environment, restricted to jobs running
-#      on the main branch (a branch author cannot edit their way around it)
-#      and gated by the repo owner as required reviewer (every deploy waits
-#      for his approval in GitHub), and stores the Azure IDs the workflow
-#      reads as repo SECRETS:
-#      AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID, AZURE_DEPLOY_CLIENT_ID. They
-#      are identifiers, not credentials, but the run logs of a public repo are
-#      public and GitHub masks a secret's value there.
-#
-# Needs the signed-in user to be able to create identities, assign roles, and
-# administer the GitHub repo. Auth is the live `az login` and `gh auth`
-# sessions; nothing secret is written anywhere. Federated credentials do not
-# expire.
-#
-# Usage: ./scripts/setup-github-deploy.sh
+# The Azure IDs are stored as secrets, not variables: a public repo's run logs are public.
 set -euo pipefail
 
 GH_REPO=Fredheda/Portfolio
@@ -47,8 +22,7 @@ fi
 PRINCIPAL=$(az identity show -g "$RG" -n "$IDENTITY" --query principalId -o tsv)
 CLIENT=$(az identity show -g "$RG" -n "$IDENTITY" --query clientId -o tsv)
 
-# Role assignment by object id + principal type, so a just-created identity
-# does not have to wait for Entra replication before the lookup succeeds.
+# By object id and principal type: a just-created identity need not wait for Entra replication.
 APP_ID=$(az functionapp show -g "$RG" -n "$FUNCTION_APP" --query id -o tsv)
 az role assignment create --assignee-object-id "$PRINCIPAL" \
   --assignee-principal-type ServicePrincipal \
@@ -67,13 +41,9 @@ else
   echo "federated credential $IDENTITY/$CRED: created ($SUBJECT)"
 fi
 
-# The identity trusts any job that runs in the `production` environment,
-# whatever branch it runs on, and the `main`-only check inside the workflow is
-# in a file any branch author can edit. So the environment itself only admits
-# jobs from main: GitHub enforces this outside the workflow file. The repo
-# owner is its required reviewer, so every deploy waits for his approval in
-# GitHub (the run shows `waiting`) and no admin can bypass that. Required
-# reviewers need a public repo on the Free plan.
+# The identity trusts any job in `production`, and the `main` check in the workflow file
+# is editable by any branch author: the environment itself admits only main, enforced by
+# GitHub. Required reviewers need a public repo on the Free plan.
 OWNER_ID=$(gh api "users/${GH_REPO%%/*}" --jq .id)
 gh api -X PUT "repos/$GH_REPO/environments/production" --input - \
   --jq '"environment " + .name + ": ensured"' <<EOF

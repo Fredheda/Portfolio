@@ -1,19 +1,7 @@
 #!/usr/bin/env bash
-# Run every check .github/workflows/ci.yml runs, in the same order, and stop at
-# the first failure. This is the gate before `gh pr ready`: a draft PR runs
-# only the light CI jobs, so make this green first.
-#
-# Needs Poetry, Python 3, Node 24 and network access for installs. The e2e
-# suite itself runs offline on ports 3210, 8210 and 8211; set E2E_WEB_PORT,
-# E2E_BACKEND_PORT and E2E_MCP_PORT to run two copies at once.
-# scripts/tests/test_ci_local.py fails when ci.yml gains a command this script
-# lacks.
-#
-# Usage: ./scripts/ci-local.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-# macOS and some Linux installs only ship python3.
 command -v python >/dev/null 2>&1 || python() { python3 "$@"; }
 
 step() { printf '\n==> %s\n' "$1"; }
@@ -31,8 +19,7 @@ step "backend: tests, lint, types"
 step "mcp-tools tests (isolated venv)"
 mkdir -p mcp-tools/content && cp content/site-content.json mcp-tools/content/site-content.json
 rm -rf mcp-tools/.venv
-# Python 3.13 like CI and the Function App (the pinned azure-functions needs it):
-# the backend's Poetry interpreter, not whatever `python` is on the PATH.
+# The pinned azure-functions needs Python 3.13: use the backend's interpreter, not the PATH's.
 (cd backend && poetry run python -m venv ../mcp-tools/.venv)
 mcp-tools/.venv/bin/pip install pip==26.2.2
 mcp-tools/.venv/bin/pip install --no-deps --only-binary=":all:" -r mcp-tools/requirements.txt

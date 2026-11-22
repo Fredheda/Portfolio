@@ -1,21 +1,7 @@
 #!/usr/bin/env bash
-# Roll both container apps to the images built from a given commit.
-# Usage: ./scripts/redeploy.sh [git-sha]   (defaults to current HEAD — the
-# same commit ./scripts/build-push.sh tags). The SHA must be the full
-# 40-character commit hash.
-#
-# Image-only: no Bicep re-run, no secret prompts. Use after build-push.sh
-# to promote freshly-built images. SHA tags (not `latest`) so every deploy
-# creates a distinct revision — rollback is `./scripts/redeploy.sh <old-sha>`.
-#
-# Order of work:
-#   1. Refuse a malformed SHA, then refuse unless BOTH images exist, so a
-#      half-built commit can never leave the apps on mixed versions.
-#   2. Roll the apps.
-#   3. Lock the two deployed tags (`acr purge` skips locked tags, so the image
-#      a replica needs for its next cold start is never deleted) and unlock
-#      the SHA tags the apps ran before. Nothing is locked or unlocked if a
-#      rollout fails.
+# Image-only: no Bicep run. Both images must exist before any app rolls, so a half-built
+# commit cannot leave mixed versions. Deployed tags are locked (`acr purge` skips them) and
+# the replaced ones unlocked, only after every rollout succeeds.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 # shellcheck source=lib/images.sh
@@ -38,7 +24,6 @@ for entry in "${IMAGES[@]}"; do
 done
 [ "$missing" -eq 0 ] || exit 1
 
-# The tag each app runs now, read before anything changes.
 old_tags=()
 for entry in "${IMAGES[@]}"; do
   IFS='|' read -r _ app _ _ <<<"$entry"

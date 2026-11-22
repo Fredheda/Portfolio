@@ -1,41 +1,7 @@
 #!/usr/bin/env bash
-# One-time (idempotent) setup so GitHub Actions can build and deploy the two
-# container apps with no stored secrets, using OpenID Connect (workload
-# identity federation). The Function App has its own setup script
-# (setup-github-deploy.sh); the two do not touch each other's identity.
-#
-# What it does:
-#   1. Creates two user-assigned managed identities in rg-chatbot:
-#        id-portfolio-gh-build   builds and pushes missing images (first part of
-#                                the manual "Deploy apps" workflow)
-#        id-portfolio-gh-deploy  rolls the two container apps (second part of
-#                                the same workflow)
-#   2. Grants each only what it needs:
-#        build:  AcrPush + Container Registry Tasks Contributor on the registry
-#        deploy: AcrPush on the registry (to lock/unlock deployed tags — note
-#                that this also lets it push images; the registry is in
-#                legacy permission mode, which cannot scope pushes by
-#                repository), Container Apps Contributor on each of the two
-#                apps, and Managed Identity Operator on the apps' AcrPull
-#                identity (updating an app that uses it needs assign/action)
-#   3. Adds one federated credential to each identity, for the job that runs
-#      in the `production` environment (and removes the build identity's old
-#      credential that trusted any workflow on refs/heads/main).
-#   4. Ensures the `production` GitHub environment only admits jobs running on
-#      the main branch (a branch author cannot edit their way around it) and
-#      has the repo owner as required reviewer (every deploy waits for his
-#      approval in GitHub), and
-#      stores the Azure IDs the workflows read as repo SECRETS: AZURE_TENANT_ID,
-#      AZURE_SUBSCRIPTION_ID, AZURE_BUILD_CLIENT_ID, AZURE_APPS_DEPLOY_CLIENT_ID.
-#      They are identifiers, not credentials, but the run logs of a public
-#      repo are public and GitHub masks a secret's value there.
-#
-# Needs the signed-in user to be able to create identities, assign roles, and
-# administer the GitHub repo. Auth is the live `az login` and `gh auth`
-# sessions; nothing secret is written anywhere. Federated credentials do not
-# expire.
-#
-# Usage: ./scripts/setup-github-apps-deploy.sh
+# The deploy identity's AcrPush also lets it push images: the registry is in legacy
+# permission mode, which cannot scope pushes by repository.
+# The Azure IDs are stored as secrets, not variables: a public repo's run logs are public.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 # shellcheck source=lib/images.sh
@@ -62,8 +28,7 @@ ensure_identity() {
   fi
 }
 
-# Role assignment by object id + principal type, so a just-created identity
-# does not have to wait for Entra replication before the lookup succeeds.
+# By object id and principal type: a just-created identity need not wait for Entra replication.
 ensure_role() {
   local principal=$1 role=$2 scope=$3
   az role assignment create --assignee-object-id "$principal" \
@@ -111,8 +76,6 @@ ensure_federated_credential "$BUILD_ID" github-production \
 ensure_federated_credential "$DEPLOY_ID" github-production \
   "repo:$GH_REPO:environment:production"
 
-# Older versions trusted the build identity for any workflow on main; the
-# Deploy apps job now builds inside `production`, so drop the broader trust.
 if az identity federated-credential show -g "$RG" --identity-name "$BUILD_ID" \
   --name github-main -o none 2>/dev/null; then
   az identity federated-credential delete -g "$RG" --identity-name "$BUILD_ID" \
@@ -120,13 +83,9 @@ if az identity federated-credential show -g "$RG" --identity-name "$BUILD_ID" \
   echo "federated credential $BUILD_ID/github-main: deleted"
 fi
 
-# The deploy identity trusts any job that runs in the `production` environment,
-# whatever branch it runs on, and the `main`-only check inside deploy-apps.yml
-# is in a file any branch author can edit. So the environment itself only
-# admits jobs from main: GitHub enforces this outside the workflow file. The
-# repo owner is its required reviewer, so every deploy waits for his approval
-# in GitHub (the run shows `waiting`) and no admin can bypass that. Required
-# reviewers need a public repo on the Free plan.
+# The identity trusts any job in `production`, and the `main` check in the workflow file
+# is editable by any branch author: the environment itself admits only main, enforced by
+# GitHub. Required reviewers need a public repo on the Free plan.
 OWNER_ID=$(gh api "users/${GH_REPO%%/*}" --jq .id)
 gh api -X PUT "repos/$GH_REPO/environments/production" --input - \
   --jq '"environment " + .name + ": ensured"' <<EOF

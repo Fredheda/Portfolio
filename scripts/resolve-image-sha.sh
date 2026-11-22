@@ -1,14 +1,5 @@
 #!/usr/bin/env bash
-# Decide which commit the `Deploy apps` workflow deploys, and refuse anything
-# that should not reach production. Needs only git, so the workflow runs it
-# before it logs in to Azure. Whether images exist for the commit is checked
-# later, by redeploy.sh, which can ask the registry.
-#
-# Prints the full 40-character SHA on stdout. Exits 1 with an `ERROR:` line on
-# stderr when the input is not a full lowercase SHA, is not a commit of this
-# repository, or is not on origin/main.
-#
-# Usage: ./scripts/resolve-image-sha.sh [SHA]   (empty = head of origin/main)
+# Needs only git: it runs before the Azure login. redeploy.sh checks the images exist.
 set -euo pipefail
 
 sha="$(printf '%s' "${1:-}" | tr -d '[:space:]')"
