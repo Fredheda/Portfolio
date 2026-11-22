@@ -1,4 +1,4 @@
-"""ag-ui-langgraph 0.0.47 sends `str(exc)` to the browser, and a provider error can carry keys, hosts or the visitor's message: the client gets one fixed RUN_ERROR."""
+"""One fixed RUN_ERROR for every failed run: 0.0.42 lets the exception escape and abort the stream, 0.0.47 sends `str(exc)`, and provider errors can carry keys, hosts or the visitor's message."""
 
 import logging
 from collections.abc import AsyncGenerator
