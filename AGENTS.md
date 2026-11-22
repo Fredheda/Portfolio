@@ -95,7 +95,7 @@ Dependencies: 14-day install cooldown (`frontend/.npmrc`, `backend/poetry.toml`,
 
 ## PR review
 
-`.github/workflows/claude-review.yml` posts a comment-only AI review on every push to a ready (non-draft) PR: security first, a documentation check ("Docs: current" or findings) and advisory size and tests checks, ending with an advisory `Verdict:` line (`ready to merge` or `changes requested (N open)`). The owner can request one with a `@claude` comment (also on a draft). Each run draws on the Claude subscription usage limit. Token expiry and renewal: `deployment/expirations.md`.
+`.github/workflows/claude-review.yml` posts a comment-only AI review on every push to a ready (non-draft) PR: security first (including sensitive detail in docs, specs and plans), a documentation check ("Docs: current" or findings) and advisory size and tests checks, ending with an advisory `Verdict:` line (`ready to merge` or `changes requested (N open)`). The owner can request one with a `@claude` comment (also on a draft). Each run draws on the Claude subscription usage limit. Token expiry and renewal: `deployment/expirations.md`.
 
 ## Skills
 
