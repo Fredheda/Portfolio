@@ -80,7 +80,7 @@ class MediaProxy:
             return None
         if target.port is not None and not self._insecure:
             return None
-        if target.host.lower() not in self._hosts:
+        if target.host not in self._hosts:
             return None
         return target
 
