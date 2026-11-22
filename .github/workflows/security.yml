@@ -1,6 +1,6 @@
 name: Security
 
-# PRs and a weekly run (full-history scan); gitleaks and workflow-lint also run on drafts. Locally: CLAUDE.md, "Security checks".
+# PRs and a weekly run (full-history scan); gitleaks and workflow-lint also run on drafts. Locally: AGENTS.md, "Security checks".
 on:
   pull_request:
     types: [opened, reopened, synchronize, ready_for_review]
