@@ -1,15 +1,5 @@
 #!/usr/bin/env bash
-# Provision (or update) the Container Apps environment + both apps from
-# infra/main.bicep. Idempotent — re-run to roll config changes.
-#
-# Sources the repo-root .env for all secrets (OpenAI key, Azure Search key).
-# .env is gitignored and never leaves this machine; auth to Azure is the live
-# `az login` session. The registry + resource group already exist; this only
-# adds the environment, identity, and the two apps.
-# Optional .env values BLOG_API_URL and BLOG_API_AUDIENCE switch the blog routes on.
-#
-# Usage: ./infra/deploy.sh [image-tag]
-#   image-tag defaults to the current git HEAD SHA (the tag build-push.sh set).
+# Usage: ./infra/deploy.sh [image-tag]   (default: git HEAD)
 set -euo pipefail
 cd "$(dirname "$0")/.."
 

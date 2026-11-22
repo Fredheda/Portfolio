@@ -69,10 +69,6 @@ poetry run python main.py              # local server, loopback only (the image 
 - No `[draft]` marker ships: a test fails on one. Mark text still waiting for the owner only on a branch.
 - Deploying a content change: see [deployment/README.md](../deployment/README.md).
 
-## Database
-
-The app stores no chat messages. The legacy `chatbot_logs` table remains in the shared database and nothing writes it.
-
 ## Search index (`data/`)
 
 The scripts that build the Azure AI Search index have heavier dependencies than the backend needs, so `data/` is its own Poetry project. This keeps those dependencies out of the production container image. Do not merge them into `backend/pyproject.toml`.

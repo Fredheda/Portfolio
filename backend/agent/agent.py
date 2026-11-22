@@ -12,12 +12,8 @@ from agent.mcp_tools import load_mcp_tools
 
 SYSTEM_PROMPT = (Path(__file__).parent / "system_prompt.md").read_text()
 
-# gpt-5.6-luna rejects any temperature other than its default (1) with
-# a 400 -- confirmed live, not just in docs -- so no temperature kwarg
-# is passed here. It also 400s on tool calls over /v1/chat/completions
-# unless reasoning_effort is explicitly set to "none" -- the string
-# shorthand "openai:gpt-5.6-luna" can't express that, so the model is
-# built explicitly instead.
+# gpt-5.6-luna 400s on any non-default temperature and on tool calls unless
+# reasoning_effort="none", which the "openai:" shorthand cannot set.
 _MODEL = ChatOpenAI(model="gpt-5.6-luna", reasoning_effort="none")
 
 
@@ -30,8 +26,7 @@ async def build_graph(
         model=model or _MODEL,
         tools=tools,
         system_prompt=SYSTEM_PROMPT,
-        # CopilotKitMiddleware declares its state type as StateSchema, which
-        # create_agent's invariant AgentState parameter rejects; works at runtime.
+        # create_agent's AgentState typing rejects CopilotKitMiddleware's StateSchema; works at runtime.
         middleware=[
             ContentSafetyMiddleware(client=moderation_client),
             CopilotKitMiddleware(),  # pyright: ignore[reportArgumentType]

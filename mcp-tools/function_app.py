@@ -8,10 +8,7 @@ from search_client import retrieve_information as _retrieve_information
 
 app = func.FunctionApp()
 
-# What the model reads when the search cannot run. Fixed on purpose: a
-# provider error (OpenAI, Azure AI Search) can carry a key prefix, an
-# organisation name, a request id or a host, and a tool result reaches the
-# model and the browser's event stream.
+# Fixed text: a provider error can carry keys or hosts, and a tool result reaches the model and the browser.
 SEARCH_UNAVAILABLE = (
     "Search is temporarily unavailable. Answer from what you already know and "
     "tell the visitor the background search could not be run."

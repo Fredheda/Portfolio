@@ -2,8 +2,6 @@ import { randomUUID } from 'node:crypto';
 import { test, expect } from '@playwright/test';
 import { humanTexts, modelCalls, resetBackend, runAgent } from '../helpers.js';
 
-// No browser: these check backend behaviour a browser test cannot see.
-
 test.beforeEach(async ({ request }) => {
   await resetBackend(request);
 });

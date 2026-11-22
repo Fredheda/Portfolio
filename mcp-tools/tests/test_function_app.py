@@ -53,10 +53,6 @@ def test_get_profile_returns_the_visible_page_content_without_the_hidden_about_t
     assert result["profile"]["name"] == "Frederik Heda"
 
 
-# A known id's full record is checked end to end, over MCP, by the browser
-# suite (frontend/e2e/full-stack/tools.spec.js).
-
-
 def test_get_project_details_unknown_id_returns_error():
     context = json.dumps({"arguments": {"project_id": "does-not-exist"}})
     result = json.loads(function_app.get_project_details(context=context))

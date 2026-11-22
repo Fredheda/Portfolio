@@ -1,9 +1,5 @@
 """The real backend app with a scripted model and fake moderation.
 
-Uses main.create_app and agent.build_graph, so the agent path, the agent
-name, the middleware order and the MCP client are production code. Adds
-test-only routes the Playwright specs read and drive.
-
 Run from backend/: PYTHONPATH=.. poetry run python -m e2e_backend.backend_server
 """
 
@@ -12,8 +8,7 @@ import os
 PORT = int(os.environ.get("E2E_BACKEND_PORT", "8210"))
 MCP_PORT = os.environ.get("E2E_MCP_PORT", "8211")
 
-# Set before importing the backend: main.py's load_dotenv() never overrides
-# variables that already exist, so a local .env cannot leak in.
+# Set before importing the backend: load_dotenv() never overrides existing variables, so no local .env leaks in.
 os.environ["OPENAI_API_KEY"] = "sk-e2e-dummy-key-not-used"
 os.environ["FUNCTION_APP_URL"] = f"http://127.0.0.1:{MCP_PORT}"
 os.environ["FUNCTION_MCP_KEY"] = os.environ.get("E2E_MCP_KEY", "e2e-test-key")
@@ -33,8 +28,6 @@ from e2e_backend.model import ScriptedChatModel  # noqa: E402
 
 MODEL = ScriptedChatModel()
 
-# The real client, routes and media proxy against the fake read API; only the
-# token provider and the plain-http loopback allowance are test seams.
 BLOG_HTTP = httpx.AsyncClient(follow_redirects=False)
 BLOG = BlogParts(
     client=HttpBlogClient(
