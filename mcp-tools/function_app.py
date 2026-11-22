@@ -3,7 +3,7 @@ import logging
 
 import azure.functions as func
 from content_loader import load_content
-from redact import redact
+from describe import describe
 from search_client import retrieve_information as _retrieve_information
 
 app = func.FunctionApp()
@@ -118,9 +118,5 @@ def retrieve_information(context) -> str:
         return _retrieve_information(search_query)
     except Exception as exc:
         # The trigger boundary: nothing may escape as an MCP error result.
-        logging.error(
-            "retrieve_information failed: %s: %s",
-            type(exc).__name__,
-            redact(str(exc)),
-        )
+        logging.error("retrieve_information failed: %s", describe(exc))
         return SEARCH_UNAVAILABLE
