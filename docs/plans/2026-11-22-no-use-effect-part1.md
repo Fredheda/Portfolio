@@ -10,12 +10,15 @@ For agentic workers: run task by task. Steps are checkboxes; flip each `- [ ]` t
 
 **Spec:** `docs/specs/2026-11-22-no-use-effect.md`
 
+Status: draft, awaiting specialist approval
+
 **Global constraints:**
 - No new dependency. No new comment in any file. Keep only the comments listed in Task 11.
 - Edit files with Edit and Write only. `git mv` and `git commit` are the only shell file operations.
 - Run every npm command from `frontend/`.
 - The worktree has no `node_modules`. Before Task 1, run `npm ci` in `frontend/` (its `postinstall` builds the site).
-- Two commits: the feature commit (Tasks 1 to 10), then the cleanup commit (Task 11). Messages are 2 lines max with no trailer.
+- Branch `pw80-no-use-effect`, in worktree `../.worktrees/Portfolio-pw80-no-use-effect`, created from the merged `main` before Task 0: `git -C <main checkout> worktree add ../.worktrees/Portfolio-pw80-no-use-effect -b pw80-no-use-effect origin/main`. Never work in the main checkout.
+- Commits: the feature commit (Tasks 1 to 10), the cleanup commit (Task 11), then the status commit (Task 12 Step 5). Messages are 2 lines max with no trailer.
 - Changed files: 25 including docs. Do not add a file outside the list in Task 12.
 
 ## TL;DR
@@ -76,7 +79,7 @@ flowchart TB
 Run from the repo root:
 
 ```bash
-grep -rn -E "useEffect|useLayoutEffect|useInsertionEffect" frontend/src | wc -l
+grep -rnE "\buse(Layout|Insertion)?Effect\(" frontend/src | grep -vE "\.test\.jsx?:|src/lib/effects/" | wc -l
 ```
 
 Expected output: `27`
@@ -120,12 +123,12 @@ Create `frontend/src/lint/noEffects.test.js`:
 ```js
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import process from 'node:process';
 import { ESLint } from 'eslint';
 import { describe, expect, it } from 'vitest';
 import { effectBaseline } from '../../eslint.config.js';
 
-const FRONTEND = fileURLToPath(new URL('../..', import.meta.url));
+const FRONTEND = process.cwd();
 const SRC = join(FRONTEND, 'src');
 const EFFECTS_DIR = join(SRC, 'lib', 'effects');
 const HOOK = /\buse(Layout|Insertion)?Effect\b/;
@@ -139,6 +142,14 @@ const violations = {
   renamedImport: 'import { useEffect as e } from "react";\nexport function C() { e(() => {}); }\n',
   namespaceCall: 'import React from "react";\nexport function C() { React.useEffect(() => {}); }\n',
   layoutImport: 'import { useLayoutEffect } from "react";\nexport function C() { useLayoutEffect(() => {}); }\n',
+  destructured: 'const { useEffect: e } = React;\nexport function C() { e(() => {}); }\n',
+  destructuredKey: 'const { "useEffect": e } = React;\nexport function C() { e(() => {}); }\n',
+};
+
+const reexports = {
+  namedReexport: 'export { useEffect } from "react";\n',
+  allReexport: 'export * from "react";\n',
+  aliasedExport: 'import { useEffect } from "react";\nexport { useEffect as useFx };\n',
 };
 
 async function bannedMessages(code, filePath) {
@@ -170,6 +181,11 @@ describe('effects rule', () => {
     expect(messages).toEqual([]);
   });
 
+  it.each(Object.entries(reexports))('flags %s inside src/lib/effects', async (_, code) => {
+    const messages = await bannedMessages(code, join(EFFECTS_DIR, 'snippet.js'));
+    expect(messages.length).toBeGreaterThan(0);
+  });
+
   it('lists exactly the files that still call an effect hook', () => {
     const withHook = sourceFiles
       .filter((path) => HOOK.test(readFileSync(path, 'utf8')))
@@ -195,7 +211,7 @@ From `frontend/`:
 npm test -- src/lint/noEffects.test.js
 ```
 
-Expected output: the file fails to load with `SyntaxError: The requested module '../../eslint.config.js' does not provide an export named 'effectBaseline'`, and `Test Files  1 failed`.
+Expected output: `Test Files  1 failed`, and the `lists exactly the files that still call an effect hook` case fails because `effectBaseline` is undefined. Observed in the dry run with the rule in place and the export removed: `Tests  1 failed | 16 passed (17)`. Run it from `frontend/`: the test reads the frontend root from `process.cwd()`.
 
 - [ ] **Step 3: Add the rule, the folder exemption and the baseline to the config**
 
@@ -223,10 +239,18 @@ const noEffects = {
     "no-restricted-syntax": ["error",
       { selector: "MemberExpression[property.name=/^use(Layout|Insertion)?Effect$/]", message: "No effects in components." },
       { selector: "MemberExpression[property.value=/^use(Layout|Insertion)?Effect$/]", message: "No effects in components." },
+      { selector: "ObjectPattern > Property[key.name=/^use(Layout|Insertion)?Effect$/]", message: "No effects in components." },
+      { selector: "ObjectPattern > Property[key.value=/^use(Layout|Insertion)?Effect$/]", message: "No effects in components." },
     ],
   },
 };
-const effectsFolder = { files: ["src/lib/effects/**"], rules: { "no-restricted-imports": "off", "no-restricted-syntax": "off" } };
+const NO_REEXPORT = "No re-export of react or of an effect hook.";
+const noReexports = [
+  { selector: 'ExportNamedDeclaration[source.value="react"]', message: NO_REEXPORT },
+  { selector: 'ExportAllDeclaration[source.value="react"]', message: NO_REEXPORT },
+  { selector: "ExportSpecifier[local.name=/^use(Layout|Insertion)?Effect$/]", message: NO_REEXPORT },
+];
+const effectsFolder = { files: ["src/lib/effects/**"], rules: { "no-restricted-imports": "off", "no-restricted-syntax": ["error", ...noReexports] } };
 const effectBaseline = [
   'src/components/Diagram.jsx',
   'src/components/FredbotPanel.jsx',
@@ -246,7 +270,7 @@ const effectBaseline = [
 ];
 const effectBaselineOverride = {
   files: effectBaseline,
-  rules: { 'no-restricted-imports': 'off', 'no-restricted-syntax': 'off' },
+  rules: { "no-restricted-imports": "off", "no-restricted-syntax": ["error", ...noReexports] },
 };
 
 export { effectBaseline };
@@ -279,7 +303,7 @@ new_string:
 npm test -- src/lint/noEffects.test.js
 ```
 
-Expected output: `Tests  10 passed (10)`. The 4 `flags` cases, the 4 `allows` cases, the baseline case (15 names match the grep in Task 0) and the eslint-disable case.
+Expected output (observed): `Tests  17 passed (17)`. The 6 `flags` cases, the 6 `allows` cases, the 3 `flags ... inside src/lib/effects` re-export cases, the baseline case (15 names match the grep in Task 0) and the eslint-disable case.
 
 - [ ] **Step 5: Lint the project**
 
@@ -291,7 +315,7 @@ Expected output: no errors (exit 0). The 15 baseline files are exempt, and no ot
 
 - [ ] **Step 6: Owner-runnable gate**
 
-Edit `frontend/src/components/Footer.jsx` temporarily is not allowed; instead confirm by a scratch file: create `frontend/src/components/Probe.jsx` with `import { useEffect } from 'react';\nexport default function Probe() { useEffect(() => {}); return null; }\n`, run `npx eslint src/components/Probe.jsx` from `frontend/`, expect an error `No effects in components`, then delete `Probe.jsx` with `rm frontend/src/components/Probe.jsx`. Expected: the eslint run prints `error  No effects in components` and exits 1. Delete the probe before continuing.
+Edit `frontend/src/components/Footer.jsx` temporarily is not allowed; instead confirm by a scratch file: create `frontend/src/components/Probe.jsx` with `import { useEffect } from 'react';\nexport default function Probe() { useEffect(() => {}); return null; }\n`, run `npx eslint src/components/Probe.jsx` from `frontend/`, expect an error `No effects in components`, then delete `Probe.jsx` with `rm frontend/src/components/Probe.jsx`. Expected (observed): the eslint run prints `error  'useEffect' import from 'react' is restricted. No effects in components. Use a hook from src/lib/effects/ (see docs/development.md)` and exits 1. Delete the probe before continuing.
 
 Commit is deferred to Task 10.
 
@@ -666,7 +690,7 @@ new_string: empty (delete the line). Use Edit with old_string `  'src/lib/useDoc
 npm test -- src/lib/effects src/pages/BlogPost.test.jsx src/pages/BlogIndex.test.jsx src/lint
 ```
 
-Expected output: all listed files pass. `src/lint` reports `Tests  10 passed (10)`, with the baseline now 14 entries; the consistency test passes because `useDocumentHead.js` no longer exists under `src/lib`.
+Expected output (observed): `Test Files  7 passed (7)` and `Tests  40 passed (40)` for the listed files. `src/lint` reports 17 tests, with the baseline now 14 entries; the consistency test passes because `useDocumentHead.js` no longer exists under `src/lib`.
 
 Commit is deferred to Task 10.
 
@@ -737,7 +761,7 @@ new_string: empty. Use old_string `  'src/components/Diagram.jsx',\n  'src/compo
 npm test -- src/components/Footer.test.jsx src/lint
 ```
 
-Expected output: `Footer.test.jsx` 4 passed; `src/lint` 10 passed.
+Expected output (observed): `Test Files  2 passed (2)`, `Tests  21 passed (21)`: `Footer.test.jsx` 4 passed and `src/lint` 17 passed.
 
 - [ ] **Step 5: Owner-runnable gate (manual)**
 
@@ -823,7 +847,7 @@ Note: the baseline also still lists `Footer` only if Task 4 was skipped; it was 
 npm test -- src/components/Headers src/lint
 ```
 
-Expected output: the same Headers counts as Step 1; `src/lint` 10 passed.
+Expected output (observed): the same Headers counts as Step 1 (11 tests); with `src/lint` (17) the run reports `Tests  28 passed (28)`.
 
 - [ ] **Step 5: Owner-runnable gate (manual)**
 
@@ -833,7 +857,7 @@ With `npm run dev` running, at a phone width (about 390 px, browser dev tools de
 
 **Files:**
 - Create: `frontend/src/lib/useScrollToTopRef.js`, `frontend/src/pages/About.test.jsx`
-- Modify: `frontend/src/components/PrivacyPolicy.jsx`, `frontend/src/pages/About.jsx`, `frontend/src/pages/ProjectPage.jsx`, `frontend/eslint.config.js`
+- Modify: `frontend/src/components/PrivacyPolicy.jsx`, `frontend/src/pages/About.jsx`, `frontend/src/pages/ProjectPage.jsx`, `frontend/src/pages/ProjectPage.test.jsx`, `frontend/eslint.config.js`
 
 Existing coverage: `PrivacyPolicy.test.jsx` "scrolls to the top on mount" and `ProjectPage.test.jsx` "keeps the toggle on and scrolls to the top when moving to another project". `About` has no test; its wiring is new, so it gets one.
 
@@ -947,7 +971,19 @@ function PrivacyPolicy() {
 
 - [ ] **Step 5: Convert ProjectPage**
 
-Edit `frontend/src/pages/ProjectPage.jsx`. Replace
+First add the unknown-slug test to `frontend/src/pages/ProjectPage.test.jsx`. Insert it before the test `links to GitHub in a new tab when the repo is public`:
+
+```jsx
+  it('scrolls to the top for an unknown slug', () => {
+    renderAt('/projects/no-such-project');
+    expect(screen.getByRole('heading', { level: 1, name: 'Page not found' })).toBeInTheDocument();
+    expect(window.scrollTo).toHaveBeenCalledWith(0, 0);
+  });
+```
+
+Run it on the current code (before any change here): it passes, because the old effect scrolls for every slug.
+
+Then convert the page. Edit `frontend/src/pages/ProjectPage.jsx`. Replace
 
 old_string:
 ```js
@@ -1000,6 +1036,29 @@ old_string: `    <article className="hero-wash">`
 
 new_string: `    <article key={slug} ref={scrollToTop} className="hero-wash">`
 
+- [ ] **Step 5a: Run the unknown-slug test on the naive conversion (must fail)**
+
+The article now scrolls, but the NotFound branch has no ref yet:
+
+```bash
+npm test -- src/pages/ProjectPage.test.jsx
+```
+
+Expected output (observed): one failure, `scrolls to the top for an unknown slug` (`AssertionError: expected "vi.fn()" to be called with arguments: [ +0, +0 ]`), and `Tests  1 failed | 6 passed (7)`. Record the actual summary line in the PR description.
+
+- [ ] **Step 5b: Wrap the NotFound branch with the same ref and key**
+
+Edit `frontend/src/pages/ProjectPage.jsx`. Replace
+
+old_string: `  if (!project) return <NotFound />;`
+
+new_string:
+```js
+  if (!project) return <div key={slug} ref={scrollToTop}><NotFound /></div>;
+```
+
+Run `npm test -- src/pages/ProjectPage.test.jsx`. Expected output (observed): `Tests  7 passed (7)`, all green.
+
 - [ ] **Step 6: Remove the three files from the baseline**
 
 Edit `frontend/eslint.config.js`: replace
@@ -1037,7 +1096,7 @@ new_string:
 npm test -- src/pages/About.test.jsx src/components/PrivacyPolicy.test.jsx src/pages/ProjectPage.test.jsx src/lint
 ```
 
-Expected output: About 1 passed; PrivacyPolicy 2 passed; ProjectPage all passed; `src/lint` 10 passed.
+Expected output (observed): `Test Files  4 passed (4)` and `Tests  27 passed (27)`: About 1, PrivacyPolicy 2, ProjectPage 7, `src/lint` 17.
 
 - [ ] **Step 8: Owner-runnable gate (manual)**
 
@@ -1090,7 +1149,7 @@ new_string:
   useTimeout(() => setBooted(true), BOOT_DELAY_MS);
 ```
 
-The `useEffect` import stays: eight other effects remain in this file.
+The `useEffect` import stays: six other effects remain in this file (the `useEffect` calls at spec rows 5, 6, 7, 9, 10 and 11).
 
 - [ ] **Step 3: Run the test**
 
@@ -1216,7 +1275,7 @@ Expected output: the same 9 files (prefixed `frontend/`), no others.
 npm run lint && npm test
 ```
 
-Expected output: lint exits 0 with no output; `Test Files` all passed, no failures. Record the counts for the PR description.
+Expected output (observed): lint exits 0 with no output; `Test Files  37 passed (37)` and `Tests  200 passed (200)`. Record the counts for the PR description.
 
 ## Task 10: Docs and the feature commit
 
@@ -1259,14 +1318,14 @@ Components do not call `useEffect`, `useLayoutEffect` or `useInsertionEffect`; E
 
 - [ ] **Step 2: Commit the feature change**
 
-From the worktree root, stage the listed files only:
+The code PR starts from `main` after the docs PR (#142) merges, so the spec, plan and diagram are already on `main` and are not staged here. The branch `pw80-no-use-effect` is created before Task 0 from the merged `main` (see Global constraints). Stage the code files and docs only:
 
 ```bash
-git add docs/specs/2026-11-22-no-use-effect.md docs/plans/2026-11-22-no-use-effect-part1.md docs/plans/diagrams/2026-11-22-no-use-effect-part1.mmd docs/development.md frontend/eslint.config.js frontend/src
-git commit -m "PW-80: ban effect hooks outside src/lib/effects, baseline 15 to 9 files" -m "Convert 9 call sites with non-effect means and named hooks; spec and plan."
+git add docs/development.md frontend/eslint.config.js frontend/src
+git commit -m "PW-80: ban effect hooks outside src/lib/effects, baseline 15 to 9 files" -m "Convert 9 call sites with non-effect means and named hooks."
 ```
 
-Expected output: one commit line `[pw80-no-use-effect-docs <sha>] PW-80: ban effect hooks ...` and `N files changed`. The message is 2 lines (subject plus one body line).
+Expected output: one commit line `[pw80-no-use-effect <sha>] PW-80: ban effect hooks ...` and `23 files changed, 397 insertions(+), 114 deletions(-)` (observed in the dry run; the cleanup commit adds none). The message is 2 lines (subject plus one body line).
 
 ## Task 11: Cleanup commit (comments in touched files)
 
@@ -1343,13 +1402,13 @@ old_string:
 Keep these blocks (constraint or workaround): `The panel sits mid-page...` (preventScroll), `Fire-and-forget warm-up ping...` (cold start workaround), `Once the reply has something to show...` (unmount constraint), `A run that fails...` (RUN_ERROR workaround), `Jump the log (not the window)...` (scroll constraint).
 
 Delete each of these blocks in full (copy exact text from the file at this commit):
-1. `// True from the first message's send until its real reply starts` through `// single instance never resets itself).` (8 lines above `const [introWaitActive...]`).
+1. `// True from the first message's send until its real reply starts` through `// single instance never resets itself).` (7 lines above `const [introWaitActive...]`).
 2. `// Escalating "still working" indicator for messages after the first one` through `// 3s -- covers slow real replies, e.g. an MCP tool call.` (5 lines above `const [waitStage...]`).
 3. Trailing comment: replace `  const [waitStage, setWaitStage] = useState('none'); // 'none' | 'thinking' | 'sequence'` with `  const [waitStage, setWaitStage] = useState('none');`.
 4. `// Input stays hidden for the whole exchange -- the fake sequence's own` through `// AND finish revealing at its throttled typing pace.` (3 lines).
 5. `// The moment real content starts arriving for the in-flight reply, the` through `// rather than waiting for its own timers to unwind.` (3 lines).
 6. `// Idle cursor-blink boot beat before the terminal "wakes up".` (1 line, above `useTimeout`).
-7. `// The user's own message renders immediately via the turn list below --` through `// in the render) until the fake sequence ends.` (2 lines in sendMessage).
+7. `// The user's own message renders immediately via the turn list below --` through `// in the render) until the fake sequence ends.` (3 lines in sendMessage).
 8. `// The intro theater plays once, on the first message of a session.` (1 line).
 9. `// Escalating "still working" indicator, armed on every send: "thinking` through `// indicator picks up from the real elapsed time instead of resetting.` (5 lines in sendMessage).
 10. `// A cleared thread is a new session -- the intro sequence should play` through `// again on its first message.` (2 lines in clearChat).
@@ -1394,7 +1453,7 @@ git add frontend/src/components/Headers.jsx frontend/src/components/terminal/Typ
 git commit -m "PW-80: remove comments in touched files" -m "Keep only constraint and workaround comments."
 ```
 
-Expected output: one commit line and `4 files changed` (fewer lines than before).
+Expected output (observed): one commit line and `4 files changed, 1 insertion(+), 53 deletions(-)`. The `git diff origin/main -- frontend/src | grep '^+' | grep -E '^\+\s*(//|/\*)'` check printed nothing, and no `-  it(` line was removed.
 
 ## Task 12: Acceptance and PR
 
@@ -1408,7 +1467,7 @@ From `frontend/`:
 npm run lint && npm test && npm run e2e
 ```
 
-Expected output: lint exit 0; vitest all green; Playwright all green. The e2e run needs `npx playwright install chromium` once and `poetry install` in `backend/` (see `docs/development.md`, "Browser tests"). Two runs at once need distinct ports.
+Expected output (observed in the dry run): lint exit 0; `Tests  200 passed (200)` in 37 files; Playwright `67 passed`, exit 0 (the e2e run builds first). The e2e run needs `npx playwright install chromium` once and `poetry install` in `backend/` (see `docs/development.md`, "Browser tests"). Two runs at once need distinct ports.
 
 - [ ] **Step 2: Count changed files and lines**
 
@@ -1418,14 +1477,14 @@ From the repo root:
 git diff --stat origin/main | tail -1
 ```
 
-Expected: 25 files changed or fewer (docs included) and a total changed-line count well under 5000.
+Expected (observed in the dry run, code commits only): `23 files changed, 397 insertions(+), 114 deletions(-)`. Step 5 adds 2 files (the spec and the plan), so the PR changes 25 files: the limit. Changed lines: 511, well under 5000.
 
 - [ ] **Step 3: Before and after list for the PR description**
 
 Run:
 
 ```bash
-grep -rn -E "useEffect|useLayoutEffect|useInsertionEffect" frontend/src | wc -l
+grep -rnE "\buse(Layout|Insertion)?Effect\(" frontend/src | grep -vE "\.test\.jsx?:|src/lib/effects/" | wc -l
 ```
 
 Expected output: `18` (27 minus the 9 converted call sites). Put in the PR description the table from `docs/specs/2026-11-22-no-use-effect.md` section 1 with the result column filled in, and the baseline change `15 to 9`.
@@ -1435,6 +1494,20 @@ Expected output: `18` (27 minus the 9 converted call sites). Put in the PR descr
 Open a draft with `gh pr create --draft`, title `PW-80: ban effect hooks outside src/lib/effects (part 1)`. Before `gh pr ready`, run `auditing-branch-changes` and put its result in the PR-ready hand-over and the ticket comment. Run `./scripts/ci-local.sh` green before `gh pr ready`.
 
 The PR description ends with the attribution line given by the session, and it lists the 9 converted call sites and the before/after table. It says `Comments: no file gains a comment; comment count drops in Headers.jsx, TypedMarkdown.jsx, FredbotPanel.jsx, useDocumentHead.js`.
+
+- [ ] **Step 5: Mark the spec and plan done (status commit)**
+
+The spec and plan are on `main` from the docs PR. This commit edits only their `Status:` line, after the PR number is known:
+
+In `docs/specs/2026-11-22-no-use-effect.md`, replace `Status: draft, awaiting specialist approval` with `Status: done (PR #n)`. In `docs/plans/2026-11-22-no-use-effect-part1.md`, replace the same line with `Status: done (PR #n)`. Use the real number for `n`. Then:
+
+```bash
+git add docs/specs/2026-11-22-no-use-effect.md docs/plans/2026-11-22-no-use-effect-part1.md
+git commit -m "PW-80: mark spec and plan done" -m "Status line only; PR #n."
+git push
+```
+
+Expected output (predicted, not run in the dry run): one commit line, `2 files changed, 2 insertions(+), 2 deletions(-)`, then a push to `pw80-no-use-effect`. Both files count toward the 25-file limit (Step 2 includes them).
 
 ## Self-check (done by the planner)
 

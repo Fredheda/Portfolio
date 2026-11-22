@@ -13,7 +13,7 @@ Why: a component that calls `useEffect` syncs state after render, which causes e
 
 ## 1. The 27 current calls
 
-Found with `grep -rn -E "useEffect|useLayoutEffect|useInsertionEffect" frontend/src` (15 files). Class: N = non-effect means, F = named hook in the effects folder, K = kept for part 2 (reason in the last column).
+Found with `grep -rnE "\buse(Layout|Insertion)?Effect\(" frontend/src | grep -vE "\.test\.jsx?:|src/lib/effects/" | wc -l` (27 calls on main, in 15 files). Class: N = non-effect means, F = named hook in the effects folder, K = kept for part 2 (reason in the last column).
 
 | # | File:line | What it does | Class | Part 1 result |
 |---|---|---|---|---|
@@ -39,7 +39,7 @@ Found with `grep -rn -E "useEffect|useLayoutEffect|useInsertionEffect" frontend/
 | 20 | `lib/useBlogAvailable.js:17` | blog list request with retries | K fetch on show | kept |
 | 21 | `lib/useToolTimings.js:11` | agent tool-call event subscription | K subscription | kept |
 | 22 | `lib/useDocumentHead.js:6` | sets title and robots meta while shown | F | moved to `lib/effects/useDocumentHead.js` |
-| 23 | `pages/ProjectPage.jsx:33` | scroll to top when project changes | N | ref callback with `key={slug}` on the root |
+| 23 | `pages/ProjectPage.jsx:33` | scroll to top when project changes | N | ref callback on the article and on the NotFound wrapper, both with `key={slug}` |
 | 24 | `pages/About.jsx:8` | scroll to top on mount | N | ref callback, `useScrollToTopRef` |
 | 25 | `pages/BlogPost.jsx:19` | scroll to top when slug changes | K | kept: scroll timing depends on load state |
 | 26 | `pages/BlogPost.jsx:23` | post `getPost` request with abort | K fetch on show | kept |
@@ -63,16 +63,31 @@ const noEffects = {
     "no-restricted-syntax": ["error",
       { selector: "MemberExpression[property.name=/^use(Layout|Insertion)?Effect$/]", message: "No effects in components." },
       { selector: "MemberExpression[property.value=/^use(Layout|Insertion)?Effect$/]", message: "No effects in components." },
+      { selector: "ObjectPattern > Property[key.name=/^use(Layout|Insertion)?Effect$/]", message: "No effects in components." },
+      { selector: "ObjectPattern > Property[key.value=/^use(Layout|Insertion)?Effect$/]", message: "No effects in components." },
     ],
   },
 };
-const effectsFolder = { files: ["src/lib/effects/**"], rules: { "no-restricted-imports": "off", "no-restricted-syntax": "off" } };
+const NO_REEXPORT = "No re-export of react or of an effect hook.";
+const noReexports = [
+  { selector: 'ExportNamedDeclaration[source.value="react"]', message: NO_REEXPORT },
+  { selector: 'ExportAllDeclaration[source.value="react"]', message: NO_REEXPORT },
+  { selector: "ExportSpecifier[local.name=/^use(Layout|Insertion)?Effect$/]", message: NO_REEXPORT },
+];
+const effectsFolder = { files: ["src/lib/effects/**"], rules: { "no-restricted-imports": "off", "no-restricted-syntax": ["error", ...noReexports] } };
+const effectBaselineOverride = {
+  files: effectBaseline,
+  rules: { "no-restricted-imports": "off", "no-restricted-syntax": ["error", ...noReexports] },
+};
 ```
 
 Rules:
 - Core ESLint rules only. No plugin, no new dependency.
 - The first selector catches `React.useEffect` and `ns.useLayoutEffect`; the second catches `React["useEffect"]`.
+- The third and fourth selectors catch destructuring: `const { useEffect: e } = React` and `const { "useEffect": e } = React`.
 - `no-restricted-imports` checks the imported name, so `import { useEffect as e }` is caught.
+- `effectsFolder` and `effectBaselineOverride` keep `no-restricted-imports` off and set `no-restricted-syntax` to the three re-export selectors: `export ... from "react"`, `export * from "react"` and `export { useEffect as x }`. No file in those two sets can re-export an effect hook under another name.
+- Outside those two sets a re-export is caught only where `no-restricted-imports` matches it (named re-export from `react`). `export * from "react"` in a component is not caught by this config; part 1 accepts that gap.
 - Exemption is by folder only (`src/lib/effects/**`), never by line or by comment. A file under `src/` must not contain an `eslint-disable` for either rule; a test checks this.
 - Part 1 sets no rule to `warn`.
 
@@ -163,7 +178,8 @@ Risks:
 - TypedMarkdown: the reveal timer moves from a self-rescheduling `setTimeout` chain to `useInterval`. The first word must still appear at mount, so `revealed` starts at `min(tokens.length, WORDS_PER_TICK)`. The existing test "reveals the text one word per tick" checks this.
 - Headers: the body `overflow` reset moves from effect cleanup to the handlers. `App.jsx` renders `Header` once, outside `Routes`, so it never unmounts; no reset on unmount is needed.
 - ProjectPage: `key={slug}` on the article remounts it on project change. The engineer toggle lives in `sessionStorage` and in `ProjectPage` state, not in the article, so it survives.
+- ProjectPage unknown slug: the old effect scrolled to the top before `NotFound` rendered. Chosen: keep that scroll. The NotFound branch is wrapped in a `div` with the same ref and `key={slug}`, so both branches share one ref callback. Why not document the change: the scroll is the existing behaviour and costs one wrapper element. A test "scrolls to the top for an unknown slug" in `ProjectPage.test.jsx` guards it; it fails when the NotFound wrapper is missing.
 - Scroll on mount via a ref runs in the commit phase, before paint, like a layout effect. For `PrivacyPolicy`, `About` and `ProjectPage` the timing matches the old effect within one frame; no visible change is expected.
-- ESLint in tests: the fixture test uses the ESLint Node API under vitest's jsdom environment. If jsdom breaks it, the fix is a `test.environmentMatchGlobs` entry in `frontend/vite.config.mjs`, not a comment in the test file.
+- ESLint in tests: the fixture test runs the ESLint Node API under vitest's jsdom environment, and it passes there (17 cases). Under jsdom `import.meta.url` is not a file URL, so the test takes the frontend root from `process.cwd()`; `npm test` runs from `frontend/`. No environment change is needed: `environmentMatchGlobs` is not in the Vitest 5 docs (checked for v5.0.3), and a `// @vitest-environment node` pragma fails because `vitest.setup.js` touches `window`.
 - The e2e `no-restricted-syntax` override for `e2e/**/*.spec.js` replaces this rule's options for spec files. Spec files contain no effects, so no check is lost; the fixture test does not cover them.
 - A part 1 reviewer should confirm that the folder holds only named hooks and that no file outside it gained a call.
