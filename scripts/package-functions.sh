@@ -1,17 +1,5 @@
 #!/usr/bin/env bash
-# Build the deployment zip for the Function App from a source tree.
-#
-# SRC_ROOT is a directory laid out like this repository at some commit (the
-# workflow fills it with `git archive`). The script reads nothing from the
-# directory it runs in, so it also packages commits older than this script.
-#
-# It copies the site content file (content/site-content.json, the single source
-# of truth) into the function folder, where mcp-tools/content/ is git-ignored,
-# then zips that folder's contents, leaving out local-only files, tests and
-# caches. Dependencies are not installed here: the deploy asks Azure for a
-# remote build.
-#
-# Usage: ./scripts/package-functions.sh SRC_ROOT OUT_ZIP
+# Reads nothing from the current directory, so it packages commits older than this script.
 set -euo pipefail
 
 src="${1:?usage: package-functions.sh SRC_ROOT OUT_ZIP}"

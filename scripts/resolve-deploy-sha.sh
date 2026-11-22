@@ -1,16 +1,7 @@
 #!/usr/bin/env bash
-# Decide which commit the `Deploy functions` workflow deploys, and refuse
-# anything that should not reach production. Everything here needs only git,
-# so the workflow runs it before it logs in to Azure.
-#
-# Prints the full 40-character SHA on stdout. Exits 1 with an `ERROR:` line on
-# stderr when the input is not a full lowercase SHA, is not a commit of this
-# repository, is not on origin/main, or predates the files a deploy needs.
-#
-# Usage: ./scripts/resolve-deploy-sha.sh [SHA]   (empty = head of origin/main)
+# Needs only git: it runs before the Azure login.
 set -euo pipefail
 
-# Paths that must exist at the commit for the package to be buildable.
 REQUIRED_PATHS=(
   mcp-tools/function_app.py
   mcp-tools/host.json

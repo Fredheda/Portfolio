@@ -1,17 +1,5 @@
 #!/usr/bin/env bash
-# Log the Azure CLI in from a GitHub Actions job with OpenID Connect: no stored
-# secret. Asks the runner for a short-lived GitHub OIDC token and exchanges it
-# for an Azure session as the given managed identity, whose federated
-# credential must trust this repo (see setup-github-deploy.sh).
-#
-# This is the same exchange the azure/login action performs; it is done here
-# with the Azure CLI so the pipeline needs no third-party action (the repo only
-# allows a short list of actions).
-#
-# Usage: ./scripts/ci-azure-login.sh <managed-identity-client-id>
-# Needs: AZURE_TENANT_ID and AZURE_SUBSCRIPTION_ID in the environment, and the
-# job to have `permissions: id-token: write` (that is what sets
-# ACTIONS_ID_TOKEN_REQUEST_URL and ACTIONS_ID_TOKEN_REQUEST_TOKEN).
+# The azure/login action does the same exchange; the repo allows only a short list of actions.
 set -euo pipefail
 
 client_id="${1:?usage: ci-azure-login.sh <client-id>}"

@@ -1,13 +1,6 @@
 #!/usr/bin/env bash
-# Smoke check after a rollout: wait until the latest revision of each app
-# reports provisioningState Provisioned.
-# Usage: ./scripts/wait-healthy.sh [timeout_seconds=300] [interval_seconds=5]
-#
-# Exits 1 as soon as a revision reports Failed, or when the overall timeout
-# passes. It never rolls anything back: rollback is a deliberate
-# `redeploy.sh <old-sha>`. A freshly updated app can keep serving from its
-# previous revision for a short while, so this checks the new revision's own
-# state rather than the app's traffic.
+# Checks the new revision's own state: a freshly updated app can keep serving from its
+# previous revision for a while. Never rolls back; that is a deliberate redeploy.sh.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 # shellcheck source=lib/images.sh

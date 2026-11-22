@@ -1,15 +1,6 @@
 #!/usr/bin/env bash
-# Push a package zip to the Function App and check that it serves functions.
-#
-# The app is on the Flex Consumption plan, which accepts only package
-# deployment; Python needs a remote build so dependencies are installed for
-# Linux on Azure's side. After the push the function list can stay empty for a
-# short while, so it is polled until at least one function shows up. An empty
-# list at the timeout fails the deploy. A failing `function list` call counts
-# as "not yet", not as fatal.
-#
-# Usage: ./scripts/deploy-functions.sh ZIP [TIMEOUT_SECONDS=300] [INTERVAL_SECONDS=5]
-# Needs a live `az` session (ci-azure-login.sh in CI).
+# Flex Consumption accepts only package deployment, and Python needs a remote build.
+# The function list can stay empty after the push: a failing list call counts as "not yet".
 set -euo pipefail
 
 APP=func-portfolio-mcp-tools

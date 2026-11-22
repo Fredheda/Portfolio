@@ -1,11 +1,5 @@
 #!/usr/bin/env python3
-"""Turn a `pip install --dry-run --report` file into exact pins.
-
-Prints one `name==version` per line, sorted, names canonical, after a header.
-Refuses an empty report and a requirement that is not a plain index version.
-
-Usage: report_to_pins.py REPORT.json
-"""
+"""Refuses an empty report and any requirement that is not a plain index version."""
 
 import json
 import re

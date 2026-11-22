@@ -1,15 +1,4 @@
 #!/usr/bin/env bash
-# Ship a code change: build+push the images for the current commit, then roll
-# both container apps to them. Just `build-push.sh` followed by `redeploy.sh`,
-# with a clean-working-tree guard so the SHA-tagged image honestly matches HEAD.
-#
-# Use this for CODE changes to backend/ or frontend/ ONLY -- it does not
-# touch mcp-tools/ (a separate Azure Function App, not a Container App; use
-# ./scripts/deploy-mcp-tools.sh for that) or INFRA changes (infra/main.bicep,
-# secrets; use ./infra/deploy.sh for those). See deployment/README.md for the full
-# picture of all three.
-#
-# Usage: ./scripts/ship.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
