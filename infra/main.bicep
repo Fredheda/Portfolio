@@ -1,20 +1,3 @@
-// Azure Container Apps deployment for the Portfolio site.
-//
-// Provisions, into the existing rg-chatbot resource group (shared with
-// copilot-kit-exp, along with its ACR — nothing else is shared, this project
-// gets its own Container Apps environment: cae-portfolio):
-//   - a Container Apps environment (no Log Analytics — same as cae-chatbot)
-//   - a user-assigned managed identity granted AcrPull on the EXISTING registry
-//   - the backend app  (ca-portfolio-backend): internal ingress only
-//   - the frontend app (ca-portfolio-web):     external ingress, public site
-//
-// No Easy Auth anywhere here — unlike copilot-kit-exp's gated demo, this site
-// must stay fully public.
-//
-// Deploy with infra/deploy.sh (sources the repo-root .env for all secrets —
-// there are too many here, three, for one-by-one interactive prompting to
-// still be the best UX, unlike copilot-kit-exp's single OpenAI-key prompt).
-
 @description('Region for all resources. Defaults to the resource group location.')
 param location string = resourceGroup().location
 
@@ -45,9 +28,6 @@ param azureSearchApiKey string
 param azureSearchEndpoint string
 param azureIndexName string
 
-param azureSqlServer string
-param azureSqlDatabase string
-
 @description('Azure Function App name (MCP tools server).')
 param functionAppName string = 'func-portfolio-mcp-tools'
 
@@ -67,11 +47,9 @@ param blogApiUrl string = ''
 @description('Blog read API audience, api://<application id>. Needed together with blogApiUrl.')
 param blogApiAudience string = ''
 
-// Built-in AcrPull role definition ID (constant across all tenants).
 var acrPullRoleId = '7f951dda-4ed3-4680-a7ca-43fe172d538d'
 var loginServer = '${acrName}.azurecr.io'
 
-// The registry already exists (shared with copilot-kit-exp) — reference, don't create.
 resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' existing = {
   name: acrName
 }
@@ -86,8 +64,6 @@ resource blogReadIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023
   location: location
 }
 
-// Blog settings reach the backend only once a URL is given. Without them the
-// backend mounts no /blog routes.
 var blogEnv = empty(blogApiUrl) ? [] : [
   { name: 'BLOG_API_URL', value: blogApiUrl }
   { name: 'BLOG_API_AUDIENCE', value: blogApiAudience }
@@ -104,9 +80,7 @@ resource acrPull 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   }
 }
 
-// No Log Analytics — same reasoning as cae-chatbot: omitting
-// appLogsConfiguration entirely avoids the one meter that silently accrues.
-// Live logs remain available via `az containerapp logs show --follow`.
+// No appLogsConfiguration on purpose: a Log Analytics destination bills silently.
 resource environment 'Microsoft.App/managedEnvironments@2025-01-01' = {
   name: environmentName
   location: location
@@ -124,8 +98,6 @@ resource functionStorage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   }
 }
 
-// Flex Consumption ships code from a blob container rather than
-// WEBSITE_RUN_FROM_PACKAGE — this is that deployment target.
 resource functionDeploymentContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
   name: '${functionStorage.name}/default/deployments'
 }
@@ -146,10 +118,6 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
   kind: 'functionapp,linux'
   properties: {
     serverFarmId: functionPlan.id
-    // Flex Consumption moves language/version and deployment source out of
-    // siteConfig.linuxFxVersion and into this block. 3.13 (unlike on Linux
-    // Consumption) is GA here, matching the Python version used everywhere
-    // else in this project.
     functionAppConfig: {
       deployment: {
         storage: {
@@ -184,8 +152,6 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
   }
 }
 
-// Backend: internal ingress only — no public endpoint. Reachable in-environment
-// as http://ca-portfolio-backend (port 80 -> targetPort 8000).
 resource backend 'Microsoft.App/containerApps@2025-01-01' = {
   name: backendAppName
   location: location
@@ -216,10 +182,7 @@ resource backend 'Microsoft.App/containerApps@2025-01-01' = {
       ]
       secrets: [
         { name: 'openai-api-key', value: openaiApiKey }
-        // Container Apps rejects an empty secret value, so fall back to a
-        // placeholder on first deploy (before the real MCP key is known) —
-        // infra/deploy.sh's post-deploy steps replace it via `az containerapp
-        // secret set` once the Function App's system key can be fetched.
+        // Container Apps rejects an empty secret value; deploy.sh sets the real key later.
         { name: 'function-mcp-key', value: empty(functionMcpKey) ? 'unset' : functionMcpKey }
       ]
     }
@@ -236,11 +199,6 @@ resource backend 'Microsoft.App/containerApps@2025-01-01' = {
             { name: 'OPENAI_API_KEY', secretRef: 'openai-api-key' }
             { name: 'FUNCTION_APP_URL', value: 'https://${functionApp.properties.defaultHostName}' }
             { name: 'FUNCTION_MCP_KEY', secretRef: 'function-mcp-key' }
-            { name: 'AZURE_SQL_SERVER', value: azureSqlServer }
-            { name: 'AZURE_SQL_DATABASE', value: azureSqlDatabase }
-            // Presence of this var is what makes database_client.py pick
-            // ActiveDirectoryMSI auth (this identity) over ActiveDirectoryDefault.
-            { name: 'AZURE_CLIENT_ID', value: identity.properties.clientId }
           ], blogEnv)
         }
       ]
@@ -252,7 +210,6 @@ resource backend 'Microsoft.App/containerApps@2025-01-01' = {
   }
 }
 
-// Frontend: external ingress, public. Talks to the backend over in-environment DNS.
 resource frontend 'Microsoft.App/containerApps@2025-01-01' = {
   name: frontendAppName
   location: location
@@ -274,13 +231,7 @@ resource frontend 'Microsoft.App/containerApps@2025-01-01' = {
         external: true
         targetPort: 3000
         transport: 'auto'
-        // ARM's PUT on this Container App treats the whole `ingress` object
-        // as authoritative, so any redeploy that omits customDomains wipes
-        // the production domain binding (this happened — see git history
-        // around 2026-08-29). The two hostnames/certs below were originally
-        // bound imperatively (docs/Portfolio/plans/2026-08-09-azure-migration.md
-        // Task 7); declaring them here makes every future deploy preserve
-        // them instead of resetting them.
+        // ingress is authoritative on PUT: omitting customDomains drops the production domain binding
         customDomains: [
           {
             name: 'frederikheda.com'

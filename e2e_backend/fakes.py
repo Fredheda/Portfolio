@@ -1,6 +1,6 @@
-"""Stand-ins for the OpenAI moderation client and the Azure SQL logger.
+"""Stand-in for the OpenAI moderation client.
 
-Neither defines __len__ or __bool__: the middlewares use `client or default`,
+It defines neither __len__ nor __bool__: the middleware uses `client or default`,
 so a falsy fake would be silently replaced by the real client.
 """
 
@@ -17,11 +17,3 @@ class FlaggingModeration:
         return SimpleNamespace(
             results=[SimpleNamespace(flagged=FLAGGED_KEYWORD in input)]
         )
-
-
-class RecordingDatabase:
-    def __init__(self):
-        self.rows: list[list] = []
-
-    def log_chatbot_interaction(self, message: str, message_type: str, duration: int):
-        self.rows.append([message, message_type, duration])

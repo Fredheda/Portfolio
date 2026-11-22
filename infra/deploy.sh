@@ -1,18 +1,5 @@
 #!/usr/bin/env bash
-# Provision (or update) the Container Apps environment + both apps from
-# infra/main.bicep. Idempotent — re-run to roll config changes.
-#
-# Sources the repo-root .env for all secrets (OpenAI key, Azure Search key —
-# too many for copilot-kit-exp's one-secret interactive-prompt pattern to
-# still be the best UX). Azure SQL access is passwordless (Microsoft Entra
-# ID via the identity Bicep creates), so there's no SQL secret to source.
-# .env is gitignored and never leaves this machine; auth to Azure is the live
-# `az login` session. The registry + resource group already exist; this only
-# adds the environment, identity, and the two apps.
-# Optional .env values BLOG_API_URL and BLOG_API_AUDIENCE switch the blog routes on.
-#
-# Usage: ./infra/deploy.sh [image-tag]
-#   image-tag defaults to the current git HEAD SHA (the tag build-push.sh set).
+# Usage: ./infra/deploy.sh [image-tag]   (default: git HEAD)
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -25,7 +12,7 @@ set -a
 source .env
 set +a
 
-for var in OPENAI_API_KEY azure_search_api_key azure_search_endpoint azure_index_name AZURE_SQL_SERVER AZURE_SQL_DATABASE; do
+for var in OPENAI_API_KEY azure_search_api_key azure_search_endpoint azure_index_name; do
   [ -n "${!var:-}" ] || { echo "ERROR: $var is empty in .env" >&2; exit 1; }
 done
 
@@ -38,8 +25,6 @@ az deployment group create \
     azureSearchApiKey="$azure_search_api_key" \
     azureSearchEndpoint="$azure_search_endpoint" \
     azureIndexName="$azure_index_name" \
-    azureSqlServer="$AZURE_SQL_SERVER" \
-    azureSqlDatabase="$AZURE_SQL_DATABASE" \
     functionMcpKey="${FUNCTION_MCP_KEY:-}" \
     blogApiUrl="${BLOG_API_URL:-}" \
     blogApiAudience="${BLOG_API_AUDIENCE:-}" \
