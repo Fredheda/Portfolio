@@ -1,9 +1,3 @@
-"""Tests for `scripts/report_to_pins.py`.
-
-The script turns a `pip install --dry-run --report` file into the exact pins of
-`mcp-tools/requirements.txt`.
-"""
-
 import json
 import subprocess
 import sys

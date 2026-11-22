@@ -1,9 +1,4 @@
-"""The container images listen on all interfaces. Local servers listen on
-loopback by default (tests: backend/tests/test_listen_address.py and the
-`server` e2e project); the frontend image sets HOST=0.0.0.0 and the backend
-image passes --host 0.0.0.0 to uvicorn, so Container Apps ingress and probes
-can reach them. If an image lost that setting the app would answer only inside
-its own container. Text-based: no Docker or server runs here."""
+"""Images must listen on 0.0.0.0, or ingress and probes cannot reach the app. Text-based: no Docker runs here."""
 
 import re
 from pathlib import Path

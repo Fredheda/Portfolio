@@ -1,7 +1,3 @@
-"""Tests for scripts/changed-areas.sh, which decides whether a PR needs the
-heavy CI jobs. A PR that only touches documentation prints `code=false`;
-anything else prints `code=true`."""
-
 import subprocess
 from pathlib import Path
 
@@ -46,12 +42,10 @@ def run_script(repo: Path) -> list[str]:
 
 
 def classify(repo: Path) -> str:
-    """The `code=` line."""
     return run_script(repo)[0]
 
 
 def data_flag(repo: Path) -> str:
-    """The `data=` line."""
     return run_script(repo)[1]
 
 
@@ -64,8 +58,7 @@ def test_only_markdown_and_docs_is_not_code(repo: Path) -> None:
 
 
 def test_markdown_outside_the_docs_folders_is_code(repo: Path) -> None:
-    # backend/agent/system_prompt.md is read at runtime, so a prompt-only PR
-    # must run the backend tests and e2e.
+    # system_prompt.md is runtime input: a prompt-only PR runs the code jobs.
     prompt = repo / "backend" / "agent" / "system_prompt.md"
     prompt.parent.mkdir(parents=True)
     prompt.write_text("changed\n")
@@ -134,9 +127,7 @@ def test_ci_runs_on_pull_requests_only_and_builds_nothing() -> None:
 
 
 def test_every_heavy_job_skips_on_docs_only_and_runs_if_changes_fails() -> None:
-    # `code != 'false'` (not `== 'true'`) so an empty output, from a failed
-    # `changes` job, still runs everything; `!cancelled()` stops the implicit
-    # success() that would otherwise skip the job when `changes` failed.
+    # `code != 'false'` runs everything on an empty output; `!cancelled()` avoids the implicit success().
     text = CI_YML.read_text()
     condition = "if: ${{ !cancelled() && needs.changes.outputs.code != 'false'"
     for job in HEAVY_JOBS:
@@ -162,7 +153,6 @@ def test_only_e2e_and_the_frontend_build_wait_for_a_ready_pr() -> None:
     frontend = text.split("\n  frontend:\n", 1)[1].split("\n  # ", 1)[0]
     build = frontend.split("- name: Production build", 1)[1]
     assert NOT_DRAFT in build.split("run:", 1)[0]
-    # Everything else runs on drafts too.
     assert text.count(NOT_DRAFT) == 2
 
 

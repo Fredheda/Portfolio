@@ -1,6 +1,3 @@
-"""scripts/ci-local.sh is the gate before `gh pr ready`: it must run every
-check that ci.yml runs, so a green local run predicts a green CI run."""
-
 import re
 from pathlib import Path
 
@@ -8,8 +5,7 @@ ROOT = Path(__file__).resolve().parents[2]
 CI_YML = ROOT / ".github" / "workflows" / "ci.yml"
 CI_LOCAL = ROOT / "scripts" / "ci-local.sh"
 
-# ci.yml commands that run differently on a laptop, with what the script runs
-# instead (None = CI-only plumbing with no local equivalent).
+# None: CI-only plumbing with no local equivalent.
 DIFFERENT_LOCALLY = {
     "pipx install poetry==": None,  # the developer has Poetry
     "python -m venv mcp-tools/.venv": "poetry run python -m venv ../mcp-tools/.venv",

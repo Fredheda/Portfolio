@@ -1,7 +1,4 @@
-"""npm is pinned exactly where the frontend is built or audited: every stage of
-frontend/Dockerfile that starts from a Node image, and every workflow job that
-uses actions/setup-node. Text-based: the CI test env has no YAML library.
-The patch number is not hardcoded; the pins must agree and be npm 12."""
+"""Every npm pin (Dockerfile stages, setup-node jobs) must agree and be npm 12. Text-based: no YAML library in CI."""
 
 import re
 from pathlib import Path
@@ -22,12 +19,10 @@ def docker_stages() -> list[str]:
 
 
 def workflow_jobs() -> list[tuple[str, str]]:
-    """(file name and job id, job text) for each job that uses setup-node."""
     found = []
     for path in WORKFLOWS:
         text = path.read_text()
         parts = re.split(r"(?m)^  ([a-z0-9-]+):\n", text)
-        # parts: preamble, id1, body1, id2, body2, ...
         for job_id, body in zip(parts[1::2], parts[2::2]):
             if "actions/setup-node" in body:
                 found.append((f"{path.name}:{job_id}", body))
