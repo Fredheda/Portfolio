@@ -4,13 +4,11 @@ version = "0.1.0"
 description = ""
 requires-python = ">=3.13,<3.14"
 dependencies = [
-    # Starlette 1.x (security fixes) needs a fastapi newer than 0.115; the old
-    # <0.116 bound capped starlette below 0.47.
+    # Starlette 1.x (security fixes) needs fastapi >=0.162.
     "fastapi (>=0.162.0,<1.0.0)",
     "openai (>=2.26.0,<3.0.0)",
     "python-dotenv (==1.2.2)",
     "uvicorn==0.32.0",
-    "mssql-python==1.12.0",
     "langchain (==1.4.9)",
     "langgraph (==1.2.20)",
     "langgraph-prebuilt (==1.1.1)",
@@ -38,7 +36,7 @@ dev = [
 ]
 
 [tool.pyright]
-include = ["agent", "blog", "services", "scripts", "tests", "main.py"]
+include = ["agent", "blog", "tests", "main.py"]
 exclude = ["**/.venv", "backup"]
 pythonVersion = "3.13"
 typeCheckingMode = "basic"

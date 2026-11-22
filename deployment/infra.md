@@ -4,7 +4,7 @@
 ./infra/deploy.sh
 ```
 
-Re-runs `infra/main.bicep` against `rg-chatbot`, sourcing all secrets from the repo-root `.env` (OpenAI key, Azure Search key), which are never stored anywhere else. Azure SQL access is passwordless (Microsoft Entra ID via the managed identity Bicep creates), so there is no SQL secret to source. The script is idempotent and safe to re-run any time infra or secrets change.
+Re-runs `infra/main.bicep` against `rg-chatbot`, sourcing all secrets from the repo-root `.env` (OpenAI key, Azure Search key), which are never stored anywhere else. The script is idempotent and safe to re-run any time infra or secrets change.
 
 Things to remember:
 
@@ -15,7 +15,7 @@ Things to remember:
 
 ## Blog read identity
 
-`id-portfolio-blogread` is attached to `ca-portfolio-backend` and holds no Azure role. Its only grant is the `Blog.Read` app role in the blog project. `AZURE_CLIENT_ID` stays the ACR and SQL identity. Bicep outputs `blogReadIdentityClientId` and `blogReadIdentityPrincipalId`; `deploy.sh` prints both at the end.
+`id-portfolio-blogread` is attached to `ca-portfolio-backend` and holds no Azure role. Its only grant is the `Blog.Read` app role in the blog project. Bicep outputs `blogReadIdentityClientId` and `blogReadIdentityPrincipalId`; `deploy.sh` prints both at the end.
 
 Enable the blog in this order, each step with the owner's yes:
 

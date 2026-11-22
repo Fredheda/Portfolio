@@ -15,7 +15,7 @@ from uuid import uuid4
 import pytest
 from ag_ui.core import EventType, RunAgentInput, RunErrorEvent, RunStartedEvent
 from agent.agent import build_graph
-from agent.safe_errors import GENERIC_RUN_ERROR, SafeErrorAgent, describe, redact
+from agent.safe_errors import GENERIC_RUN_ERROR, SafeErrorAgent, describe
 from fastapi.testclient import TestClient
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AIMessage
@@ -26,12 +26,10 @@ from main import create_app
 
 AGENT_PATH = "/agent/portfolio_agent"
 
-# Shaped like the text an OpenAI auth or rate-limit error carries.
 PLANTED_OPENAI = (
     "Error code: 401 - Incorrect API key provided (sk-proj-PLANTEDKEY1234). "
     "organization org-PLANTEDORG request req_PLANTEDREQ"
 )
-# Shaped like an httpx error from the Function App (transport failure).
 PLANTED_FUNC = (
     "Client error '401 Unauthorized' for url "
     "'https://planted-func.azurewebsites.net/runtime/webhooks/mcp' "
@@ -54,14 +52,6 @@ class NeverFlags:
 
     def create(self, model: str, input: str):
         return SimpleNamespace(results=[SimpleNamespace(flagged=False)])
-
-
-class RecordingDatabase:
-    def __init__(self):
-        self.rows: list[list] = []
-
-    def log_chatbot_interaction(self, message: str, message_type: str, duration: int):
-        self.rows.append([message, message_type, duration])
 
 
 class FailingModel(BaseChatModel):
@@ -131,18 +121,15 @@ def _events(body: str) -> list[dict]:
     ]
 
 
-def _app(model: BaseChatModel, tools: list) -> tuple[Any, RecordingDatabase]:
-    db = RecordingDatabase()
-
+def _app(model: BaseChatModel, tools: list) -> Any:
     async def build():
         with patch("agent.agent.load_mcp_tools", new=AsyncMock(return_value=tools)):
             return await build_graph(
                 model=model,
                 moderation_client=NeverFlags(),  # pyright: ignore[reportArgumentType]
-                db=db,  # pyright: ignore[reportArgumentType]
             )
 
-    return create_app(build=build), db
+    return create_app(build=build)
 
 
 def _post_run(app) -> str:
@@ -154,7 +141,7 @@ def _post_run(app) -> str:
     return response.text
 
 
-def _assert_safe_ending(body: str, caplog, db: RecordingDatabase) -> None:
+def _assert_safe_ending(body: str, caplog) -> None:
     events = _events(body)
     types = [e["type"] for e in events]
     assert "RUN_STARTED" in types
@@ -167,24 +154,21 @@ def _assert_safe_ending(body: str, caplog, db: RecordingDatabase) -> None:
     for planted in PLANTED_ALL:
         assert planted not in body
         assert planted not in caplog.text
-        assert all(planted not in row[0] for row in db.rows)
     assert "RuntimeError" in caplog.text
 
 
 def test_model_error_ends_the_run_with_a_fixed_run_error(caplog):
-    app, db = _app(FailingModel(), [])
+    app = _app(FailingModel(), [])
     with caplog.at_level(logging.ERROR):
         body = _post_run(app)
-    _assert_safe_ending(body, caplog, db)
-    assert "[redacted-key]" in caplog.text
+    _assert_safe_ending(body, caplog)
 
 
 def test_tool_transport_error_ends_the_run_with_a_fixed_run_error(caplog):
-    app, db = _app(ToolCallingModel(), [_failing_tool()])
+    app = _app(ToolCallingModel(), [_failing_tool()])
     with caplog.at_level(logging.ERROR):
         body = _post_run(app)
-    _assert_safe_ending(body, caplog, db)
-    assert "[redacted-url]" in caplog.text
+    _assert_safe_ending(body, caplog)
 
 
 # The 0.0.47 shape: the library itself yields RUN_ERROR with the provider
@@ -242,7 +226,6 @@ async def test_upstream_run_error_is_rewritten(monkeypatch, caplog):
     assert error.raw_event is None
     for planted in ("sk-proj-PLANTEDKEY1234", "org-PLANTEDORG", "req_PLANTEDREQ"):
         assert planted not in caplog.text
-    assert "[redacted-key]" in caplog.text
 
 
 @pytest.mark.asyncio
@@ -273,45 +256,26 @@ async def test_no_second_terminal_event_when_upstream_raises_after_run_error(
         events = await _collect(_safe_agent())
     assert [e.type for e in events] == [EventType.RUN_STARTED, EventType.RUN_ERROR]
     assert "planted-func.azurewebsites.net" not in caplog.text
-    assert "[redacted-url]" in caplog.text
 
 
-# redact and describe
+class RateLimited(Exception):
+    status_code = 429
 
 
-@pytest.mark.parametrize(
-    ("text", "expected"),
-    [
-        ("key sk-proj-PLANTEDKEY1234 here", "key [redacted-key] here"),
-        ("organization org-PLANTEDORG", "organization [redacted-org]"),
-        ("request req_PLANTEDREQ", "request [redacted-request]"),
-        (
-            "at https://planted-func.azurewebsites.net/runtime/webhooks/mcp?code=sk-PLANTEDQUERYKEY now",
-            "at [redacted-url] now",
-        ),
-        ("x-functions-key: PLANTEDFUNCKEY", "x-functions-key [redacted-credential]"),
-        ("Authorization: Bearer PLANTEDTOKEN", "Authorization [redacted-credential]"),
-    ],
-)
-def test_redact_replaces_each_secret_shape(text, expected):
-    assert redact(text) == expected
+def test_describe_gives_the_type_and_never_the_message():
+    assert describe(RuntimeError(PLANTED_OPENAI)) == "RuntimeError"
 
 
-@pytest.mark.parametrize(
-    "text", ["", "The agent hit an error.", "Error code: 429 - rate limited"]
-)
-def test_redact_leaves_plain_text_alone(text):
-    assert redact(text) == text
+def test_describe_adds_the_status_of_a_provider_error():
+    assert describe(RateLimited(PLANTED_OPENAI)) == "RateLimited status=429"
 
 
-def test_describe_names_the_type_when_the_message_is_empty():
-    assert describe(RuntimeError("")) == "RuntimeError: "
+def test_describe_reads_the_status_of_an_http_response():
+    error = RuntimeError(PLANTED_FUNC)
+    error.response = SimpleNamespace(status_code=401)  # type: ignore[attr-defined]
+    assert describe(error) == "RuntimeError status=401"
 
 
 def test_describe_flattens_exception_groups():
-    group = ExceptionGroup("transport", [RuntimeError(PLANTED_FUNC), ValueError("x")])
-    text = redact(describe(group))
-    assert text.startswith("ExceptionGroup(2): RuntimeError: ")
-    assert "[redacted-url]" in text
-    assert "ValueError: x" in text
-    assert "planted-func.azurewebsites.net" not in text
+    group = ExceptionGroup("transport", [RuntimeError(PLANTED_FUNC), RateLimited("x")])
+    assert describe(group) == "ExceptionGroup(2): RuntimeError; RateLimited status=429"

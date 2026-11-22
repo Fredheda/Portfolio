@@ -2,7 +2,6 @@ import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
 import {
-  dbLog,
   failNextModelCall,
   failNextSearch,
   humanTexts,
@@ -18,9 +17,7 @@ const SYSTEM_PROMPT = readFileSync(
   'utf8',
 );
 
-// Secret-shaped strings planted by e2e_backend/model.py (model failure) and
-// e2e_backend/mcp_server.py (search failure). None may reach the stream, the
-// model calls or the SQL rows.
+// Secret-shaped strings planted by the fake model and search; none may reach the stream or the model calls.
 const PLANTED = [
   'sk-proj-PLANTEDKEY1234',
   'org-PLANTEDORG',
@@ -88,7 +85,6 @@ test('a model failure ends the run with the fixed RUN_ERROR and no provider text
   expect(errors[0].message).toBe(GENERIC_RUN_ERROR);
   expect(errors[0]).not.toHaveProperty('rawEvent');
   for (const planted of PLANTED) expect(body).not.toContain(planted);
-  for (const row of await dbLog(request)) expect(row[0]).not.toContain('PLANTED');
 });
 
 test('a failed search gives the model the fixed text and leaks nothing', async ({ request }) => {
@@ -100,7 +96,6 @@ test('a failed search gives the model the fixed text and leaks nothing', async (
   const toolResult = calls.at(-1).messages.find((m) => m.type === 'tool');
   expect(toolResult.text.startsWith(SEARCH_UNAVAILABLE_PREFIX)).toBe(true);
   for (const planted of PLANTED) expect(JSON.stringify(calls)).not.toContain(planted);
-  for (const row of await dbLog(request)) expect(row[0]).not.toContain('PLANTED');
 });
 
 test('clear starts a new thread', async ({ page, request }) => {

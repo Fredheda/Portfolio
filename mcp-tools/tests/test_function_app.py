@@ -53,10 +53,6 @@ def test_get_profile_returns_the_visible_page_content_without_the_hidden_about_t
     assert result["profile"]["name"] == "Frederik Heda"
 
 
-# A known id's full record is checked end to end, over MCP, by the browser
-# suite (frontend/e2e/full-stack/tools.spec.js).
-
-
 def test_get_project_details_unknown_id_returns_error():
     context = json.dumps({"arguments": {"project_id": "does-not-exist"}})
     result = json.loads(function_app.get_project_details(context=context))
@@ -102,7 +98,6 @@ def test_retrieve_information_hides_an_openai_error(monkeypatch, caplog):
         result = function_app.retrieve_information(context=SEARCH_CONTEXT)
     assert result == function_app.SEARCH_UNAVAILABLE
     assert "RuntimeError" in caplog.text
-    assert "[redacted-key]" in caplog.text
     for planted in ("sk-proj-PLANTEDKEY1234", "org-PLANTEDORG", "req_PLANTEDREQ"):
         assert planted not in caplog.text
         assert planted not in result
@@ -114,7 +109,6 @@ def test_retrieve_information_hides_a_search_error(monkeypatch, caplog):
         result = function_app.retrieve_information(context=SEARCH_CONTEXT)
     assert result == function_app.SEARCH_UNAVAILABLE
     assert "RuntimeError" in caplog.text
-    assert "[redacted-url]" in caplog.text
     for planted in (
         "planted-search.search.windows.net",
         "PLANTEDSEARCHKEY",
