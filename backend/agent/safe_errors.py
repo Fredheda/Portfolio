@@ -1,14 +1,4 @@
-"""Keep provider error text out of the AG-UI stream.
-
-ag-ui-langgraph 0.0.42 lets an exception escape `run()`, which aborts the SSE
-stream with no RUN_ERROR; 0.0.47 catches it and sends RUN_ERROR with
-`str(exc)` and the upstream event as `raw_event`. A model or transport error
-can carry a key prefix, an organisation name, a request id, a host or a header
-value, and may quote the visitor's message. This wrapper gives the client one
-fixed RUN_ERROR either way, never a second terminal event, and logs only the
-exception type and HTTP status. The client-facing text is a constant, never a
-filtered string.
-"""
+"""ag-ui-langgraph 0.0.47 sends `str(exc)` to the browser, and a provider error can carry keys, hosts or the visitor's message: the client gets one fixed RUN_ERROR."""
 
 import logging
 from collections.abc import AsyncGenerator
@@ -25,7 +15,6 @@ _TERMINAL = {EventType.RUN_ERROR, EventType.RUN_FINISHED}
 
 
 def describe(exc: BaseException) -> str:
-    """Type and HTTP status only, never the message; groups are flattened."""
     if isinstance(exc, BaseExceptionGroup):
         inner = "; ".join(describe(e) for e in exc.exceptions)
         return f"{type(exc).__name__}({len(exc.exceptions)}): {inner}"
@@ -37,8 +26,6 @@ def describe(exc: BaseException) -> str:
 
 
 class SafeErrorAgent(LangGraphAGUIAgent):
-    """`LangGraphAGUIAgent` whose failed runs end with a fixed RUN_ERROR."""
-
     async def run(self, input: RunAgentInput) -> AsyncGenerator[Any, None]:
         started = False
         terminal = False

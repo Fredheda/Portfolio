@@ -1,8 +1,4 @@
-"""Stand-in for the OpenAI moderation client.
-
-It defines neither __len__ nor __bool__: the middleware uses `client or default`,
-so a falsy fake would be silently replaced by the real client.
-"""
+"""No __len__ or __bool__: the middleware does `client or default`, so a falsy fake would be replaced by the real client."""
 
 from types import SimpleNamespace
 

@@ -1,10 +1,3 @@
-"""Provider error text never reaches the AG-UI stream or the log.
-
-Drives the real app (main.create_app, agent.build_graph) with a failing
-model and a failing tool, the way the browser suite does, and reads the SSE
-body the endpoint streams.
-"""
-
 import json
 import logging
 from types import SimpleNamespace
@@ -45,8 +38,6 @@ PLANTED_ALL = (
 
 
 class NeverFlags:
-    """Moderation client whose results never flag (see e2e_backend/fakes.py)."""
-
     def __init__(self):
         self.moderations = self
 
@@ -67,8 +58,6 @@ class FailingModel(BaseChatModel):
 
 
 class ToolCallingModel(BaseChatModel):
-    """Calls retrieve_information once; never reached a second time here."""
-
     @property
     def _llm_type(self) -> str:
         return "tool-calling"
