@@ -1,9 +1,3 @@
-"""The blog read chain must give a cold read API time to wake. The web server
-gives up on the backend after its header timeout; the backend asks the read
-API with a read timeout and one retry. Both attempts, and the pause between
-them, have to fit inside the proxy's wait, or the proxy answers 503 while the
-backend is still working. Text-based: it reads the numbers from the sources."""
-
 import re
 from pathlib import Path
 
@@ -43,6 +37,5 @@ def test_both_backend_attempts_fit_inside_the_proxy_wait() -> None:
 
 
 def test_the_backend_attempts_together_outlast_a_cold_start() -> None:
-    # The first attempt may time out while the API wakes; the retry then lands
-    # on a warm one. Shrinking the read timeout too far would give up first.
+    # A shorter read timeout gives up before a cold API wakes.
     assert 2 * backend_read_timeout() + backend_retry_delay() >= COLD_START_SECONDS

@@ -1,7 +1,4 @@
-"""The runtime image of the web app copies server.js, not the whole source
-tree (frontend/Dockerfile). A local module that server.js imports must be
-copied too, or the container fails at start while every CI job, which runs
-server.js from the checkout, passes. Text-based, like test_npm_pin.py."""
+"""Every local module server.js imports must be copied into the runtime image. Text-based."""
 
 import re
 from pathlib import Path

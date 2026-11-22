@@ -1,22 +1,3 @@
-"""Tests for the scripts behind the build-on-merge and `Deploy apps` pipeline.
-
-The scripts run against fake `az`, `curl` and `gh` programs on PATH. The fake
-`az` records every invocation (one line of arguments per call) and answers from
-environment variables, so the tests can check what the scripts would do to
-Azure without touching it:
-
-- FAKE_MISSING: comma list of `repo:tag`; `az acr repository show` exits 1 for them.
-- FAKE_FAIL_UPDATE: container app name whose `az containerapp update` exits 1.
-- FAKE_FAIL_LOCK: when set, `az acr repository update` exits 1.
-- FAKE_IMAGE_<APP>: image printed for `az containerapp show -n <app> ... image`
-  (app name upper-cased, `-` replaced by `_`).
-- FAKE_NO_TASK: when set, `az acr task show` exits 1 (the purge task does not exist yet).
-- FAKE_PROVISIONING: comma list of revision provisioning states, returned one per
-  `az containerapp revision show` call (the last value repeats).
-- `az acr build` for the web image also logs `WEB_BUILD content=present|absent`:
-  whether frontend/content/site-content.json existed at that moment.
-"""
-
 import json
 import os
 import subprocess
@@ -104,16 +85,11 @@ esac
 exit 0
 """
 
-# Stands in for the GitHub Actions OIDC token endpoint.
 FAKE_CURL = r"""#!/usr/bin/env bash
 echo "$*" >> "$FAKE_LOG.curl"
 echo '{"value":"fake-token"}'
 """
 
-# Stands in for the GitHub CLI. Listing the environment's branch policies
-# prints FAKE_POLICY_NAMES (`\n` separates names), as the script's --jq filter
-# would. A user lookup prints the id 77542239. A request body given on stdin
-# (`--input -`) is kept in `$FAKE_LOG.gh-body`.
 FAKE_GH = r"""#!/usr/bin/env bash
 echo "$*" >> "$FAKE_LOG.gh"
 case "$*" in
@@ -212,9 +188,6 @@ def source_and_run(snippet: str) -> subprocess.CompletedProcess[str]:
     )
 
 
-# --- scripts/lib/images.sh ---------------------------------------------------
-
-
 def test_is_sha_accepts_only_40_lowercase_hex() -> None:
     assert source_and_run(f'is_sha "{SHA}"').returncode == 0
     for bad in ("abc1234", "A" * 40, "latest", "", "g" * 40, "a" * 41):
@@ -228,9 +201,6 @@ def test_images_lists_the_two_portfolio_images_in_order() -> None:
         "portfolio-backend|ca-portfolio-backend|backend/Dockerfile|backend",
         "portfolio-web|ca-portfolio-web|frontend/Dockerfile|frontend",
     ]
-
-
-# --- build-push.sh -----------------------------------------------------------
 
 
 def build_call(repo: str, dockerfile: str, context: str, sha: str) -> str:
@@ -299,8 +269,7 @@ class MiniRepo:
 
 @pytest.fixture
 def mini_repo(tmp_path: Path) -> MiniRepo:
-    """A throwaway git repo holding just what build-push.sh needs, so the
-    tests do not depend on this checkout's history (CI clones one commit)."""
+    """Most CI checkouts are shallow, so the tests cannot rely on this checkout's history."""
     root = tmp_path / "repo"
     (root / "scripts" / "lib").mkdir(parents=True)
     for name in ("scripts/build-push.sh", "scripts/lib/images.sh"):
@@ -358,11 +327,8 @@ def test_build_push_with_a_sha_builds_that_commit_not_the_working_tree(
     ]
     assert len(build_dirs) == 2
     assert all(Path(d).resolve() != mini_repo.root.resolve() for d in build_dirs)
-    # The exported tree holds the first commit's files, though the working
-    # tree already has the second commit's.
     assert fake_az.calls.count("BUILD_TREE first") == 2
     assert (mini_repo.root / "backend" / "Dockerfile").read_text() == "second\n"
-    # The content file is copied into the exported tree, not the caller's.
     assert "WEB_BUILD content=present" in fake_az.calls
     assert not (mini_repo.root / "frontend" / "content").exists()
 
@@ -388,11 +354,7 @@ def test_build_push_rejects_a_bad_sha_before_any_az_call(
     assert fake_az.calls == []
 
 
-# --- redeploy.sh -------------------------------------------------------------
-
-
 def image_env(backend_tag: str, web_tag: str) -> dict[str, str]:
-    """What the two apps run right now, as `az containerapp show` reports it."""
     return {
         "FAKE_IMAGE_CA_PORTFOLIO_BACKEND": f"{ACR}.azurecr.io/{BACKEND}:{backend_tag}",
         "FAKE_IMAGE_CA_PORTFOLIO_WEB": f"{ACR}.azurecr.io/{WEB}:{web_tag}",
@@ -459,7 +421,6 @@ def test_redeploy_locks_new_and_unlocks_old_sha_tags(fake_az: FakeAz) -> None:
     for repo in (BACKEND, WEB):
         assert lock_call(repo, SHA, True) in calls
         assert lock_call(repo, OLD_SHA, False) in calls
-    # The lock calls happen after both apps have been rolled.
     last_update = max(
         i for i, c in enumerate(calls) if c.startswith("containerapp update")
     )
@@ -497,13 +458,9 @@ def test_redeploy_reports_a_lock_failure_but_says_the_apps_are_rolled(
 
 
 def test_redeploy_uses_the_given_sha_and_never_asks_git(fake_az: FakeAz) -> None:
-    # A rollback to a commit older than these scripts passes a SHA only.
     env = {"GIT_DIR": "/nonexistent", **image_env(OLD_SHA, OLD_SHA)}
     result = fake_az.run("redeploy.sh", SHA, env=env)
     assert result.returncode == 0, result.stderr
-
-
-# --- wait-healthy.sh ---------------------------------------------------------
 
 
 def test_wait_healthy_passes_when_all_provisioned(fake_az: FakeAz) -> None:
@@ -537,9 +494,6 @@ def test_wait_healthy_times_out(fake_az: FakeAz) -> None:
     )
     assert result.returncode == 1
     assert "timed out" in result.stderr
-
-
-# --- resolve-image-sha.sh ----------------------------------------------------
 
 
 def git(repo: Path, *args: str) -> str:
@@ -632,8 +586,6 @@ def test_resolve_image_sha_rejects_sha_not_on_main(git_repo: GitRepo) -> None:
     assert "is not on main" in result.stderr
 
 
-# --- setup-github-apps-deploy.sh ---------------------------------------------
-
 REGISTRY_ID = (
     "/subscriptions/sub-1/resourceGroups/rg-chatbot/providers/"
     "Microsoft.ContainerRegistry/registries/acrchatbotfredheda"
@@ -644,7 +596,6 @@ GH_REPO = "Fredheda/Portfolio"
 
 
 def role_assignments(fake_az: FakeAz, identity: str) -> set[tuple[str, str]]:
-    """(role, last segment of scope) for every role granted to `identity`."""
     granted = set()
     for call in fake_az.calls:
         if not call.startswith("role assignment create"):
@@ -684,8 +635,6 @@ def test_setup_gives_the_deploy_identity_app_rights_and_nothing_on_other_apps(
 def test_setup_trusts_the_production_environment_for_both_identities(
     fake_az: FakeAz,
 ) -> None:
-    # The Deploy apps job builds and deploys inside the `production`
-    # environment, so both identities are trusted for that subject only.
     result = fake_az.run("setup-github-apps-deploy.sh")
     assert result.returncode == 0, result.stderr
     creds = [
@@ -726,7 +675,6 @@ def test_setup_deletes_nothing_when_the_old_credential_is_absent(
 
 
 def environment_body(fake_az: FakeAz) -> dict[str, object]:
-    """The JSON the script sends to `PUT .../environments/production`."""
     return json.loads(Path(f"{fake_az.log}.gh-body").read_text())
 
 
@@ -750,8 +698,6 @@ def test_setup_restricts_the_environment_to_main(fake_az: FakeAz) -> None:
 
 
 def test_setup_makes_the_repo_owner_the_required_reviewer(fake_az: FakeAz) -> None:
-    # Every deploy then waits for the owner's approval in GitHub, and no admin
-    # can bypass the gate.
     result = fake_az.run("setup-github-apps-deploy.sh")
     assert result.returncode == 0, result.stderr
     assert "api users/Fredheda --jq .id" in fake_az.gh_calls
@@ -805,8 +751,7 @@ def test_setup_stores_the_four_ids_as_secrets_so_logs_mask_them(
 
 
 def test_workflows_read_the_azure_ids_from_secrets_not_variables() -> None:
-    # Variables are printed in clear text in the (public) run logs; secrets
-    # are masked.
+    # Variables show in clear text in public run logs; secrets are masked.
     workflows = sorted((REPO_ROOT / ".github" / "workflows").glob("*.yml"))
     assert workflows
     for workflow in workflows:
@@ -831,7 +776,6 @@ def test_deploy_workflow_builds_with_the_build_identity_before_the_deploy_login(
     ]
     assert order == sorted(order)
     assert "secrets.AZURE_APPS_DEPLOY_CLIENT_ID" in text
-    # The build identity is trusted only inside the production environment.
     assert "environment: production" in text
 
 
@@ -840,8 +784,6 @@ def test_setup_never_touches_the_function_app_variable(fake_az: FakeAz) -> None:
     assert result.returncode == 0, result.stderr
     assert not any("AZURE_DEPLOY_CLIENT_ID" in c for c in fake_az.gh_calls)
 
-
-# --- setup-acr-purge.sh ------------------------------------------------------
 
 TASK = "purge-portfolio-images"
 

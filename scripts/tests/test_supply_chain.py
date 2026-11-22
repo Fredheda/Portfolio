@@ -1,24 +1,4 @@
-"""Supply-chain rules (docs/shared/specs/2026-11-16-supply-chain-prevention.md):
-
-1. a 14-day install cooldown beside every package.json and pyproject.toml,
-   with no exclusion committed;
-2. no pip or pipx install from a version range, one Poetry version in CI and
-   the backend image, and Poetry's own dependencies taken inside the same
-   14-day window in the image;
-3. every GitHub Action pinned by commit, with its release as a comment;
-4. no npx download;
-5. every Docker image (FROM and docker run) pinned by digest;
-6. the Function App's requirements pinned with ==, generated under the
-   14-day window.
-
-To bump Poetry: change the pin in .github/workflows/ci.yml,
-.github/workflows/security.yml and backend/Dockerfile together.
-To bump pip: change the pin in the compile script, backend/Dockerfile,
-.github/workflows/ci.yml and scripts/ci-local.sh together.
-To bump an image: resolve the new digest (docs/development.md,
-"Dependencies") and change it in the Dockerfile or security.yml.
-Text-based: the CI test env has no YAML or TOML library.
-"""
+"""Supply-chain pins: cooldowns, exact versions, digests. Text-based: no YAML or TOML library in CI. Bumps: docs/development.md, "Dependencies"."""
 
 import re
 import subprocess
@@ -26,10 +6,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 
-# Installed with `-r` because it pins every package with `==` (checked line by
-# line below). It has no hashes on purpose: Azure's remote build installs it, and
-# exact pins under the 14-day window were chosen over hashes for this file
-# (owner decision). Any other `-r` file needs hashes.
+# No hashes: an owner decision for this file; any other `-r` file needs hashes.
 PINNED_REQUIREMENTS = {"mcp-tools/requirements.txt"}
 COMPILE_SCRIPT = "scripts/compile-mcp-tools-requirements.sh"
 PIP_SOURCES = (
@@ -214,8 +191,6 @@ FROM = re.compile(r"\s*FROM\s+(\S+)(?:\s+AS\s+(\S+))?", re.IGNORECASE)
 
 
 def docker_run_image(line: str) -> str | None:
-    """The image of a `docker run` line: the first argument that is neither a
-    flag nor the value of one."""
     match = re.search(r"\bdocker run\b(.*)", line)
     if not match:
         return None

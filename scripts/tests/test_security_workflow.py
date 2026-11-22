@@ -1,6 +1,4 @@
-"""Shape of security.yml: stable job ids, no push trigger, draft-first, which
-jobs block and which only advise. Text-based: the CI test env has no YAML
-library."""
+"""Shape of security.yml: stable job ids, draft gating, blocking versus advisory jobs. Text-based."""
 
 from pathlib import Path
 
@@ -15,7 +13,6 @@ ADVISORY_ON_PRS = ("pip-audit", "npm-audit")
 def job_block(job: str) -> str:
     text = SECURITY_YML.read_text()
     block = text.split(f"\n  {job}:\n", 1)[1]
-    # The block ends at the next job id (two-space key) or end of file.
     lines = []
     for line in block.splitlines():
         if (

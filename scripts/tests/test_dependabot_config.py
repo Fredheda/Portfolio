@@ -1,6 +1,3 @@
-"""Shape of .github/dependabot.yml: every manifest directory covered, monthly
-grouped PRs with a cooldown. Text-based: the CI test env has no YAML library."""
-
 import re
 from pathlib import Path
 

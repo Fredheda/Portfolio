@@ -1,8 +1,3 @@
-"""The e2e ports have one JavaScript source (frontend/e2e/env.js). The Python
-test servers keep their own fallback values for a run started by hand; this
-test fails when one drifts from env.js, or when the Playwright config stops
-passing the same variable names on."""
-
 import re
 from pathlib import Path
 

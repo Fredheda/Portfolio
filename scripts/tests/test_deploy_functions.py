@@ -1,10 +1,3 @@
-"""Tests for the scripts behind the `Deploy functions` workflow.
-
-The git-facing scripts run against a throwaway repository. The Azure-facing
-scripts run against a fake `az` on PATH that records every call, so the tests
-can check what would happen to Azure without touching it.
-"""
-
 import json
 import os
 import subprocess
@@ -95,9 +88,6 @@ def git_repo(tmp_path: Path) -> GitRepo:
     return GitRepo(path=repo, a=a, b=b, c=c)
 
 
-# --- resolve-deploy-sha.sh ---------------------------------------------------
-
-
 def test_resolve_defaults_to_head_of_main(git_repo: GitRepo) -> None:
     result = run_script("resolve-deploy-sha.sh", cwd=git_repo.path)
     assert result.returncode == 0, result.stderr
@@ -136,9 +126,6 @@ def test_resolve_rejects_commit_without_function_folder(git_repo: GitRepo) -> No
     result = run_script("resolve-deploy-sha.sh", git_repo.a, cwd=git_repo.path)
     assert result.returncode == 1
     assert "mcp-tools/function_app.py" in result.stderr
-
-
-# --- package-functions.sh ----------------------------------------------------
 
 
 def make_source_root(root: Path) -> Path:
@@ -186,8 +173,6 @@ def test_package_has_the_copied_in_file_and_no_local_files(tmp_path: Path) -> No
 
 
 def test_package_works_on_a_root_that_is_not_the_checkout(tmp_path: Path) -> None:
-    # The rollback case: the target commit's sources sit in a temp directory,
-    # and the script must read nothing from the directory it runs in.
     src = make_source_root(tmp_path / "elsewhere" / "src")
     other = tmp_path / "cwd"
     other.mkdir()
@@ -208,8 +193,7 @@ def test_package_takes_the_content_file_from_the_given_root(tmp_path: Path) -> N
 def test_package_includes_the_content_file_although_it_is_gitignored(
     tmp_path: Path,
 ) -> None:
-    # mcp-tools/content/ is ignored and never committed; the package must still
-    # carry the file, copied in from content/site-content.json.
+    # mcp-tools/content/ is git-ignored, so the file must be copied in from content/.
     repo = tmp_path / "repo"
     make_source_root(repo)
     (repo / ".gitignore").write_text("mcp-tools/content/\n")
@@ -247,13 +231,6 @@ def test_package_fails_clearly_when_inputs_are_missing(tmp_path: Path) -> None:
     assert not out.exists()
 
 
-# --- fake az / curl ----------------------------------------------------------
-
-# Records every call. Answers from environment variables:
-# - FAKE_FAIL_ZIP: when set, `config-zip` exits 1.
-# - FAKE_FUNCTIONS: `;`-separated answers to successive `function list` calls,
-#   each a comma list of names (empty = none yet, ERR = the call fails). The
-#   last answer repeats.
 FAKE_AZ = r"""#!/usr/bin/env bash
 echo "$*" >> "$FAKE_LOG"
 case "$*" in
@@ -291,10 +268,6 @@ esac
 exit 0
 """
 
-# Stands in for the GitHub CLI. Listing the environment's branch policies
-# prints FAKE_POLICY_NAMES (`\n` separates names), as the script's --jq filter
-# would. A user lookup prints the id 77542239. A request body given on stdin
-# (`--input -`) is kept in `$FAKE_LOG.gh-body`.
 FAKE_GH = r"""#!/usr/bin/env bash
 echo "$*" >> "$FAKE_LOG.gh"
 case "$*" in
@@ -308,7 +281,6 @@ esac
 exit 0
 """
 
-# Stands in for the GitHub Actions OIDC token endpoint.
 FAKE_CURL = r"""#!/usr/bin/env bash
 echo "$*" >> "$FAKE_LOG.curl"
 echo '{"value":"fake-token"}'
@@ -353,8 +325,6 @@ def fake_az(tmp_path: Path) -> FakeAz:
     return FakeAz(log=tmp_path / "az.log", bin_dir=bin_dir)
 
 
-# --- ci-azure-login.sh -------------------------------------------------------
-
 LOGIN_ENV = {
     "AZURE_TENANT_ID": "tenant-1",
     "AZURE_SUBSCRIPTION_ID": "sub-1",
@@ -382,9 +352,6 @@ def test_login_fails_without_an_oidc_endpoint(fake_az: FakeAz) -> None:
     assert result.returncode == 1
     assert "id-token: write" in result.stderr
     assert fake_az.calls() == []
-
-
-# --- deploy-functions.sh -----------------------------------------------------
 
 
 @pytest.fixture
@@ -470,8 +437,6 @@ def test_deploy_rejects_a_missing_zip(fake_az: FakeAz, tmp_path: Path) -> None:
     assert fake_az.calls() == []
 
 
-# --- setup-github-deploy.sh --------------------------------------------------
-
 REPO = "Fredheda/Portfolio"
 FUNCTION_APP_ID = (
     "/subscriptions/sub-1/resourceGroups/rg-chatbot/providers/Microsoft.Web/sites/"
@@ -505,7 +470,6 @@ def test_setup_trusts_only_the_production_environment(fake_az: FakeAz) -> None:
 
 
 def environment_body(fake_az: FakeAz) -> dict[str, object]:
-    """The JSON the script sends to `PUT .../environments/production`."""
     return json.loads(Path(f"{fake_az.log}.gh-body").read_text())
 
 
@@ -526,8 +490,6 @@ def test_setup_restricts_the_environment_to_main(fake_az: FakeAz) -> None:
 
 
 def test_setup_makes_the_repo_owner_the_required_reviewer(fake_az: FakeAz) -> None:
-    # Every deploy then waits for the owner's approval in GitHub, and no admin
-    # can bypass the gate.
     result = fake_az.run("setup-github-deploy.sh")
     assert result.returncode == 0, result.stderr
     assert "api users/Fredheda --jq .id" in fake_az.calls(".gh")
