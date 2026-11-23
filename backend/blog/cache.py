@@ -13,10 +13,7 @@ class Entry:
 
 
 class ResponseCache:
-    """In-memory, per process. A fresh entry is served as is; an older one is
-    kept for revalidation (If-None-Match) and as the answer when the API is
-    down, until `stale_ttl` has passed or the entry is evicted. Bounded, oldest
-    entry out first."""
+    """In-memory, per process, bounded: a stale entry is kept for revalidation and as the answer when the API is down, until `stale_ttl`."""
 
     def __init__(
         self,

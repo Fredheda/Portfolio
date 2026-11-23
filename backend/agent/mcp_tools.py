@@ -22,11 +22,7 @@ def build_mcp_client() -> MultiServerMCPClient:
 
 
 async def load_mcp_tools() -> list:
-    # Tools load once, at startup. If the Function App is unreachable then
-    # (a deploy, a cold start), raising here would stop the whole backend
-    # from starting and the container would crash-loop. Start without the
-    # MCP tools instead: the agent still answers, just without them, until
-    # the next restart loads them.
+    # An unreachable Function App must not crash-loop the container: start without the MCP tools until the next restart.
     client = build_mcp_client()
     try:
         return await client.get_tools()

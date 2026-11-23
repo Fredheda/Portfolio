@@ -12,7 +12,6 @@ from blog.token import ManagedIdentityTokenProvider
 
 logger = logging.getLogger("blog.config")
 
-# api://<application id>: the audience of the blog API's app registration.
 AUDIENCE = re.compile(r"api://[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}\Z")
 DEFAULT_MEDIA_HOSTS = "fhstorageportfolio.blob.core.windows.net"
 
@@ -25,10 +24,7 @@ class BlogParts:
 
 
 def blog_from_env(env: Mapping[str, str] | None = None) -> BlogParts | None:
-    """The blog client, or None when the blog is off. Off is the default: with
-    no BLOG_API_URL there are no blog routes. A half-configured blog also
-    stays off, with one error line (no values), because fredbot shares this
-    process and must not be taken down by a blog setting."""
+    """None when the blog is off or half-configured: fredbot shares this process and a blog setting must not take it down."""
     env = os.environ if env is None else env
     url = env.get("BLOG_API_URL", "").strip()
     if not url:
