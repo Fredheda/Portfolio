@@ -10,7 +10,7 @@ For agentic workers: run task by task. Steps are checkboxes; flip each `- [ ]` t
 
 **Spec:** `docs/specs/2026-11-22-no-use-effect.md`
 
-Status: draft, awaiting specialist approval
+Status: done (PR #145)
 
 **Global constraints:**
 - No new dependency. No new comment in any file. Keep only the comments listed in Task 11.
