@@ -6,8 +6,6 @@ import ContactLinks from './ContactLinks';
 
 const { profile } = content;
 
-// Section links point at the home page ("/#experience"), so they work from
-// every route; useHashScroll on the home page does the scrolling.
 export const navLinks = [
   { label: 'Experience', to: '/#experience' },
   { label: 'Ask fredbot', to: '/#fredbot' },
@@ -16,8 +14,6 @@ export const navLinks = [
 
 const blogLink = { label: 'Blog', to: '/blog' };
 
-// The Blog link is the section's own page, not a home-page anchor: the page
-// is current on /blog, the section on any /blog/<slug>.
 const currentState = (link, pathname) => {
   if (link.to !== '/blog') return undefined;
   if (pathname === '/blog') return 'page';
