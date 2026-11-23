@@ -24,6 +24,7 @@ class BlogParts:
 
 
 def blog_from_env(env: Mapping[str, str] | None = None) -> BlogParts | None:
+    """None when the blog is off or half-configured: fredbot shares this process and a blog setting must not take it down."""
     env = os.environ if env is None else env
     url = env.get("BLOG_API_URL", "").strip()
     if not url:
