@@ -16,8 +16,7 @@ def _validators(header: str) -> set[str]:
 
 
 def _json(result: BaseModel, request: Request) -> Response:
-    """The JSON answer with a content ETag. The browser keeps a copy but must
-    revalidate on every view, so an unpublished post is gone at the next one."""
+    """JSON with a content ETag: the browser revalidates on every view, so an unpublished post is gone at the next one."""
     response = JSONResponse(result.model_dump(mode="json"))
     etag = '"' + hashlib.sha256(response.body).hexdigest()[:32] + '"'
     headers = {"Cache-Control": JSON_CACHE, "ETag": etag}
@@ -34,9 +33,6 @@ def _failure(exc: Exception) -> Response:
 
 
 def build_blog_router(client: BlogClient, media: MediaStreamer) -> APIRouter:
-    """GET-only JSON and media for Portfolio's own pages and fredbot. Errors
-    have fixed bodies; nothing from the blog API's answers is passed on
-    except the validated models."""
     router = APIRouter(prefix="/blog")
 
     @router.get("/posts")

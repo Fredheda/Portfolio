@@ -10,9 +10,6 @@ def test_system_prompt_loads_and_documents_frontend_tools():
     assert "renderProjectCard" in SYSTEM_PROMPT
 
 
-# Building and running the graph, the injected model and the MCP client are
-# covered end to end by the browser suite (frontend/e2e/full-stack); this
-# pins the one production default the suite replaces.
 @pytest.mark.asyncio
 async def test_build_graph_defaults_to_the_production_model():
     with (

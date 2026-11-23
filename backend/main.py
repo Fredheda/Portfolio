@@ -24,17 +24,11 @@ def create_app(
     build: Callable[[], Awaitable[Any]] = build_graph,
     blog: Callable[[], BlogParts | None] = blog_from_env,
 ) -> FastAPI:
-    # `build` and `blog` exist for the browser tests, which pass a graph with
-    # a scripted model and a blog client with a fake read API; production uses
-    # build_graph() and the environment.
     blog_parts = blog()
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
-        # build_graph() is async, so it has to run inside the ASGI server's own
-        # event loop (FastAPI startup) rather than via asyncio.run() at import
-        # time — asyncio.run() can't nest inside the loop uvicorn is already
-        # running when it imports this module to resolve "main:app".
+        # build_graph() is async: run it in FastAPI startup, since asyncio.run() cannot nest in uvicorn's loop.
         graph = await build()
         add_langgraph_fastapi_endpoint(
             app=app,
@@ -64,8 +58,7 @@ app = create_app()
 
 
 def listen_address(env: Mapping[str, str]) -> tuple[str, int]:
-    """Where `python main.py` listens: loopback unless HOST says otherwise.
-    The image does not use this: its CMD starts uvicorn on 0.0.0.0 itself."""
+    """Loopback unless HOST says otherwise; the image's CMD starts uvicorn on 0.0.0.0 itself."""
     return env.get("HOST") or "127.0.0.1", int(env.get("PORT") or 8000)
 
 

@@ -1,6 +1,3 @@
-"""Read API v1 payloads transcribed from docs/shared/specs/2026-11-08-blog-studio.md
-section 5, plus fakes for the route tests. Replace the payloads by examples
-generated from openapi/v1.json once the blog project commits that file."""
 
 from blog.errors import BlogNotFound, BlogUnavailable
 from blog.models import AudioLink, MediaLink, Post, PostList
@@ -52,8 +49,6 @@ AUDIO_LINK = {**MEDIA_LINK, "contentType": "audio/mpeg", "durationSec": 61.5}
 
 
 class FakeClient:
-    """Stands in for HttpBlogClient in the route tests."""
-
     def __init__(self) -> None:
         self.error: Exception | None = None
         self.calls: list[tuple] = []

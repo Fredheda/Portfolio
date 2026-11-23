@@ -20,8 +20,6 @@ class TokenProvider(Protocol):
 
 
 class StaticTokenProvider:
-    """Test seam for the browser suite (production never builds one)."""
-
     def __init__(self, token: str) -> None:
         self._token = token
 
@@ -33,10 +31,6 @@ class StaticTokenProvider:
 
 
 class ManagedIdentityTokenProvider:
-    """Token for the blog API's app registration, from this app's own
-    user-assigned identity (client credentials, no secret). Cached until five
-    minutes before expiry; one request at a time."""
-
     def __init__(
         self,
         client_id: str,
@@ -45,8 +39,7 @@ class ManagedIdentityTokenProvider:
         clock: Callable[[], float] = time.time,
     ) -> None:
         self._scope = f"{audience.rstrip('/')}/.default"
-        # The client id is required: the app has two identities, and the
-        # default credential would pick neither reliably.
+        # The app has two identities: without the client id the default credential picks neither reliably.
         self._credential = (
             credential
             if credential is not None

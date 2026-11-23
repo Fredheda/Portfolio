@@ -17,10 +17,7 @@ from blog.token import TokenProvider
 
 logger = logging.getLogger("blog.client")
 
-# ca-blogapi scales to zero and a cold start takes about 30 s. The first
-# attempt may time out while it wakes and the retry then lands on a warm one;
-# two attempts and the pause stay inside the web server's 60 s wait for
-# headers (scripts/tests/test_blog_timeouts.py).
+# A cold ca-blogapi takes about 30 s: two attempts and the pause must fit inside the web server's 60 s header wait (scripts/tests/test_blog_timeouts.py).
 TIMEOUT = httpx.Timeout(25.0, connect=10.0)
 MAX_BODY_BYTES = 2_000_000
 RETRY_STATUS = {429, 502, 503, 504}
@@ -31,8 +28,6 @@ T = TypeVar("T", bound=BaseModel)
 
 
 class BlogClient(Protocol):
-    """What the routes need. The one place to swap if the blog backend changes."""
-
     async def list_posts(
         self, limit: int, cursor: str | None, tag: str | None
     ) -> PostList: ...
@@ -77,9 +72,7 @@ class HttpBlogClient:
         self._cache = cache if cache is not None else ResponseCache()
         self._retry_delay = retry_delay
         self._clock = clock
-        # Short-lived signed URLs stay in this process only, until a minute
-        # before they expire (the spec: clients cache descriptors, not URLs;
-        # these never reach a browser).
+        # Signed URLs stay in this process and are dropped a minute before they expire.
         self._links: dict[tuple, tuple[BaseModel, float]] = {}
 
     async def list_posts(
@@ -117,8 +110,7 @@ class HttpBlogClient:
 
     @asynccontextmanager
     async def _forgetting(self, slug: str) -> AsyncIterator[None]:
-        """A 404 means the post (or its media) is gone: drop everything cached
-        for it, and the lists that name it, so no outage can bring it back."""
+        """A 404 evicts the post, its media and the lists naming it, so stale-if-error cannot bring it back."""
         try:
             yield
         except BlogNotFound:

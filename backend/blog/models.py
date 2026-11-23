@@ -1,8 +1,3 @@
-"""Shapes of the blog read API v1 (docs/shared/specs/2026-11-08-blog-studio.md,
-section 5). Unknown fields are ignored, so an additive API change cannot break
-this client. Fields the pages need are required, so a breaking change fails
-loudly here instead of rendering half a page. Storage paths (blobPath) are not
-modelled: they never reach a browser."""
 
 import re
 
