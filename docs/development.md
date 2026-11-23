@@ -84,6 +84,26 @@ poetry run python populate_index.py    # process documents and upload to the ind
 - `populate_index.py` is the entry point. It reads source documents from a `cw/` directory.
 - Tests: `cd data && poetry run pytest`. They import only `DocumentProcessor`; never import `IndexCreator` or `populate_index.py` in a test or a check (they write the live index and call paid embeddings). They call no paid API, but the first run downloads tiktoken's `gpt2` encoding file, so they need network once (free). CI runs them in the `data` job when a PR touches `data/`, a workflow or a script; the job caches the tiktoken download.
 
+## Effects
+
+Components do not call `useEffect`, `useLayoutEffect` or `useInsertionEffect`; ESLint fails on them (`frontend/eslint.config.js`). Effects that remain live in named hooks in `frontend/src/lib/effects/`, and a short list of files still calling an effect is in `effectBaseline` (the same file; part 2 empties it). Use this table instead of an effect:
+
+| You wanted an effect to... | Do this instead |
+|---|---|
+| compute a value from props or state | compute it in render: `const shown = items.filter(matches)` |
+| reset state when an id changes | put `key={id}` on the component; React remounts it with fresh state |
+| respond to a click, submit or change | put the logic in the event handler |
+| set state after a child reports something | pass the value up in the handler that caused it |
+| set body or document style while a panel is open | set it in the open and close handlers |
+| listen to `window` or `document` events | `useEventListener(window, 'scroll', handler, { passive: true })` |
+| run something repeatedly | `useInterval(callback, ms)`; `null` pauses |
+| run something once after a delay | `useTimeout(callback, ms)` |
+| scroll to top when a page mounts or changes | `const scrollToTop = useScrollToTopRef();` on the page root; add `key={id}` to the root to remount on change |
+| set the tab title while a page is shown | `useDocumentHead({ title, noindex })` |
+| subscribe to an external store or agent | kept for part 2 (`useSubscription`) |
+| fetch data when a page or panel shows | kept for part 2 (`useAsyncData`) |
+| mount a third-party widget into a node | kept for part 2 (`useWidget`) |
+
 ## Checks
 
 Backend, from `backend/`:

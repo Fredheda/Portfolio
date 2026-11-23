@@ -71,6 +71,12 @@ describe('ProjectPage', () => {
     expect(window.scrollTo).toHaveBeenCalledWith(0, 0);
   });
 
+  it('scrolls to the top for an unknown slug', () => {
+    renderAt('/projects/no-such-project');
+    expect(screen.getByRole('heading', { level: 1, name: 'Page not found' })).toBeInTheDocument();
+    expect(window.scrollTo).toHaveBeenCalledWith(0, 0);
+  });
+
   it('links to GitHub in a new tab when the repo is public', () => {
     renderAt(`/projects/${podcasts.id}`);
     const link = screen.getByRole('link', { name: 'Code on GitHub' });

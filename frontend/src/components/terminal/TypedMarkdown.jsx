@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
+import { useInterval } from '../../lib/effects/useInterval';
 import { mathRehypePlugins, normalizeMathDelimiters } from '../../lib/markdown';
 
 // Reveals text a word at a time instead of snapping straight to whatever the
@@ -24,32 +25,16 @@ function tokenizeWords(text) {
 }
 
 export default function TypedMarkdown({ text, className, isFinal, onSettled, scrollContainerRef }) {
-  const [revealed, setRevealed] = useState(0);
   const tokens = useMemo(() => tokenizeWords(text), [text]);
-  const targetRef = useRef(tokens.length);
+  const [revealed, setRevealed] = useState(() => Math.min(tokens.length, WORDS_PER_TICK));
   const settledFiredRef = useRef(false);
 
-  useEffect(() => { targetRef.current = tokens.length; }, [tokens.length]);
-
-  useEffect(() => {
-    let cancelled = false;
-    let timer;
-
-    function tick() {
-      if (cancelled) return;
-      setRevealed((current) => {
-        if (current >= targetRef.current) return current;
-        return Math.min(targetRef.current, current + WORDS_PER_TICK);
-      });
-      timer = setTimeout(tick, TICK_MS);
-    }
-
-    tick();
-    return () => {
-      cancelled = true;
-      clearTimeout(timer);
-    };
-  }, []);
+  useInterval(() => {
+    setRevealed((current) => {
+      if (current >= tokens.length) return current;
+      return Math.min(tokens.length, current + WORDS_PER_TICK);
+    });
+  }, TICK_MS);
 
   // Keep the growing reply in view, but only while the log was already
   // scrolled near the bottom -- respects a manual scroll-up instead of

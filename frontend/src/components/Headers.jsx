@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { content } from '../lib/content';
 import { useBlogAvailable } from '../lib/useBlogAvailable';
@@ -27,16 +27,14 @@ const currentState = (link, pathname) => {
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  useEffect(() => {
-    document.body.style.overflow = mobileOpen ? 'hidden' : '';
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [mobileOpen]);
+  const setMenu = (open) => {
+    setMobileOpen(open);
+    document.body.style.overflow = open ? 'hidden' : '';
+  };
 
   const { pathname } = useLocation();
   const links = useBlogAvailable() ? [...navLinks, blogLink] : navLinks;
-  const close = () => setMobileOpen(false);
+  const close = () => setMenu(false);
 
   // A link to the page you are already on does not scroll by itself.
   const goHome = () => {
@@ -73,7 +71,7 @@ const Header = () => {
           <ContactLinks className="hidden sm:flex" />
           <button
             type="button"
-            onClick={() => setMobileOpen((open) => !open)}
+            onClick={() => setMenu(!mobileOpen)}
             aria-expanded={mobileOpen}
             aria-controls="mobile-nav"
             className="rounded-lg border border-line bg-white px-3 py-2 text-sm font-medium text-ink md:hidden"

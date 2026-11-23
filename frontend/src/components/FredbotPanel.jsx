@@ -6,6 +6,7 @@ import remarkMath from 'remark-math';
 import { useAgent, useCopilotKit } from '@copilotkit/react-core/v2';
 import { useChatThread } from '../context/ChatThreadContext';
 import { content } from '../lib/content';
+import { useTimeout } from '../lib/effects/useTimeout';
 import { mathRehypePlugins, normalizeMathDelimiters } from '../lib/markdown';
 import { formatSeconds, groupTurns } from '../lib/turns';
 import { useToolTimings } from '../lib/useToolTimings';
@@ -109,10 +110,7 @@ const FredbotPanel = () => {
   }, [agent]);
 
   // Idle cursor-blink boot beat before the terminal "wakes up".
-  useEffect(() => {
-    const t = setTimeout(() => setBooted(true), BOOT_DELAY_MS);
-    return () => clearTimeout(t);
-  }, []);
+  useTimeout(() => setBooted(true), BOOT_DELAY_MS);
 
   // Fire-and-forget warm-up ping on mount. The backend container app scales
   // to zero, and its FastAPI lifespan hook builds the LangGraph agent --
