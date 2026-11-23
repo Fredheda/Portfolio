@@ -1,9 +1,9 @@
-import { useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Link, useParams } from 'react-router-dom';
 import Diagram from '../components/Diagram';
 import { content } from '../lib/content';
 import { useEngineerMode } from '../lib/useEngineerMode';
+import { useScrollToTopRef } from '../lib/useScrollToTopRef';
 import NotFound from './NotFound';
 
 const prose = 'break-words text-[1.05rem] leading-[1.7] [&_a]:text-royal [&_a]:underline [&_p]:m-0';
@@ -29,17 +29,14 @@ export default function ProjectPage() {
   const { slug } = useParams();
   const [forEngineers, toggleEngineers] = useEngineerMode();
   const project = content.projects.find((p) => p.id === slug);
+  const scrollToTop = useScrollToTopRef();
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [slug]);
-
-  if (!project) return <NotFound />;
+  if (!project) return <div key={slug} ref={scrollToTop}><NotFound /></div>;
 
   const { caseStudy } = project;
 
   return (
-    <article className="hero-wash">
+    <article key={slug} ref={scrollToTop} className="hero-wash">
       <div className="mx-auto max-w-page px-4 py-14 md:px-6 md:py-20">
         <Link to="/#projects" className="text-sm font-semibold text-royal">
           All projects

@@ -1,6 +1,6 @@
 # Spec: no effects in components
 
-Status: draft, awaiting specialist approval
+Status: done (PR #145)
 Scope: Portfolio frontend only (`frontend/`). Other repos are out of scope.
 Tickets: PW-80 (part 1), PW-81 (part 2)
 Plan: `docs/plans/2026-11-22-no-use-effect-part1.md` (part 1 only)

@@ -1,16 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { content } from '../lib/content';
+import { useEventListener } from '../lib/effects/useEventListener';
 import ContactLinks from './ContactLinks';
 
 function Footer() {
   const [showTop, setShowTop] = useState(false);
 
-  useEffect(() => {
-    const onScroll = () => setShowTop(window.scrollY > 600);
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+  useEventListener(window, 'scroll', () => setShowTop(window.scrollY > 600), { passive: true });
 
   return (
     <footer className="border-t border-line">

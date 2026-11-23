@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import BlogBody from '../components/blog/BlogBody';
 import { getPost, isSlug, mediaUrl } from '../lib/blogApi';
 import { content } from '../lib/content';
-import { useDocumentHead } from '../lib/useDocumentHead';
+import { useDocumentHead } from '../lib/effects/useDocumentHead';
 import { PostMeta, TagLinks } from './BlogIndex';
 import NotFound from './NotFound';
 

@@ -1,12 +1,10 @@
-import { useEffect } from 'react';
+import { useScrollToTopRef } from '../lib/useScrollToTopRef';
 
 function PrivacyPolicy() {
-    useEffect(() => {
-      window.scrollTo(0, 0);
-    }, []);
+  const scrollToTop = useScrollToTopRef();
 
   return (
-    <div className="flex justify-center py-10 px-4">
+    <div ref={scrollToTop} className="flex justify-center py-10 px-4">
       <div className="max-w-3xl w-full bg-white rounded-xl p-6 md:p-12 border border-line">
         <h1 className="text-4xl font-bold mb-6 text-center text-ink font-heading">Privacy Policy</h1>
           <p className="text-center text-muted mb-6">Last updated: April 4, 2026</p>

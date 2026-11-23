@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { listPosts } from '../lib/blogApi';
 import { formatDate, readingTime } from '../lib/blogFormat';
 import { content } from '../lib/content';
-import { useDocumentHead } from '../lib/useDocumentHead';
+import { useDocumentHead } from '../lib/effects/useDocumentHead';
 
 const shell = 'mx-auto max-w-page px-4 py-14 md:px-6 md:py-20';
 const button =

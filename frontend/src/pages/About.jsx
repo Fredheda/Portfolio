@@ -1,16 +1,14 @@
-import { useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { content } from '../lib/content';
+import { useScrollToTopRef } from '../lib/useScrollToTopRef';
 
 const { profile, about } = content;
 
 export default function About() {
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
+  const scrollToTop = useScrollToTopRef();
 
   return (
-    <article className="hero-wash">
+    <article ref={scrollToTop} className="hero-wash">
       <div className="mx-auto grid max-w-page gap-10 px-4 py-14 md:px-6 md:py-20 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="max-w-[65ch]">
           <h1 className="m-0 font-heading text-[clamp(2.25rem,5vw,3.5rem)] font-bold leading-[1.08] tracking-[-0.02em]">

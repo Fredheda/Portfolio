@@ -6,6 +6,7 @@ import remarkMath from 'remark-math';
 import { useAgent, useCopilotKit } from '@copilotkit/react-core/v2';
 import { useChatThread } from '../context/ChatThreadContext';
 import { content } from '../lib/content';
+import { useTimeout } from '../lib/effects/useTimeout';
 import { mathRehypePlugins, normalizeMathDelimiters } from '../lib/markdown';
 import { formatSeconds, groupTurns } from '../lib/turns';
 import { useToolTimings } from '../lib/useToolTimings';
@@ -32,22 +33,10 @@ const FredbotPanel = () => {
   // it, and never scrolls the window to do so.
   const [interacted, setInteracted] = useState(false);
   const [sequenceActive, setSequenceActive] = useState(false);
-  // True from the first message's send until its real reply starts
-  // arriving -- spans both the intro theater AND whatever escalating wait
-  // follows it, so the SAME ThinkingSequence instance stays mounted for the
-  // whole stretch instead of being swapped for a second, freshly-mounted
-  // one once the intro's own first pass ends (see ThinkingSequence's own
-  // comment on why that handoff would look like a reset even though a
-  // single instance never resets itself).
   const [introWaitActive, setIntroWaitActive] = useState(false);
   const [hasSentFirstMessage, setHasSentFirstMessage] = useState(false);
   const [replySettled, setReplySettled] = useState(true);
-  // Escalating "still working" indicator for messages after the first one
-  // (which already gets the full intro theater from send onward): the
-  // fredbot glyph shows instantly, then "thinking ..." after 1s, then the
-  // fake process log (looping, since the real wait time is unknown) after
-  // 3s -- covers slow real replies, e.g. an MCP tool call.
-  const [waitStage, setWaitStage] = useState('none'); // 'none' | 'thinking' | 'sequence'
+  const [waitStage, setWaitStage] = useState('none');
   const waitTimersRef = useRef([]);
   const logRef = useRef(null);
   const inputRef = useRef(null);
@@ -56,9 +45,6 @@ const FredbotPanel = () => {
   const lastTurn = turns[turns.length - 1];
   const pendingAssistantContentStarted = lastTurn?.role === 'assistant';
   const isLoading = agent?.isRunning ?? false;
-  // Input stays hidden for the whole exchange -- the fake sequence's own
-  // fixed duration, then however long the real response takes to arrive
-  // AND finish revealing at its throttled typing pace.
   const busy = sequenceActive || isLoading || !replySettled;
 
   const clearWaitTimers = () => {
@@ -66,9 +52,6 @@ const FredbotPanel = () => {
     waitTimersRef.current = [];
   };
 
-  // The moment real content starts arriving for the in-flight reply, the
-  // escalating indicator above has done its job -- stop it immediately
-  // rather than waiting for its own timers to unwind.
   useEffect(() => {
     if (pendingAssistantContentStarted && waitStage !== 'none') {
       clearWaitTimers();
@@ -108,11 +91,7 @@ const FredbotPanel = () => {
     return unsubscribe;
   }, [agent]);
 
-  // Idle cursor-blink boot beat before the terminal "wakes up".
-  useEffect(() => {
-    const t = setTimeout(() => setBooted(true), BOOT_DELAY_MS);
-    return () => clearTimeout(t);
-  }, []);
+  useTimeout(() => setBooted(true), BOOT_DELAY_MS);
 
   // Fire-and-forget warm-up ping on mount. The backend container app scales
   // to zero, and its FastAPI lifespan hook builds the LangGraph agent --
@@ -144,23 +123,14 @@ const FredbotPanel = () => {
     const sanitizedInput = DOMPurify.sanitize(trimmed);
     setInput('');
     setReplySettled(false);
-    // The user's own message renders immediately via the turn list below --
-    // only the assistant's reply is held back (by the `sequenceActive` check
-    // in the render) until the fake sequence ends.
     agent.addMessage({ id: crypto.randomUUID(), role: 'user', content: sanitizedInput });
 
-    // The intro theater plays once, on the first message of a session.
     if (!hasSentFirstMessage) {
       setHasSentFirstMessage(true);
       setSequenceActive(true);
       setIntroWaitActive(true);
     }
 
-    // Escalating "still working" indicator, armed on every send: "thinking
-    // ..." at 1s, a looping fake log at 3s if a real reply is still in
-    // flight. For the first message the pending row only shows once the
-    // intro finishes -- but these timers start now regardless, so the
-    // indicator picks up from the real elapsed time instead of resetting.
     clearWaitTimers();
     setWaitStage('none');
     waitTimersRef.current = [
@@ -178,8 +148,6 @@ const FredbotPanel = () => {
   const clearChat = () => {
     agent?.setMessages([]);
     resetThread();
-    // A cleared thread is a new session -- the intro sequence should play
-    // again on its first message.
     setHasSentFirstMessage(false);
     setReplySettled(true);
     clearWaitTimers();
@@ -238,7 +206,6 @@ const FredbotPanel = () => {
                     </div>
                   );
                 }
-                // The reply stays hidden until the intro sequence finishes.
                 if (sequenceActive) return null;
                 return (
                   <div key={turn.id} className="border-l-2 border-toolLine pl-3">
